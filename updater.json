@@ -1,7 +1,7 @@
 [
     {
         "iconUrl": "https://i.imgur.com/KgMakl9.png",
-        "repositoryUrl": "https://github.com/your_username/myRepository",
+        "repositoryUrl": "https://github.com/Flixclusive/flx-providers",
         "providerType": {
             "type": "Movies, TV Shows, etc."
         },
@@ -11,12 +11,17 @@
         },
         "authors": [
             {
-                "name": "MyUsername"
+                "githubLink": "http://github.com/Flixclusive",
+                "name": "Flixclusive"
+            },
+            {
+                "githubLink": "https://github.com/rhenwinch",
+                "name": "rhenwinch"
             }
         ],
         "versionCode": 10000,
         "description": "A classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.",
-        "buildUrl": "https://raw.githubusercontent.com/your_username/myRepository/builds/SuperStream.flx",
+        "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/SuperStream.flx",
         "versionName": "1.0.0",
         "name": "SuperStream"
     }
