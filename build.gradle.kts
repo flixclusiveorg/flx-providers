@@ -3,6 +3,10 @@ import com.android.build.gradle.BaseExtension
 
 
 buildscript {
+    extra.apply {
+        set("composeBomVersion", "2024.04.00")
+    }
+
     configurations.getByName("classpath") {
         // Change this to `...(0, TimeUnit.SECONDS)`
         // to force update the providers-gradle dependency. Then, just return it
@@ -94,7 +98,8 @@ subprojects {
         val testImplementation by configurations
         val coreLibraryDesugaring by configurations
 
-        coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+        //noinspection GradleDependency
+        coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.9")
 
         // Stubs for all Flixclusive classes
         flixclusive("com.flixclusive:flixclusive:pre-release") {

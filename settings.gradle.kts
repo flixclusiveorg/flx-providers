@@ -1,4 +1,4 @@
-rootProject.name = "providers-template"
+rootProject.name = "flx-providers"
 
 /**
 *
@@ -7,7 +7,7 @@ rootProject.name = "providers-template"
 * to the includes below.
 * */
 include(
-    "MyFirstProvider",
+    "SuperStream",
     // "MySecondProvider",
 )
 
