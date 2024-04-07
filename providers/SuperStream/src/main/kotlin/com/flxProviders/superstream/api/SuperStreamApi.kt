@@ -10,7 +10,6 @@ import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.dto.FilmInfo
 import com.flixclusive.provider.dto.SearchResults
 import com.flixclusive.provider.util.TvShowCacheData
-import com.flxProviders.superstream.SuperStream
 import com.flxProviders.superstream.api.dto.SuperStreamDownloadResponse
 import com.flxProviders.superstream.api.dto.SuperStreamMediaDetailResponse
 import com.flxProviders.superstream.api.dto.SuperStreamMediaDetailResponse.Companion.toMediaInfo
@@ -33,8 +32,7 @@ import okhttp3.OkHttpClient
  *
  * */
 class SuperStreamApi(
-    client: OkHttpClient,
-    private val provider: SuperStream
+    client: OkHttpClient
 ) : ProviderApi(client) {
     /**
      * The name of the provider.

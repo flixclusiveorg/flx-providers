@@ -98,8 +98,7 @@ subprojects {
         val testImplementation by configurations
         val coreLibraryDesugaring by configurations
 
-        //noinspection GradleDependency
-        coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.9")
+        coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
         // Stubs for all Flixclusive classes
         flixclusive("com.flixclusive:flixclusive:pre-release") {

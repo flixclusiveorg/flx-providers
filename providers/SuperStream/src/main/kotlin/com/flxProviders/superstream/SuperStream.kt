@@ -35,6 +35,6 @@ class SuperStream : Provider() {
         context: Context?,
         client: OkHttpClient
     ): ProviderApi {
-        return SuperStreamApi(client, this)
+        return SuperStreamApi(client)
     }
 }

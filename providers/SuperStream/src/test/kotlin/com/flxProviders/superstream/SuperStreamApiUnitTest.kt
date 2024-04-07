@@ -27,7 +27,7 @@ class SuperStreamApiUnitTest : BaseProviderTest()  {
     override fun setUp() {
         super.setUp()
 
-        sourceProviderApi = SuperStreamApi(OkHttpClient(), SuperStream())
+        sourceProviderApi = SuperStreamApi(OkHttpClient())
     }
 
     @Test
