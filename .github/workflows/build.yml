@@ -1,0 +1,54 @@
+name: Build
+
+# https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#concurrency
+concurrency: 
+  group: "build"
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '*.md'
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          path: "src"
+
+      - name: Checkout builds
+        uses: actions/checkout@master
+        with:
+          ref: "builds"
+          path: "builds"
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v1
+        with:
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+
+      # Change `**/**/build/*.flx` if you've changed the providers file structure.
+      - name: Build Plugins
+        run: |
+          cd $GITHUB_WORKSPACE/src
+          chmod +x gradlew
+          ./gradlew make generateUpdaterJson
+          cp **/**/build/*.flx $GITHUB_WORKSPACE/builds
+          cp build/updater.json $GITHUB_WORKSPACE/builds
+
+      - name: Push builds
+        run: |
+          cd $GITHUB_WORKSPACE/builds
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add .
+          git commit -m "Build $GITHUB_SHA" || exit 0   # do not error if nothing to commit
+          git push
