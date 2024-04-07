@@ -10,6 +10,13 @@ flixclusive {
     versionPatch = 0
     versionBuild = 0
 
+    // Extra authors
+    author(
+        name = "rhenwinch",
+        githubLink = "https://github.com/rhenwinch",
+    )
+    // ===
+
     iconUrl.set("https://i.imgur.com/KgMakl9.png") // OPTIONAL
 
     language.set(Language.Multiple)
