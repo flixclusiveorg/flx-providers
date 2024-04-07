@@ -1,5 +1,6 @@
 [
     {
+        "iconUrl": "https://i.imgur.com/KgMakl9.png",
         "repositoryUrl": "https://github.com/your_username/myRepository",
         "providerType": {
             "type": "Movies, TV Shows, etc."
@@ -11,16 +12,12 @@
         "authors": [
             {
                 "name": "MyUsername"
-            },
-            {
-                "name": "SecondAuthor"
             }
         ],
         "versionCode": 10000,
-        "description": "My first provider!",
-        "buildUrl": "https://raw.githubusercontent.com/your_username/myRepository/builds/MyFirstProvider.flx",
-        "changelog": "Some changelog:\n\nTODO: Add your changes here...",
+        "description": "A classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.",
+        "buildUrl": "https://raw.githubusercontent.com/your_username/myRepository/builds/SuperStream.flx",
         "versionName": "1.0.0",
-        "name": "MyFirstProvider"
+        "name": "SuperStream"
     }
 ]
