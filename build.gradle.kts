@@ -47,9 +47,10 @@ fun Project.android(configuration: BaseExtension.() -> Unit) = extensions.getByN
 
 subprojects {
     apply(plugin = "com.android.library")
-    apply(plugin = "com.flixclusive.gradle")
     // Remove if using Java
     apply(plugin = "kotlin-android")
+
+    apply(plugin = "com.flixclusive.gradle")
 
     // Fill out with your info
     flixclusive {
@@ -93,17 +94,18 @@ subprojects {
     }
 
     dependencies {
-        val flixclusive by configurations
         val implementation by configurations
         val testImplementation by configurations
         val coreLibraryDesugaring by configurations
 
-        coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
-
+        val flixclusive by configurations
         // Stubs for all Flixclusive classes
         flixclusive("com.flixclusive:flixclusive:pre-release") {
             isChanging = true
         }
+
+        coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
 
         // ============= START: SCRAPING TOOLS =============
         val okHttpBom = platform("com.squareup.okhttp3:okhttp-bom:4.12.0")
