@@ -1,11 +1,37 @@
 [
     {
+        "iconUrl": "https://i.imgur.com/LNtqPTi.png",
+        "repositoryUrl": "https://github.com/Flixclusive/flx-providers",
+        "providerType": {
+            "type": "Movies, TV Shows, etc."
+        },
+        "status": "Beta",
+        "language": {
+            "languageCode": "Multiple"
+        },
+        "authors": [
+            {
+                "githubLink": "http://github.com/Flixclusive",
+                "name": "Flixclusive"
+            },
+            {
+                "githubLink": "https://github.com/rhenwinch",
+                "name": "rhenwinch"
+            }
+        ],
+        "versionCode": 10000,
+        "description": "Stream seamlessly in adjustable HD resolution (1080p) with blazing-fast loading speeds. Offers HLS media.",
+        "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/FlixHQ.flx",
+        "versionName": "1.0.0",
+        "name": "FlixHQ"
+    },
+    {
         "iconUrl": "https://i.imgur.com/KgMakl9.png",
         "repositoryUrl": "https://github.com/Flixclusive/flx-providers",
         "providerType": {
             "type": "Movies, TV Shows, etc."
         },
-        "status": "Working",
+        "status": "Down",
         "language": {
             "languageCode": "Multiple"
         },
