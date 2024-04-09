@@ -1,11 +1,14 @@
 package com.flxProviders.flixhq
 
 import android.content.Context
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import com.flixclusive.provider.FlixclusiveProvider
 import com.flixclusive.provider.Provider
 import com.flixclusive.provider.ProviderApi
 import com.flxProviders.flixhq.extractors.vidcloud.dto.VidCloudKey
 import com.flxProviders.flixhq.api.FlixHQApi
+import com.flxProviders.flixhq.settings.MainSettingsPanel
 import okhttp3.OkHttpClient
 
 /**
@@ -41,5 +44,18 @@ class FlixHQ : Provider() {
             client = client,
             key = key
         )
+    }
+
+    @Composable
+    override fun SettingsScreen() {
+        val key = remember(settings) { settings.getObject("key", VidCloudKey()) }
+
+        resources?.let { res ->
+            MainSettingsPanel(
+                key = key,
+                setKey = { settings.setObject("key", it) },
+                resources = res,
+            )
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.flxProviders.flixhq.api
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.film.FilmType
+import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.SourceLink
@@ -132,8 +133,8 @@ class FlixHQApi(
         val filmIdToUse = filmId.split("-").last()
         val isSameId = tvCacheData.id == filmIdToUse
 
-        val ajaxReqUrl: (String, String, Boolean) -> String = { id, type, isSeasons ->
-            "$baseUrl/ajax/v2/$type/${if (isSeasons) "seasons" else "episodes"}/$id"
+        val ajaxReqUrl: (String, Boolean) -> String = { id, isSeasons ->
+            "$baseUrl/ajax/season/${if (isSeasons) "list" else "episodes"}/$id"
         }
 
         if (isSameId) {
@@ -146,7 +147,7 @@ class FlixHQApi(
 
         if (tvCacheData.seasons == null || !isSameId) {
             val responseSeasons =
-                client.request(url = ajaxReqUrl(filmIdToUse, "tv", true)).execute()
+                client.request(url = ajaxReqUrl(filmIdToUse, true)).execute()
             val dataSeasons = responseSeasons.body?.string()
                 ?: throw Exception("Failed to fetch season data from provider")
 
@@ -168,7 +169,7 @@ class FlixHQApi(
         val seasonId =
             seasons.getSeasonId(season) ?: throw Exception("Season $season is not available")
 
-        val responseEpisodes = client.request(url = ajaxReqUrl(seasonId, "season", false)).execute()
+        val responseEpisodes = client.request(url = ajaxReqUrl(seasonId, false)).execute()
         val dataEpisodes = responseEpisodes.body?.string()
             ?: throw Exception("Failed to fetch episode id from provider")
 
@@ -206,10 +207,10 @@ class FlixHQApi(
         } else filmId.split("-").last()
 
         val fetchServerUrl =
-            if (!episodeId.startsWith("$baseUrl/ajax") && !filmId.contains("movie")) {
-                "$baseUrl/ajax/v2/episode/servers/$episodeId"
+            if (filmId.contains("movie")) {
+                "$baseUrl/ajax/episode/list/$episodeId"
             } else {
-                "$baseUrl/ajax/movie/episodes/$episodeId"
+                "$baseUrl/ajax/episode/servers/$episodeId"
             }
 
         val response = client.request(url = fetchServerUrl).execute()
@@ -233,7 +234,8 @@ class FlixHQApi(
                 }
 
             servers.mapAsync { server ->
-                val serverResponse = client.request(url = "${baseUrl}/ajax/get_link/${server.url.split('.').last()}").execute()
+                val fetchServerSourceUrl = "${baseUrl}/ajax/episode/sources/${server.url.split('.').last()}"
+                val serverResponse = client.request(url = fetchServerSourceUrl).execute()
 
                 serverResponse.body
                     ?.string()

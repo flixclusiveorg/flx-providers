@@ -1,5 +1,6 @@
 package com.flxProviders.flixhq.extractors.vidcloud.dto
 
+import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
@@ -13,7 +14,7 @@ internal data class VidCloudEmbedData(
     val sources: List<DecryptedSource>,
     val tracks: List<VidCloudEmbedSubtitleData>,
     val encrypted: Boolean,
-    val server: Int
+    val server: Int?
 ) {
     data class VidCloudEmbedSubtitleData(
         @SerializedName("file") val url: String,
@@ -38,10 +39,12 @@ internal class VidCloudEmbedDataCustomDeserializer(
         val tracks = obj.get("tracks").asJsonArray.map {
             fromJson<VidCloudEmbedData.VidCloudEmbedSubtitleData>(it)
         }
-        val encrypted = obj.get("t").asInt == 1
-        val server = obj.get("server").asInt
 
-        val sources = if (encrypted) {
+        val encrypted = if (tracks.isEmpty()) false else obj.get("t").asInt == 1
+
+        val server = if (tracks.isEmpty()) null else obj.get("server").asInt
+
+        val sources = if (encrypted && server != null && tracks.isNotEmpty()) {
             decryptSource(obj.get("sources").asString)
         } else {
             obj.get("sources").asJsonArray.map {
