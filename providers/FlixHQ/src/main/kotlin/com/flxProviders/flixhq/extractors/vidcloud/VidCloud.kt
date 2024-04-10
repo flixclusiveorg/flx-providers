@@ -3,6 +3,7 @@ package com.flxProviders.flixhq.extractors.vidcloud
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.coroutines.mapIndexedAsync
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.network.CryptographyUtil.decryptAes
 import com.flixclusive.core.util.network.USER_AGENT
@@ -25,12 +26,14 @@ import java.net.URL
  * Also known as vidcloud
  * */
 class VidCloud(
-    private val key: VidCloudKey,
     private val client: OkHttpClient,
-    private val isAlternative: Boolean = false,
 ) : Extractor() {
     override val name: String = "upcloud"
+    override val alternateNames: List<String>
+        get() = listOf("vidcloud")
     override val host: String = "https://rabbitstream.net"
+
+    var key = VidCloudKey()
 
     override suspend fun extract(
         url: URL,
@@ -55,8 +58,6 @@ class VidCloud(
             headers = options,
         ).execute()
 
-        debugLog(response.request.headers.toString())
-
         val responseBody = response.body
             ?.string()
             ?: throw Exception("Cannot fetch source")
@@ -67,10 +68,9 @@ class VidCloud(
         val vidCloudEmbedData = fromJson<VidCloudEmbedData>(
             json = responseBody,
             serializer = VidCloudEmbedDataCustomDeserializer {
-                debugLog("${key.e4Key} == $it")
-                fromJson<List<DecryptedSource>>(
-                    decryptAes(it, key.e4Key) // TODO("Fix this")
-                )
+                safeCall {
+                    fromJson<List<DecryptedSource>>(decryptAes(it, key.e4Key))
+                } ?: throw IllegalStateException("Key might be outdated!")
             }
         )
 

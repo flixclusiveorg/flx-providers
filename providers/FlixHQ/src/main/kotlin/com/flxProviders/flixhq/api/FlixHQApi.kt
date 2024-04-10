@@ -1,19 +1,22 @@
 package com.flxProviders.flixhq.api
+import android.content.Context
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.tmdb.TMDBEpisode
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.dto.FilmInfo
 import com.flixclusive.provider.dto.SearchResultItem
 import com.flixclusive.provider.dto.SearchResults
 import com.flixclusive.provider.extractor.Extractor
+import com.flixclusive.provider.util.FlixclusiveWebView
 import com.flixclusive.provider.util.TvShowCacheData
+import com.flixclusive.provider.util.WebViewCallback
 import com.flxProviders.flixhq.extractors.vidcloud.VidCloud
-import com.flxProviders.flixhq.extractors.vidcloud.dto.VidCloudKey
 import com.flxProviders.flixhq.api.dto.FlixHQInitialSourceData
 import com.flxProviders.flixhq.api.util.getEpisodeId
 import com.flxProviders.flixhq.api.util.getSeasonId
@@ -21,33 +24,27 @@ import com.flxProviders.flixhq.api.util.getServerName
 import com.flxProviders.flixhq.api.util.getServerUrl
 import com.flxProviders.flixhq.api.util.replaceWhitespaces
 import com.flxProviders.flixhq.api.util.toSearchResultItem
+import com.flxProviders.flixhq.webview.FlixHQWebView
 import okhttp3.OkHttpClient
 import org.jsoup.Jsoup
+import java.lang.IllegalStateException
 import java.net.URL
 import java.net.URLDecoder
 
 @Suppress("SpellCheckingInspection")
 class FlixHQApi(
-    client: OkHttpClient,
-    key: VidCloudKey
+    client: OkHttpClient
 ) : ProviderApi(client) {
+    public override val baseUrl: String = "https://flixhq.to"
     override val name: String = "FlixHQ"
-    override val baseUrl: String = "https://flixhq.to"
+    override val useWebView = true
 
-    private var tvCacheData: TvShowCacheData = TvShowCacheData()
-
-    override val supportedExtractors: List<Extractor> = listOf(
-        VidCloud(
-            client = client,
-            key = key
-        ),
-        VidCloud(
-            client = client,
-            key = key,
-            isAlternative = true
-        ), // upcloud
+    public override val supportedExtractors: List<Extractor> = listOf(
+        VidCloud(client = client)
         //"mixdrop",
     )
+
+    private var tvCacheData: TvShowCacheData = TvShowCacheData()
 
     override suspend fun search(
         query: String,
@@ -125,6 +122,30 @@ class FlixHQApi(
         throw NullPointerException("FilmInfo is null!")
     }
 
+    override suspend fun getSourceLinks(
+        filmId: String,
+        season: Int?,
+        episode: Int?,
+        onLinkLoaded: (SourceLink) -> Unit,
+        onSubtitleLoaded: (Subtitle) -> Unit,
+    ) = throw IllegalAccessException("$name uses a WebView!")
+
+    override fun getWebView(
+        context: Context,
+        callback: WebViewCallback,
+        film: Film,
+        episode: TMDBEpisode?,
+    ): FlixclusiveWebView {
+        return FlixHQWebView(
+            mClient = client,
+            api = this,
+            context = context,
+            filmToScrape = film,
+            episodeData = episode,
+            callback = callback
+        )
+    }
+
     private fun getEpisodeId(
         filmId: String,
         episode: Int,
@@ -189,16 +210,14 @@ class FlixHQApi(
         return episodes.getEpisodeId(episode) ?: throw Exception("Cannot find episode id!")
     }
 
-    override suspend fun getSourceLinks(
+    internal suspend fun getEpisodeIdAndServers(
         filmId: String,
-        season: Int?,
         episode: Int?,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit,
-    ) {
+        season: Int?,
+    ): Pair<String, List<SourceLink>> {
         val isTvShow = season != null && episode != null
 
-        val episodeId = if(isTvShow) {
+        val episodeId = if (isTvShow) {
             getEpisodeId(
                 filmId = filmId,
                 episode = episode!!,
@@ -215,49 +234,26 @@ class FlixHQApi(
 
         val response = client.request(url = fetchServerUrl).execute()
         val data = response.body?.string()
+            ?: throw IllegalStateException("No available servers for this film")
 
-        if (data != null) {
-            val doc = Jsoup.parse(data)
-            val servers = doc.select(".nav > li")
-                .filter { element ->
-                    val serverName = element.select("a").getServerName(filmId)
+        val doc = Jsoup.parse(data)
+        return episodeId to doc.select(".nav > li")
+            .filter { element ->
+                val serverName = element.select("a").getServerName(filmId)
 
-                    supportedExtractors.find { it.name == serverName || it.alternateNames.contains(serverName) } != null
-                }
-                .mapAsync { element ->
-                    val anchorElement = element.select("a")
-
-                    SourceLink(
-                        name = anchorElement.getServerName(filmId),
-                        url = anchorElement.getServerUrl(baseUrl, filmId)
+                supportedExtractors.find {
+                    it.name == serverName || it.alternateNames.contains(
+                        serverName
                     )
-                }
-
-            servers.mapAsync { server ->
-                val fetchServerSourceUrl = "${baseUrl}/ajax/episode/sources/${server.url.split('.').last()}"
-                val serverResponse = client.request(url = fetchServerSourceUrl).execute()
-
-                serverResponse.body
-                    ?.string()
-                    ?.let { initialSourceData ->
-                        val serverUrl = URLDecoder.decode(
-                            fromJson<FlixHQInitialSourceData>(initialSourceData).link,
-                            "UTF-8"
-                        )
-
-                        supportedExtractors.mapAsync { extractor ->
-                            if (extractor.name == server.name) {
-                                extractor.extract(
-                                    url = URL(serverUrl),
-                                    mediaId = filmId,
-                                    episodeId = episodeId,
-                                    onLinkLoaded = onLinkLoaded,
-                                    onSubtitleLoaded = onSubtitleLoaded
-                                )
-                            }
-                        }
-                    }
+                } != null
             }
-        }
+            .mapAsync { element ->
+                val anchorElement = element.select("a")
+
+                SourceLink(
+                    name = anchorElement.getServerName(filmId),
+                    url = anchorElement.getServerUrl(baseUrl, filmId)
+                )
+            }
     }
 }
