@@ -31,7 +31,7 @@ android {
 
 flixclusive {
     description.set("""
-        NOTICE: This provider uses WebView to scrape content. This might lag.\n\n
+        NOTICE: This provider uses WebView to scrape content. This might lag.
         
         Stream seamlessly in adjustable HD resolution (1080p) with blazing-fast loading speeds. Offers HLS media.
     """.trimIndent())

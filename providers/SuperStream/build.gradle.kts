@@ -4,7 +4,7 @@ import com.flixclusive.gradle.entities.Status
 
 flixclusive {
     description.set("""
-        NOTICE: This provider doesn't work sometimes, idk why.\n\n
+        NOTICE: This provider doesn't work sometimes, idk why.
         
         A classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.
     """.trimIndent())
