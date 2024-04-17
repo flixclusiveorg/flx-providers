@@ -62,8 +62,8 @@ subprojects {
          * own github profile link
          * */
         author(
-            name = "Flixclusive",
-            githubLink = "http://github.com/Flixclusive",
+            name = "rhenwinch",
+            githubLink = "https://github.com/rhenwinch",
         )
         // author( ... )
         // author( ... )

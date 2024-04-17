@@ -9,25 +9,6 @@ import com.flxProviders.flixhq.api.FlixHQApi
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
 
-internal fun interceptE4Request(
-    referer: String,
-    request: WebResourceRequest
-): WebResourceResponse {
-    val requestUrl = URL(request.url.toString())
-    val conn = requestUrl.openConnection() as HttpsURLConnection
-    for ((key, value) in request.requestHeaders) {
-        conn.addRequestProperty(key, value)
-    }
-
-    conn.setRequestProperty("Referer", referer)
-
-    return WebResourceResponse(
-        conn.contentType.substringBefore(";"),
-        conn.contentType.substringAfter("charset=", "UTF-8"),
-        conn.inputStream
-    )
-}
-
 internal suspend fun FlixHQApi.getMediaId(
     film: Film
 ): String? {

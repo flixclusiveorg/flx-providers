@@ -30,18 +30,22 @@ android {
 }
 
 flixclusive {
-    description.set("Stream seamlessly in adjustable HD resolution (1080p) with blazing-fast loading speeds. Offers HLS media.")
+    description.set("""
+        NOTICE: This provider uses WebView to scrape content. This might lag.\n\n
+        
+        Stream seamlessly in adjustable HD resolution (1080p) with blazing-fast loading speeds. Offers HLS media.
+    """.trimIndent())
 
     versionMajor = 1
     versionMinor = 0
     versionPatch = 0
     versionBuild = 0
 
-    // Extra authors
-    author(
-        name = "rhenwinch",
-        githubLink = "https://github.com/rhenwinch",
-    )
+    // Extra authors for specific provider
+    // author(
+    //    name = "...",
+    //    githubLink = "https://github.com/...",
+    // )
     // ===
 
     iconUrl.set("https://i.imgur.com/LNtqPTi.png")
@@ -50,7 +54,6 @@ flixclusive {
 
     providerType.set(ProviderType.All)
 
-    status.set(Status.Beta)
-    requiresResources.set(true)
+    status.set(Status.Working)
 }
 
