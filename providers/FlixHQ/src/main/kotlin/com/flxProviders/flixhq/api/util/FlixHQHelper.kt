@@ -6,9 +6,6 @@ import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.util.Locale
 
-internal class NoExtractorAvailableException(embed: String) :
-    Exception("No extractor for this server [$embed] yet.")
-
 internal fun Elements.getEpisodeId(episode: Int): String? {
     return try {
         var episodeId: String? = null

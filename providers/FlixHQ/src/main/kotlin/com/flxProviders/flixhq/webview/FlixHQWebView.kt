@@ -1,5 +1,6 @@
 package com.flxProviders.flixhq.webview
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
@@ -11,6 +12,7 @@ import android.webkit.WebViewClient
 import com.flixclusive.core.util.R
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.network.USER_AGENT
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
@@ -34,6 +36,8 @@ import java.net.URLDecoder
 
 internal const val INJECTOR_SCRIPT = "javascript:(function() {  function shift(y) {      return [          (4278190080 & y) >> 24,          (16711680 & y) >> 16,          (65280 & y) >> 8,          255 & y      ];  }  function shiftArray(toShift, shiftNums) {      try {          for (let i = 0; i < toShift.length; i++) {              toShift[i] = toShift[i] ^ shiftNums[i % shiftNums.length];          }      } catch (err) {          return null;      }  }  function checkClipboard() {    try {      var iframeWindow = window;      if (iframeWindow.clipboard) {        clearInterval(pollingInterval);        const browserVersion = iframeWindow.browser_version;        const kId = iframeWindow.localStorage.getItem('kid');        const kVersion = iframeWindow.localStorage.getItem('kversion');        const arrayKeys = new Uint8Array(iframeWindow.clipboard());        shiftArray(arrayKeys, shift(parseInt(kVersion)));        const finalKeys = btoa(String.fromCharCode.apply(null, new Uint8Array(arrayKeys)));        var body = document.body;        body.innerHTML = `<div style='text-align: center;'><h1 style='font-size: 60px; color: white'>Your E4 keys are:</h1><p style='font-weight: bold; font-size: 30px; color: white'>`+finalKeys+`</p><h1 style='font-size: 60px; color: white'>Other details are:</h1><p style='font-weight: bold; font-size: 30px; color: white'>BrowserVersion = `+browserVersion+`</p><br/><p style='font-weight: bold; font-size: 30px; color: white'>ID = `+kId+`</p><br/><p style='font-weight: bold; font-size: 30px; color: white'>Version = `+kVersion+`</p></div>`;                console.log(`{'e4Key': '`+finalKeys+`', 'browserVersion': '`+browserVersion+`', 'kVersion': '`+kVersion+`', 'kId': '`+kId+`'}`);      } else {        setTimeout(checkClipboard, 200);      }    } catch (error) {      setTimeout(checkClipboard, 500);    }  }  var pollingInterval = setInterval(checkClipboard, 500);})();"
 
+@Suppress("SpellCheckingInspection")
+@SuppressLint("SetJavaScriptEnabled", "ClickableViewAccessibility", "ViewConstructor")
 class FlixHQWebView(
     private val mClient: OkHttpClient,
     private val api: FlixHQApi,
@@ -108,6 +112,8 @@ class FlixHQWebView(
                 api.getMediaId(film = filmToScrape)
             } ?: return callback.updateDialogState(SourceDataState.Unavailable())
 
+            debugLog(filmId)
+
             val (episodeId, servers) = withContext(ioDispatcher) {
                 api.getEpisodeIdAndServers(
                     filmId = filmId,
@@ -119,6 +125,8 @@ class FlixHQWebView(
             servers.forEach { server ->
                 val fetchServerSourceUrl =
                     "${api.baseUrl}/ajax/episode/sources/${server.url.split('.').last()}"
+
+                debugLog("episodeId = $episodeId")
 
                 val serverResponse = withContext(ioDispatcher) {
                     mClient.request(url = fetchServerSourceUrl).execute()

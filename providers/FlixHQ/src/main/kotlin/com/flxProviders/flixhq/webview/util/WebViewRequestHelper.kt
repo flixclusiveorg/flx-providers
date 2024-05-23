@@ -1,13 +1,15 @@
 package com.flxProviders.flixhq.webview.util
 
-import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.TvShow
 import com.flxProviders.flixhq.api.FlixHQApi
-import java.net.URL
-import javax.net.ssl.HttpsURLConnection
+import java.text.Normalizer
+
+private fun String.removeAccents(): String {
+    return Normalizer.normalize(this, Normalizer.Form.NFD)
+        .replace("\\p{Mn}+".toRegex(), "")
+}
 
 internal suspend fun FlixHQApi.getMediaId(
     film: Film
@@ -19,18 +21,17 @@ internal suspend fun FlixHQApi.getMediaId(
 
         while (id == null) {
             if (i > maxPage) {
-                return ""
+                return null
             }
 
             val searchResponse = search(
-                query = film.title,
+                query = film.title.removeAccents(),
                 page = i,
                 filmType = film.filmType
             )
 
             if (searchResponse.results.isEmpty())
-                return ""
-
+                return null
 
             for (result in searchResponse.results) {
                 if (result.tmdbId == film.id) {
@@ -73,7 +74,6 @@ internal suspend fun FlixHQApi.getMediaId(
             if (searchResponse.hasNextPage) {
                 i++
             } else if (id.isNullOrEmpty()) {
-                id = ""
                 break
             }
         }
