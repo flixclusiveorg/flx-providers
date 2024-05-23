@@ -3,7 +3,6 @@ package com.flxProviders.flixhq.api
 import android.content.Context
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
@@ -17,20 +16,16 @@ import com.flixclusive.provider.extractor.Extractor
 import com.flixclusive.provider.util.FlixclusiveWebView
 import com.flixclusive.provider.util.TvShowCacheData
 import com.flixclusive.provider.util.WebViewCallback
-import com.flxProviders.flixhq.extractors.vidcloud.VidCloud
-import com.flxProviders.flixhq.api.dto.FlixHQInitialSourceData
 import com.flxProviders.flixhq.api.util.getEpisodeId
 import com.flxProviders.flixhq.api.util.getSeasonId
 import com.flxProviders.flixhq.api.util.getServerName
 import com.flxProviders.flixhq.api.util.getServerUrl
 import com.flxProviders.flixhq.api.util.replaceWhitespaces
 import com.flxProviders.flixhq.api.util.toSearchResultItem
+import com.flxProviders.flixhq.extractors.vidcloud.VidCloud
 import com.flxProviders.flixhq.webview.FlixHQWebView
 import okhttp3.OkHttpClient
 import org.jsoup.Jsoup
-import java.lang.IllegalStateException
-import java.net.URL
-import java.net.URLDecoder
 
 @Suppress("SpellCheckingInspection")
 class FlixHQApi(
@@ -147,7 +142,7 @@ class FlixHQApi(
         )
     }
 
-    private fun getEpisodeId(
+    internal fun getEpisodeId(
         filmId: String,
         episode: Int,
         season: Int,
@@ -186,10 +181,10 @@ class FlixHQApi(
         val seasons = tvCacheData.seasons!!
 
         if (seasons.size < season)
-            throw Exception("Season $season is not available")
+            throw Exception("Season $season is not available.")
 
         val seasonId =
-            seasons.getSeasonId(season) ?: throw Exception("Season $season is not available")
+            seasons.getSeasonId(season) ?: throw Exception("Season $season could not be found!")
 
         val responseEpisodes = client.request(url = ajaxReqUrl(seasonId, false)).execute()
         val dataEpisodes = responseEpisodes.body?.string()
