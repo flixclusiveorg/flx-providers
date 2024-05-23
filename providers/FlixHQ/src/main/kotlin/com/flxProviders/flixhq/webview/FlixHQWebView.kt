@@ -103,7 +103,7 @@ class FlixHQWebView(
     }
 
     override suspend fun startScraping() {
-        safeCall {
+        try {
             val filmId = withContext(ioDispatcher) {
                 api.getMediaId(film = filmToScrape)
             } ?: return callback.updateDialogState(SourceDataState.Unavailable())
@@ -172,8 +172,12 @@ class FlixHQWebView(
             }
 
             return callback.onSuccess(episodeData)
+        } catch (e: Exception) {
+            return callback.updateDialogState(
+                SourceDataState.Error(
+                    UiText.StringValue("Something went wrong with FlixHQ: ${e.localizedMessage}")
+                )
+            )
         }
-
-        return callback.onError()
     }
 }
