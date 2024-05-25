@@ -12,7 +12,6 @@ import android.webkit.WebViewClient
 import com.flixclusive.core.util.R
 import com.flixclusive.core.util.common.ui.UiText
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.network.USER_AGENT
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
@@ -112,8 +111,6 @@ class FlixHQWebView(
                 api.getMediaId(film = filmToScrape)
             } ?: return callback.updateDialogState(SourceDataState.Unavailable())
 
-            debugLog(filmId)
-
             val (episodeId, servers) = withContext(ioDispatcher) {
                 api.getEpisodeIdAndServers(
                     filmId = filmId,
@@ -125,8 +122,6 @@ class FlixHQWebView(
             servers.forEach { server ->
                 val fetchServerSourceUrl =
                     "${api.baseUrl}/ajax/episode/sources/${server.url.split('.').last()}"
-
-                debugLog("episodeId = $episodeId")
 
                 val serverResponse = withContext(ioDispatcher) {
                     mClient.request(url = fetchServerSourceUrl).execute()
@@ -158,7 +153,7 @@ class FlixHQWebView(
                         }
 
                         if (key == null)
-                            return callback.updateDialogState(SourceDataState.Unavailable(UiText.StringValue("Can't find decryption key!")))
+                            return callback.updateDialogState(SourceDataState.Error(UiText.StringValue("Can't find decryption key!")))
 
                         api.supportedExtractors.forEach { extractor ->
                             if (extractor.name == server.name) {
