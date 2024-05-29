@@ -22,6 +22,32 @@
         "name": "FlixHQ"
     },
     {
+        "iconUrl": "https://i.imgur.com/dBgb2CR.png",
+        "repositoryUrl": "https://github.com/Flixclusive/flx-providers",
+        "providerType": {
+            "type": "Movies, TV Shows, etc."
+        },
+        "status": "Working",
+        "language": {
+            "languageCode": "Multiple"
+        },
+        "authors": [
+            {
+                "githubLink": "https://github.com/rhenwinch",
+                "name": "rhenwinch"
+            },
+            {
+                "githubLink": "https://github.com/sussy-code",
+                "name": "sussy-code"
+            }
+        ],
+        "versionCode": 10000,
+        "description": "A forked clone of the old movie-web.",
+        "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/Sudo-Flix.flx",
+        "versionName": "1.0.0",
+        "name": "Sudo-Flix"
+    },
+    {
         "iconUrl": "https://i.imgur.com/KgMakl9.png",
         "repositoryUrl": "https://github.com/Flixclusive/flx-providers",
         "providerType": {
