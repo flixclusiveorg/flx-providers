@@ -6,7 +6,7 @@ import com.flixclusive.model.tmdb.TvShow
 import com.flxProviders.flixhq.api.FlixHQApi
 import java.text.Normalizer
 
-private fun String.removeAccents(): String {
+internal fun String.removeAccents(): String {
     return Normalizer.normalize(this, Normalizer.Form.NFD)
         .replace("\\p{Mn}+".toRegex(), "")
 }
@@ -25,9 +25,8 @@ internal suspend fun FlixHQApi.getMediaId(
             }
 
             val searchResponse = search(
-                query = film.title.removeAccents(),
-                page = i,
-                filmType = film.filmType
+                film = film,
+                page = i
             )
 
             if (searchResponse.results.isEmpty())

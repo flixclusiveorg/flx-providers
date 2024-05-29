@@ -6,6 +6,7 @@ import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
+import com.flixclusive.model.tmdb.Film
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.dto.FilmInfo
 import com.flixclusive.provider.dto.SearchResults
@@ -23,6 +24,8 @@ import com.flxProviders.superstream.api.util.SuperStreamUtil.getExpiryDate
 import com.flxProviders.superstream.api.util.SuperStreamUtil.raiseOnError
 import com.flxProviders.superstream.api.util.superStreamCall
 import okhttp3.OkHttpClient
+import com.flixclusive.model.tmdb.Movie
+import com.flixclusive.model.tmdb.TvShow
 
 /**
  *
@@ -73,14 +76,15 @@ class SuperStreamApi(
 
     /**
      * Obtains source links for the provided film, season, and episode.
-     * @param filmId The ID of the film.
-     * @param season The season number. Defaults to null if the film is a movie.
+     * @param filmId The ID of the film. The ID must come from the [search] method.
+     * @param film The [Film] object of the film. It could either be a [Movie] or [TvShow].
      * @param episode The episode number. Defaults to null if the film is a movie.
      * @param onLinkLoaded A callback function invoked when a [SourceLink] is loaded.
      * @param onSubtitleLoaded A callback function invoked when a [Subtitle] is loaded.
      */
     override suspend fun getSourceLinks(
         filmId: String,
+        film: Film,
         season: Int?,
         episode: Int?,
         onLinkLoaded: (SourceLink) -> Unit,
@@ -166,20 +170,18 @@ class SuperStreamApi(
 
     /**
      * Performs a search for films based on the provided query.
-     * @param query The search query.
+     * @param film The [Film] object of the film. It could either be a [Movie] or [TvShow].
      * @param page The page number for paginated results. Defaults to 1.
-     * @param filmType The type of film being searched for.
      * @return a [SearchResults] instance containing the search results.
      */
     override suspend fun search(
-        query: String,
+        film: Film,
         page: Int,
-        filmType: FilmType
     ): SearchResults {
         val itemsPerPage = 20
         val apiQuery =
             // Originally 8 pagelimit
-            """{"childmode":"0","app_version":"$appVersion","appid":"$appIdSecond","module":"Search4","channel":"Website","page":"$page","lang":"en","type":"all","keyword":"$query","pagelimit":"$itemsPerPage","expired_date":"${getExpiryDate()}","platform":"android"}"""
+            """{"childmode":"0","app_version":"$appVersion","appid":"$appIdSecond","module":"Search4","channel":"Website","page":"$page","lang":"en","type":"all","keyword":"${film.title}","pagelimit":"$itemsPerPage","expired_date":"${getExpiryDate()}","platform":"android"}"""
 
         val response = client.superStreamCall<SuperStreamSearchResponse>(apiQuery, true)
 

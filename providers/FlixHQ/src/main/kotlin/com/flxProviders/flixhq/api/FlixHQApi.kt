@@ -24,6 +24,7 @@ import com.flxProviders.flixhq.api.util.replaceWhitespaces
 import com.flxProviders.flixhq.api.util.toSearchResultItem
 import com.flxProviders.flixhq.extractors.vidcloud.VidCloud
 import com.flxProviders.flixhq.webview.FlixHQWebView
+import com.flxProviders.flixhq.webview.util.removeAccents
 import okhttp3.OkHttpClient
 import org.jsoup.Jsoup
 
@@ -43,10 +44,11 @@ class FlixHQApi(
     private var tvCacheData: TvShowCacheData = TvShowCacheData()
 
     override suspend fun search(
-        query: String,
-        page: Int,
-        filmType: FilmType
+        film: Film,
+        page: Int
     ): SearchResults {
+        val query = film.title.removeAccents()
+
         var searchResult = SearchResults(page, false, listOf())
 
         client.request(
@@ -120,6 +122,7 @@ class FlixHQApi(
 
     override suspend fun getSourceLinks(
         filmId: String,
+        film: Film,
         season: Int?,
         episode: Int?,
         onLinkLoaded: (SourceLink) -> Unit,
