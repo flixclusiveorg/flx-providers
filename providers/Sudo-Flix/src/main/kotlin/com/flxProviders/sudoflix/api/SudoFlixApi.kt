@@ -1,7 +1,7 @@
 package com.flxProviders.sudoflix.api
 
-import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
@@ -12,8 +12,8 @@ import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.dto.FilmInfo
 import com.flixclusive.provider.dto.SearchResultItem
 import com.flixclusive.provider.dto.SearchResults
-import com.flixclusive.provider.util.TvShowCacheData
 import com.flxProviders.sudoflix.api.nsbx.NsbxApi
+import com.flxProviders.sudoflix.api.ridomovies.RidoMoviesApi
 import okhttp3.OkHttpClient
 
 /**
@@ -32,8 +32,9 @@ class SudoFlixApi(
     override val name: String
         get() = "Sudo-Flix"
 
-    private val providersList = listOf<ProviderApi>(
-        NsbxApi(client)
+    private val providersList = listOf(
+        NsbxApi(client),
+        RidoMoviesApi(client),
     )
 
     /**
@@ -63,16 +64,30 @@ class SudoFlixApi(
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
-        providersList.mapAsync {
-            it.getSourceLinks(
-                filmId = filmId,
-                film = film,
-                season = season,
-                episode = episode,
-                onLinkLoaded = onLinkLoaded,
-                onSubtitleLoaded = onSubtitleLoaded
-            )
+        var resultsLoaded = 0
+
+        fun _onLinkLoaded(link: SourceLink) {
+            resultsLoaded++
+            onLinkLoaded(link)
         }
+
+        providersList.mapAsync {
+            safeCall {
+                it.getSourceLinks(
+                    filmId = filmId,
+                    film = film,
+                    season = season,
+                    episode = episode,
+                    onLinkLoaded = { link ->
+                        _onLinkLoaded(link)
+                    },
+                    onSubtitleLoaded = onSubtitleLoaded
+                )
+            }
+        }
+
+        if (resultsLoaded == 0)
+            throw Exception("Sudo-Flix returned no results")
     }
 
     /**

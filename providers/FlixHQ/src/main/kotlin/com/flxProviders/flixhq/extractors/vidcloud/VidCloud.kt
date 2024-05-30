@@ -4,9 +4,7 @@ import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.coroutines.mapIndexedAsync
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.network.CryptographyUtil.decryptAes
-import com.flixclusive.core.util.network.USER_AGENT
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.SourceLink

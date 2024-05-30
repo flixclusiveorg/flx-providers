@@ -1,6 +1,5 @@
 package com.flxProviders.flixhq.extractors.vidcloud.dto
 
-import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource

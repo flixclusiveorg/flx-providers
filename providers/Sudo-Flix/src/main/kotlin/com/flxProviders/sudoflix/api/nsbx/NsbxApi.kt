@@ -4,7 +4,6 @@ import android.net.Uri
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
