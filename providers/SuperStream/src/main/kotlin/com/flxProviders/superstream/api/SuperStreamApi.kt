@@ -181,7 +181,7 @@ class SuperStreamApi(
         val itemsPerPage = 20
         val apiQuery =
             // Originally 8 pagelimit
-            """{"childmode":"0","app_version":"$appVersion","appid":"$appIdSecond","module":"Search4","channel":"Website","page":"$page","lang":"en","type":"all","keyword":"${film.title}","pagelimit":"$itemsPerPage","expired_date":"${getExpiryDate()}","platform":"android"}"""
+            """{"childmode":"0","app_version":"$appVersion","appid":"$appIdSecond","module":"Search5","channel":"Website","page":"$page","lang":"en","type":"all","keyword":"${film.title}","pagelimit":"$itemsPerPage","expired_date":"${getExpiryDate()}","platform":"android"}"""
 
         val response = client.superStreamCall<SuperStreamSearchResponse>(apiQuery, true)
 

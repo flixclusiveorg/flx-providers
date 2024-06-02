@@ -1,17 +1,16 @@
 package com.flxProviders.superstream.api.util
 
+import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.CryptographyUtil.base64Encode
 import com.flixclusive.core.util.network.HttpMethod
 import com.flixclusive.core.util.network.formRequest
 import com.flixclusive.core.util.network.fromJson
-import com.flixclusive.core.util.network.request
-import com.flxProviders.superstream.api.util.Constants.apiUrl
+import com.flxProviders.superstream.BuildConfig
 import com.flxProviders.superstream.api.util.Constants.appKey
 import com.flxProviders.superstream.api.util.Constants.appVersionCode
 import com.flxProviders.superstream.api.util.Constants.headers
 import com.flxProviders.superstream.api.util.Constants.iv
 import com.flxProviders.superstream.api.util.Constants.key
-import com.flxProviders.superstream.api.util.Constants.secondApiUrl
 import com.flxProviders.superstream.api.util.SuperStreamUtil.randomToken
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
@@ -31,13 +30,11 @@ internal inline fun <reified T : Any> OkHttpClient.superStreamCall(
         "appid" to "27",
         "platform" to "android",
         "version" to appVersionCode,
-        // Probably best to randomize this
-        "medium" to "Website",
-        "token" to randomToken()
+        "medium" to "Website&token${randomToken()}"
     )
 
     val errorMessage = "Failed to fetch SuperStream API"
-    val url = if (useAlternativeApi) secondApiUrl else apiUrl
+    val url = if (useAlternativeApi) BuildConfig.SUPERSTREAM_SECOND_API else BuildConfig.SUPERSTREAM_FIRST_API
     val response = this.formRequest(
         url = url,
         method = HttpMethod.POST,
@@ -53,7 +50,10 @@ internal inline fun <reified T : Any> OkHttpClient.superStreamCall(
             other = """"msg":"success""",
             ignoreCase = true
         ).not()
-    ) throw Exception(errorMessage + " [${response.code} - ${response.message}]")
+    ) {
+        errorLog("SuperStream call response body: $responseBody")
+        throw Exception(errorMessage + " [${response.code} - ${response.message}]")
+    }
 
     if (response.isSuccessful && responseBody.isNotBlank())
         return fromJson(responseBody)

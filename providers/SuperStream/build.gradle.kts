@@ -1,6 +1,19 @@
 import com.flixclusive.gradle.entities.Language
 import com.flixclusive.gradle.entities.ProviderType
 import com.flixclusive.gradle.entities.Status
+import org.jetbrains.kotlin.konan.properties.Properties
+
+android {
+    defaultConfig {
+        val properties = Properties()
+        properties.load(project.rootProject.file("local.properties").inputStream())
+
+        buildConfigField("String", "SUPERSTREAM_FIRST_API", "\"${properties.getProperty("SUPERSTREAM_FIRST_API")}\"")
+        buildConfigField("String", "SUPERSTREAM_SECOND_API", "\"${properties.getProperty("SUPERSTREAM_SECOND_API")}\"")
+        buildConfigField("String", "SUPERSTREAM_THIRD_API", "\"${properties.getProperty("SUPERSTREAM_THIRD_API")}\"")
+        buildConfigField("String", "SUPERSTREAM_FOURTH_API", "\"${properties.getProperty("SUPERSTREAM_FOURTH_API")}\"")
+    }
+}
 
 flixclusive {
     description.set("""
@@ -27,6 +40,6 @@ flixclusive {
 
     providerType.set(ProviderType.All)
 
-    status.set(Status.Beta)
+    status.set(Status.Working)
 }
 
