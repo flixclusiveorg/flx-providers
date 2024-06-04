@@ -5,14 +5,9 @@ import com.flxProviders.superstream.api.util.SuperStreamUtil
 import com.google.gson.annotations.SerializedName
 
 internal data class SuperStreamSearchResponse(
-    val code: String? = null,
-    val msg: String? = null,
-    val data: SuperStreamSearchResponseDataContent = SuperStreamSearchResponseDataContent()
+    @SerializedName("data") val results: List<SuperStreamSearchItem>,
+    val total: Int = 0,
 ) {
-    data class SuperStreamSearchResponseDataContent(
-        @SerializedName("list") val results: List<SuperStreamSearchItem> = listOf(),
-        val total: Int = 0,
-    )
     data class SuperStreamSearchItem(
         val id: Int? = null,
         @SerializedName("box_type") val boxType: Int? = null,

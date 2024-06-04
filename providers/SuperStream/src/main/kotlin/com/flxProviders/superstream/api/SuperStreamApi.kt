@@ -1,31 +1,28 @@
 package com.flxProviders.superstream.api
 
 import com.flixclusive.core.util.coroutines.asyncCalls
-import com.flixclusive.core.util.coroutines.mapAsync
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.model.provider.SubtitleSource
 import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.tmdb.Movie
+import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.dto.FilmInfo
 import com.flixclusive.provider.dto.SearchResults
 import com.flixclusive.provider.util.TvShowCacheData
-import com.flxProviders.superstream.api.dto.SuperStreamDownloadResponse
 import com.flxProviders.superstream.api.dto.SuperStreamMediaDetailResponse
 import com.flxProviders.superstream.api.dto.SuperStreamMediaDetailResponse.Companion.toMediaInfo
 import com.flxProviders.superstream.api.dto.SuperStreamSearchResponse
 import com.flxProviders.superstream.api.dto.SuperStreamSearchResponse.SuperStreamSearchItem.Companion.toSearchResultItem
-import com.flxProviders.superstream.api.dto.SuperStreamSubtitleResponse
-import com.flxProviders.superstream.api.dto.SuperStreamSubtitleResponse.SuperStreamSubtitleItem.Companion.toValidSubtitleFilePath
 import com.flxProviders.superstream.api.util.Constants.appIdSecond
-import com.flxProviders.superstream.api.util.Constants.appVersion
+import com.flxProviders.superstream.api.util.Constants.APP_VERSION
+import com.flxProviders.superstream.api.util.SuperStreamUtil.SSMediaType.Companion.fromFilmType
 import com.flxProviders.superstream.api.util.SuperStreamUtil.getExpiryDate
 import com.flxProviders.superstream.api.util.SuperStreamUtil.raiseOnError
 import com.flxProviders.superstream.api.util.superStreamCall
 import okhttp3.OkHttpClient
-import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.TvShow
 
 /**
  *
@@ -59,9 +56,9 @@ class SuperStreamApi(
             return tvCacheData.filmInfo!!
 
         val apiQuery = if (filmType == FilmType.MOVIE) {
-            """{"childmode":"0","uid":"","app_version":"$appVersion","appid":"$appIdSecond","module":"Movie_detail","channel":"Website","mid":"$filmId","lang":"en","expired_date":"${getExpiryDate()}","platform":"android","oss":"","group":""}"""
+            """{"childmode":"0","uid":"","app_version":"$APP_VERSION","appid":"$appIdSecond","module":"Movie_detail","channel":"Website","mid":"$filmId","lang":"en","expired_date":"${getExpiryDate()}","platform":"android","oss":"","group":""}"""
         } else {
-            """{"childmode":"0","uid":"","app_version":"$appVersion","appid":"$appIdSecond","module":"TV_detail_1","display_all":"1","channel":"Website","lang":"en","expired_date":"${getExpiryDate()}","platform":"android","tid":"$filmId"}"""
+            """{"childmode":"0","uid":"","app_version":"$APP_VERSION","appid":"$appIdSecond","module":"TV_detail_1","display_all":"1","channel":"Website","lang":"en","expired_date":"${getExpiryDate()}","platform":"android","tid":"$filmId"}"""
         }
 
         val data = client.superStreamCall<SuperStreamMediaDetailResponse>(apiQuery)
@@ -90,82 +87,52 @@ class SuperStreamApi(
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
-        val isMovie = season == null && episode == null
+        var linksLoadedCount = 0
+        var error: Throwable? = null
 
-        val tvShowInfo = if(season != null) {
-            getFilmInfo(filmId, FilmType.TV_SHOW)
-        } else null
-
-        val seasonToUse = if(
-            tvShowInfo?.seasons != null
-            && tvShowInfo.episodes != null
-            && tvShowInfo.seasons!! <= season!!
-            && tvShowInfo.episodes!! >= episode!!
-        ) {
-            tvShowInfo.seasons
-        } else season
-
-        val query = if (isMovie) {
-            """{"childmode":"0","uid":"","app_version":"$appVersion","appid":"$appIdSecond","module":"Movie_downloadurl_v3","channel":"Website","mid":"$filmId","lang":"en","expired_date":"${getExpiryDate()}","platform":"android","oss":"1","group":""}"""
-        } else {
-            """{"childmode":"0","app_version":"$appVersion","module":"TV_downloadurl_v3","channel":"Website","episode":"$episode","expired_date":"${getExpiryDate()}","platform":"android","tid":"$filmId","oss":"1","uid":"","appid":"$appIdSecond","season":"$seasonToUse","lang":"en","group":""}"""
+        fun loadLinksWithCounter(sourceLink: SourceLink) {
+            linksLoadedCount++
+            onLinkLoaded(sourceLink)
         }
-
-        val downloadResponse = client.superStreamCall<SuperStreamDownloadResponse>(query, false)
-
-        downloadResponse?.msg?.raiseOnError("Failed to fetch source.")
-
-        val data = downloadResponse?.data?.list?.find {
-            it.path.isNullOrBlank().not()
-        } ?: throw Exception("Cannot find source")
-
-        // Should really run this query for every link :(
-        val subtitleQuery = if (isMovie) {
-            """{"childmode":"0","fid":"${data.fid}","uid":"","app_version":"$appVersion","appid":"$appIdSecond","module":"Movie_srt_list_v2","channel":"Website","mid":"$filmId","lang":"en","expired_date":"${getExpiryDate()}","platform":"android"}"""
-        } else {
-            """{"childmode":"0","fid":"${data.fid}","app_version":"$appVersion","module":"TV_srt_list_v2","channel":"Website","episode":"$episode","expired_date":"${getExpiryDate()}","platform":"android","tid":"$filmId","uid":"","appid":"$appIdSecond","season":"$seasonToUse","lang":"en"}"""
-        }
-
-        val subtitlesResponse = client.superStreamCall<SuperStreamSubtitleResponse>(subtitleQuery)
-        subtitlesResponse?.msg?.raiseOnError("Failed to fetch subtitles.")
 
         asyncCalls(
             {
-                subtitlesResponse?.data?.list?.mapAsync { subtitle ->
-                    subtitle.subtitles
-                        .sortedWith(compareByDescending { it.order })
-                        .mapAsync {
-                            if(
-                                it.filePath != null
-                                && it.lang != null
-                            ) {
-                                onSubtitleLoaded(
-                                    Subtitle(
-                                        language = "${it.language ?: "UNKNOWN"} [${it.lang}] - Votes: ${it.order}",
-                                        url = it.filePath.toValidSubtitleFilePath(),
-                                        type = SubtitleSource.ONLINE
-                                    )
-                                )
-                            }
+                try {
+                    client.getSourceLinksFromFourthApi(
+                        filmId = filmId,
+                        filmType = fromFilmType(filmType = film.filmType),
+                        season = season,
+                        episode = episode,
+                        onSubtitleLoaded = onSubtitleLoaded,
+                        onLinkLoaded = {
+                            loadLinksWithCounter(it)
                         }
+                    )
+                } catch (e: Throwable) {
+                    error = e
                 }
             },
             {
-                downloadResponse.data.list.mapAsync {
-                    if(
-                        !it.path.isNullOrBlank()
-                        && !it.realQuality.isNullOrBlank()
-                    ) {
-                        onLinkLoaded(
-                            SourceLink(
-                                name = "${it.realQuality} server",
-                                url = it.path
-                            )
-                        )
-                    }
+                val tvShowInfo = when {
+                    season != null -> getFilmInfo(filmId, film.filmType)
+                    else -> null
                 }
-            }
+
+                client.getSourceLinksFromSecondApi(
+                    filmId = filmId,
+                    season = season,
+                    episode = episode,
+                    tvShowInfo = tvShowInfo,
+                    onSubtitleLoaded = onSubtitleLoaded,
+                    onLinkLoaded = {
+                        loadLinksWithCounter(it)
+                    }
+                )
+            },
         )
+
+        if (linksLoadedCount == 0)
+            throw error ?: IllegalStateException("[SuperStream]> No links loaded.")
     }
 
     /**
@@ -181,18 +148,18 @@ class SuperStreamApi(
         val itemsPerPage = 20
         val apiQuery =
             // Originally 8 pagelimit
-            """{"childmode":"0","app_version":"$appVersion","appid":"$appIdSecond","module":"Search5","channel":"Website","page":"$page","lang":"en","type":"all","keyword":"${film.title}","pagelimit":"$itemsPerPage","expired_date":"${getExpiryDate()}","platform":"android"}"""
+            """{"childmode":"0","app_version":"$APP_VERSION","appid":"$appIdSecond","module":"Search5","channel":"Website","page":"$page","lang":"en","type":"all","keyword":"${film.title}","pagelimit":"$itemsPerPage","expired_date":"${getExpiryDate()}","platform":"android"}"""
 
         val response = client.superStreamCall<SuperStreamSearchResponse>(apiQuery, true)
 
-        val mappedItems = response?.data?.results?.map {
+        val mappedItems = response?.results?.map {
             it.toSearchResultItem()
         } ?: throw NullPointerException("Cannot search on SuperStream")
 
         return SearchResults(
             currentPage = page,
             results = mappedItems,
-            hasNextPage = (page * itemsPerPage) < response.data.total
+            hasNextPage = (page * itemsPerPage) < response.total
         )
     }
 }

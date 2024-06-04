@@ -24,6 +24,6 @@ internal object Constants {
         base64Decode("aW1hZ2VzLnNoZWd1Lm5ldA==")
     )
 
-    const val appVersion = "14.7"
-    const val appVersionCode = "160"
+    const val APP_VERSION = "14.7"
+    const val APP_VERSION_CODE = "160"
 }

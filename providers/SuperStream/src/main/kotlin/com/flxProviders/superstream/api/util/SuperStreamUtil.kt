@@ -17,9 +17,17 @@ internal object SuperStreamUtil {
         Movies(1);
 
         fun toFilmType() = if (this == Series) FilmType.TV_SHOW else FilmType.MOVIE
+
         companion object {
             fun getSSMediaType(value: Int?): SSMediaType {
                 return entries.firstOrNull { it.value == value } ?: Movies
+            }
+
+            fun fromFilmType(filmType: FilmType): SSMediaType {
+                return when (filmType) {
+                    FilmType.TV_SHOW -> Series
+                    FilmType.MOVIE -> Movies
+                }
             }
         }
     }
