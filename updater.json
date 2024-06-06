@@ -53,7 +53,7 @@
         "providerType": {
             "type": "Movies, TV Shows, etc."
         },
-        "status": "Beta",
+        "status": "Working",
         "language": {
             "languageCode": "Multiple"
         },
@@ -63,10 +63,10 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 10000,
+        "versionCode": 11000,
         "description": "NOTICE: This provider doesn't work sometimes, idk why.\n\nA classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/SuperStream.flx",
-        "versionName": "1.0.0",
+        "versionName": "1.1.0",
         "name": "SuperStream"
     }
 ]
