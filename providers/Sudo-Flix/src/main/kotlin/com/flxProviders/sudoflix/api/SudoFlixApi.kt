@@ -38,17 +38,6 @@ class SudoFlixApi(
     )
 
     /**
-     * Retrieves detailed information about a film.
-     * @param filmId The ID of the film.
-     * @param filmType The type of film.
-     * @return a [FilmInfo] instance containing the film's information.
-     */
-    override suspend fun getFilmInfo(
-        filmId: String,
-        filmType: FilmType
-    ): FilmInfo = throw IllegalAccessException("Not necessary to be called on this provider")
-
-    /**
      * Obtains source links for the provided film, season, and episode.
      * @param filmId The ID of the film. The ID must come from the [search] method.
      * @param film The [Film] object of the film. It could either be a [Movie] or [TvShow].

@@ -35,13 +35,6 @@ internal class NsbxApi(
         "Referer" to origin,
     ).toHeaders()
 
-    private val defaultMethodError = IllegalAccessException("This method is not necessary to be called for NsbxApi")
-
-    override suspend fun getFilmInfo(
-        filmId: String,
-        filmType: FilmType
-    ): FilmInfo = throw defaultMethodError
-
     override suspend fun getSourceLinks(
         filmId: String,
         film: Film,
@@ -68,11 +61,11 @@ internal class NsbxApi(
                     url = "$baseUrl/search?provider=$provider&query=${Uri.encode(query)}",
                     headers = headers,
                 ).execute().body?.string()
-                    ?: throw IllegalStateException("Could not search for film [NsbxApi]")
+                    ?: throw IllegalStateException("[NSBX]> Could not search for film")
 
                 val searchResponse = fromJson<Map<String, String>>(searchRawResponse)
                 val encryptedSourceId = searchResponse["url"]
-                    ?: throw IllegalStateException("Could not get encrypted source id [NsbxApi]")
+                    ?: throw IllegalStateException("[NSBX]> Could not get encrypted source id")
 
                 val source = client.request(
                     url = "$baseUrl/provider?resourceId=$encryptedSourceId&provider=$provider",
@@ -83,7 +76,7 @@ internal class NsbxApi(
 
                         if (!it.isSuccessful || stringResponse == null || stringResponse.contains("\"error\"")) {
                             errorLog(stringResponse ?: "Unknown NSBX Error")
-                            throw IllegalStateException("Could not get source link [NsbxApi]")
+                            throw IllegalStateException("[NSBX]> Could not get source link")
                         }
 
                         fromJson<NsbxSource>(stringResponse)
@@ -92,10 +85,6 @@ internal class NsbxApi(
                 asyncCalls(
                     {
                         source.stream.mapAsync {
-                            if (it.qualities.entries == null) {
-                                throw IllegalStateException("Could not get mp4s [NsbxApi]")
-                            }
-
                             it.qualities.entries.mapAsync { (serverName, qualitySource) ->
                                 onLinkLoaded(
                                     SourceLink(
@@ -131,20 +120,15 @@ internal class NsbxApi(
             }
         }
 
-        throw IllegalStateException("Could not get source link [NsbxApi]")
+        throw IllegalStateException("[NSBX]> Could not get source link")
     }
-
-    override suspend fun search(
-        film: Film,
-        page: Int,
-    ): SearchResults = throw defaultMethodError
 
     private fun getAvailableProviders(): List<String> {
         val response = client.request(
             url = "$baseUrl/status",
             headers = headers
         ).execute().body?.string()
-            ?: throw NullPointerException("Could not get available providers [NsbxApi]")
+            ?: throw NullPointerException("[NSBX]> Could not get available providers")
 
         return fromJson<NsbxProviders>(response).providers
     }
@@ -164,7 +148,7 @@ internal class NsbxApi(
 
         val response = client.request(tmdbQuery)
             .execute().body?.string()
-            ?: throw NullPointerException("Could not get TMDB ID [NsbxApi]")
+            ?: throw NullPointerException("[NSBX]> Could not get TMDB ID")
 
         val tmdbResponse = fromJson<TmdbQueryDto>(response)
 
