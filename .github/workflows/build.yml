@@ -41,7 +41,7 @@ jobs:
           SUPERSTREAM_SECOND_API: ${{ secrets.SUPERSTREAM_SECOND_API }}
           SUPERSTREAM_THIRD_API: ${{ secrets.SUPERSTREAM_THIRD_API }}
           SUPERSTREAM_FOURTH_API: ${{ secrets.SUPERSTREAM_FOURTH_API }}
-        run:
+        run: |
           cd $GITHUB_WORKSPACE/src
           echo SUPERSTREAM_FIRST_API=$SUPERSTREAM_FIRST_API >> local.properties
           echo SUPERSTREAM_SECOND_API=$SUPERSTREAM_SECOND_API >> local.properties
@@ -64,4 +64,43 @@ jobs:
           git config --local user.name "GitHub Actions"
           git add .
           git commit -m "Build $GITHUB_SHA" || exit 0   # do not error if nothing to commit
+          git push
+
+      - name: Update README.md with library statuses
+        run: |
+          cd $GITHUB_WORKSPACE/src
+          find providers -name 'build.gradle.kts' | while read -r file; do
+          lib_name=$(basename "$(dirname "$file")")
+          status=$(grep -oP 'status\.set\((Status\.)?\K[^\)]+' "$file")
+          
+          case $status in
+          Status.Working|Working) status_emoji="🟢 OK";;
+          Status.Beta|Beta) status_emoji="🔵 BETA";;
+          Status.Maintenance|Maintenance) status_emoji="🟡 MAINTENANCE";;
+          Status.Down|Down) status_emoji="🔴 DOWN";;
+          *) status_emoji="❓ UNKNOWN";;
+          esac
+          
+          echo "| $lib_name | $status_emoji |" >> status_table.md
+          done
+          
+          echo -e "| Name          | Status    |\n| :-----------  | :-------  |" | cat - status_table.md > updated_table.md
+          
+          if grep -q '| Name          | Status    |' README.md; then
+          sed -i '/| Name          | Status    |/,$d' README.md
+          fi
+          
+          echo "#### List of available providers:" >> README.md
+          cat updated_table.md >> README.md
+          
+          # Clean up
+          rm status_table.md updated_table.md
+
+      - name: Push updated README.md
+        run: |
+          cd $GITHUB_WORKSPACE/src
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add .
+          git commit -m "docs: update README.md [$GITHUB_SHA]" || exit 0   # do not error if nothing to commit
           git push
