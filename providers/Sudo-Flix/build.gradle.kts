@@ -8,7 +8,7 @@ flixclusive {
     """.trimIndent())
 
     versionMajor = 1
-    versionMinor = 0
+    versionMinor = 1
     versionPatch = 0
     versionBuild = 0
 
