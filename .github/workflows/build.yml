@@ -90,10 +90,12 @@ jobs:
           sed -i '/| Name          | Status    |/,$d' README.md
           fi
           
-          echo "#### List of available providers:" >> README.md
+          line="#### List of available providers:"
+          if ! grep -Fxq "$line" README.md
+          then echo -e "\n$line" >> README.md
+          fi
           cat updated_table.md >> README.md
           
-          # Clean up
           rm status_table.md updated_table.md
 
       - name: Push updated README.md
