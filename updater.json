@@ -41,10 +41,10 @@
                 "name": "sussy-code"
             }
         ],
-        "versionCode": 10000,
+        "versionCode": 11000,
         "description": "A forked clone of the old movie-web.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/Sudo-Flix.flx",
-        "versionName": "1.0.0",
+        "versionName": "1.1.0",
         "name": "Sudo-Flix"
     },
     {
