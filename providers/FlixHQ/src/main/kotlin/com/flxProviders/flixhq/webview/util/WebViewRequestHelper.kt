@@ -11,6 +11,10 @@ internal fun String.removeAccents(): String {
         .replace("\\p{Mn}+".toRegex(), "")
 }
 
+internal fun String.toReferer(): String {
+    return replaceFirst("^(movie|tv)/".toRegex(), "/watch-$1/")
+}
+
 internal suspend fun FlixHQApi.getMediaId(
     film: Film
 ): String? {

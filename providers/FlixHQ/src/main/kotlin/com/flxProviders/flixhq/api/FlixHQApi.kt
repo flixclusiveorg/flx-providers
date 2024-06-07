@@ -32,14 +32,9 @@ import org.jsoup.Jsoup
 class FlixHQApi(
     client: OkHttpClient
 ) : ProviderApi(client) {
-    public override val baseUrl: String = "https://flixhq.to"
+    override val baseUrl: String = "https://flixhq.to"
     override val name: String = "FlixHQ"
     override val useWebView = true
-
-    public override val supportedExtractors: List<Extractor> = listOf(
-        VidCloud(client = client)
-        //"mixdrop",
-    )
 
     private var tvCacheData: TvShowCacheData = TvShowCacheData()
 
@@ -213,7 +208,7 @@ class FlixHQApi(
         filmId: String,
         episode: Int?,
         season: Int?,
-    ): Pair<String, List<SourceLink>> {
+    ): Pair<String, List<Pair<String, String>>> {
         val isTvShow = season != null && episode != null
 
         val episodeId = if (isTvShow) {
@@ -237,22 +232,10 @@ class FlixHQApi(
 
         val doc = Jsoup.parse(data)
         return episodeId to doc.select(".nav > li")
-            .filter { element ->
-                val serverName = element.select("a").getServerName(filmId)
-
-                supportedExtractors.find {
-                    it.name == serverName || it.alternateNames.contains(
-                        serverName
-                    )
-                } != null
-            }
             .mapAsync { element ->
                 val anchorElement = element.select("a")
 
-                SourceLink(
-                    name = anchorElement.getServerName(filmId),
-                    url = anchorElement.getServerUrl(baseUrl, filmId)
-                )
+                anchorElement.getServerName(filmId) to anchorElement.getServerUrl(baseUrl, filmId)
             }
     }
 }

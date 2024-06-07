@@ -41,7 +41,7 @@ class VidCloud(
         onSubtitleLoaded: (Subtitle) -> Unit,
     ) {
         if (key.e4Key.isEmpty() || key.kId.isEmpty() || key.kVersion.isEmpty() || key.browserVersion.isEmpty()) {
-            throw Exception("FlixHQ key not set. Go to FlixHQ settings and get the keys!")
+            throw Exception("Key has not been set!")
         }
 
         val id = url.path.split('/').last().split('?').first()
@@ -56,8 +56,7 @@ class VidCloud(
             headers = options,
         ).execute()
 
-        val responseBody = response.body
-            ?.string()
+        val responseBody = response.body?.string()
             ?: throw Exception("Cannot fetch source")
 
         if(responseBody.isBlank())
@@ -74,7 +73,7 @@ class VidCloud(
 
         vidCloudEmbedData.run {
             if (sources.isEmpty()) {
-                return@run
+                throw Exception("Sources are empty!")
             }
 
             onLinkLoaded(
