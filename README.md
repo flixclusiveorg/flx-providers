@@ -3,5 +3,5 @@
 | Name          | Status    |
 | :-----------  | :-------  |
 | SuperStream | 🟢 OK |
-| FlixHQ | 🟢 OK |
+| FlixHQ | 🟡 MAINTENANCE |
 | Sudo-Flix | 🟢 OK |
