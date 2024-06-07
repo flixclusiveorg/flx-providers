@@ -1,7 +1,6 @@
 package com.flxProviders.superstream.api
 
 import com.flixclusive.core.util.coroutines.asyncCalls
-import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
@@ -16,8 +15,8 @@ import com.flxProviders.superstream.api.dto.SuperStreamMediaDetailResponse
 import com.flxProviders.superstream.api.dto.SuperStreamMediaDetailResponse.Companion.toMediaInfo
 import com.flxProviders.superstream.api.dto.SuperStreamSearchResponse
 import com.flxProviders.superstream.api.dto.SuperStreamSearchResponse.SuperStreamSearchItem.Companion.toSearchResultItem
-import com.flxProviders.superstream.api.util.Constants.appIdSecond
 import com.flxProviders.superstream.api.util.Constants.APP_VERSION
+import com.flxProviders.superstream.api.util.Constants.appIdSecond
 import com.flxProviders.superstream.api.util.SuperStreamUtil.SSMediaType.Companion.fromFilmType
 import com.flxProviders.superstream.api.util.SuperStreamUtil.getExpiryDate
 import com.flxProviders.superstream.api.util.SuperStreamUtil.raiseOnError
@@ -90,11 +89,6 @@ class SuperStreamApi(
         var linksLoadedCount = 0
         var error: Throwable? = null
 
-        fun loadLinksWithCounter(sourceLink: SourceLink) {
-            linksLoadedCount++
-            onLinkLoaded(sourceLink)
-        }
-
         asyncCalls(
             {
                 try {
@@ -105,7 +99,8 @@ class SuperStreamApi(
                         episode = episode,
                         onSubtitleLoaded = onSubtitleLoaded,
                         onLinkLoaded = {
-                            loadLinksWithCounter(it)
+                            linksLoadedCount++
+                            onLinkLoaded(it)
                         }
                     )
                 } catch (e: Throwable) {
@@ -125,7 +120,8 @@ class SuperStreamApi(
                     tvShowInfo = tvShowInfo,
                     onSubtitleLoaded = onSubtitleLoaded,
                     onLinkLoaded = {
-                        loadLinksWithCounter(it)
+                        linksLoadedCount++
+                        onLinkLoaded(it)
                     }
                 )
             },

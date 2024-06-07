@@ -1,14 +1,12 @@
 package com.flxProviders.superstream.api.util
 
-import com.flixclusive.core.util.log.debugLog
-import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.CryptographyUtil.base64Encode
 import com.flixclusive.core.util.network.HttpMethod
 import com.flixclusive.core.util.network.formRequest
 import com.flixclusive.core.util.network.fromJson
 import com.flxProviders.superstream.BuildConfig
-import com.flxProviders.superstream.api.util.Constants.appKey
 import com.flxProviders.superstream.api.util.Constants.APP_VERSION_CODE
+import com.flxProviders.superstream.api.util.Constants.appKey
 import com.flxProviders.superstream.api.util.Constants.headers
 import com.flxProviders.superstream.api.util.Constants.iv
 import com.flxProviders.superstream.api.util.Constants.key

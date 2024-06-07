@@ -3,7 +3,6 @@ package com.flxProviders.sudoflix.api.ridomovies.util
 import com.flixclusive.core.util.coroutines.mapIndexedAsync
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.SourceLink
-import okhttp3.Headers
 import okhttp3.OkHttpClient
 
 internal suspend fun extractQualitiesAndLinks(

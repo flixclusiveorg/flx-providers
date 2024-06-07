@@ -12,9 +12,6 @@ import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.provider.ProviderApi
-import com.flixclusive.provider.dto.FilmInfo
-import com.flixclusive.provider.dto.SearchResults
-import com.flxProviders.sudoflix.api.nsbx.NsbxConstant.REFERER_URL
 import com.flxProviders.sudoflix.api.nsbx.dto.NsbxProviders
 import com.flxProviders.sudoflix.api.nsbx.dto.NsbxSource
 import com.flxProviders.sudoflix.api.util.TmdbQueryDto
@@ -30,7 +27,7 @@ internal class NsbxApi(
     override val name: String
         get() = "NSBX"
 
-    private val origin = REFERER_URL
+    private val origin = "https://extension.works.again.with.nsbx"
     private val headers = mapOf(
         "Origin" to origin,
         "Referer" to origin,

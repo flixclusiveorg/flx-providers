@@ -9,7 +9,7 @@ import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
 import com.flixclusive.provider.extractor.Extractor
 import com.flxProviders.sudoflix.api.ridomovies.RidoMoviesConstant.RIDO_MOVIES_BASE_URL
-import com.flxProviders.sudoflix.api.ridomovies.util.JsUnpacker
+import com.flxProviders.sudoflix.api.util.JsUnpacker
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 import java.net.URL

@@ -1,7 +1,6 @@
-package com.flxProviders.sudoflix.api.ridomovies.util
+package com.flxProviders.sudoflix.api.util
 
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.log.errorLog
 import java.util.regex.Pattern
 import kotlin.math.pow
 
