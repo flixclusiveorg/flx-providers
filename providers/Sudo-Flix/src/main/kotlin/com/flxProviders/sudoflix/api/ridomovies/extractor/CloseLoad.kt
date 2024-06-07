@@ -58,22 +58,22 @@ internal class CloseLoad(
 
         val packedScript = htmlCode.selectFirst("script:containsData(function(p,a,c,k,e,d))")
             ?.data()
-            ?: throw IllegalStateException("Could not find eval script [$name]")
+            ?: throw IllegalStateException("[$name]> Could not find eval script")
 
         val unpacked = JsUnpacker(packedScript).unpack()
-            ?: throw NullPointerException("Unable to find source url [$name]")
+            ?: throw NullPointerException("[$name]> Unable to find source url")
 
         val regexPattern = """var\s+(\w+)\s*=\s*"([^"]+)";""".toRegex()
         val matchResult = regexPattern.find(unpacked)
         val base64EncodedUrl = matchResult?.groups?.get(2)?.value
-            ?: throw NullPointerException("Unable to find source url [$name]")
+            ?: throw NullPointerException("[$name]> Unable to find source url")
 
         val sourceUrl = CryptographyUtil.base64Decode(base64EncodedUrl)
 
         onLinkLoaded(
             SourceLink(
                 url = sourceUrl,
-                name = "$name: HLS 800p"
+                name = "[$name]> HLS"
             )
         )
     }

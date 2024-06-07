@@ -16,13 +16,6 @@ import com.flxProviders.sudoflix.api.nsbx.NsbxApi
 import com.flxProviders.sudoflix.api.ridomovies.RidoMoviesApi
 import okhttp3.OkHttpClient
 
-/**
- *
- * SuperStream = SS
- *
- * Based from [this](https://codeberg.org/cloudstream/cloudstream-extensions/src/branch/master/SuperStream/src/main/kotlin/com/lagradost/SuperStream.kt)
- *
- * */
 class SudoFlixApi(
     client: OkHttpClient
 ) : ProviderApi(client) {
@@ -91,7 +84,12 @@ class SudoFlixApi(
     ): SearchResults {
         return SearchResults(
             currentPage = 1,
-            results = listOf(SearchResultItem(id = film.id.toString(), tmdbId = film.id)),
+            results = listOf(
+                SearchResultItem(
+                    id = film.id.toString(),
+                    tmdbId = film.id
+                )
+            ),
             hasNextPage = false
         )
     }

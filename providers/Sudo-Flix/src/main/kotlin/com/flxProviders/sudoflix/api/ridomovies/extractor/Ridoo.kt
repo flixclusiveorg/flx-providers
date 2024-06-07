@@ -32,7 +32,7 @@ internal class Ridoo(
         ).execute()
 
         if (!response.isSuccessful || response.body == null) {
-            throw IllegalStateException("Failed to fetch page [$name]")
+            throw IllegalStateException("[$name]> Failed to fetch page")
         }
 
         val responseString = response.body!!.string()
@@ -40,12 +40,12 @@ internal class Ridoo(
         val regexPattern = """file:"([^"]+)"""".toRegex()
         val matchResult = regexPattern.find(responseString)
         val sourceUrl = matchResult?.groups?.get(1)?.value
-            ?: throw Exception("Unable to find source url [$name]")
+            ?: throw Exception("[$name]> Unable to find source url")
 
         onLinkLoaded(
             SourceLink(
                 url = sourceUrl,
-                name = "$name: HLS Auto"
+                name = "[$name]> HLS Auto"
             )
         )
     }

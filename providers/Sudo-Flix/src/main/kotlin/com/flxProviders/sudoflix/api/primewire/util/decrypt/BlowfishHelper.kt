@@ -7,9 +7,5 @@ fun getLinks(encryptedInput: String): List<String> {
     val decryptedData = cipher.decrypt(cipher.base64(data))
         .chunked(5)  // This splits the string into chunks of size 5
 
-    if (decryptedData.isEmpty()) {
-        throw IllegalArgumentException("No links found")
-    } else {
-        return decryptedData
-    }
+    return decryptedData
 }

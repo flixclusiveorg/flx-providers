@@ -14,10 +14,11 @@ import com.flixclusive.model.tmdb.Film
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.dto.FilmInfo
 import com.flixclusive.provider.dto.SearchResults
+import com.flxProviders.sudoflix.api.nsbx.NsbxConstant.REFERER_URL
 import com.flxProviders.sudoflix.api.nsbx.dto.NsbxProviders
 import com.flxProviders.sudoflix.api.nsbx.dto.NsbxSource
-import com.flxProviders.sudoflix.api.nsbx.dto.TmdbQueryDto
-import com.flxProviders.sudoflix.api.nsbx.util.getTmdbQuery
+import com.flxProviders.sudoflix.api.util.TmdbQueryDto
+import com.flxProviders.sudoflix.api.util.getTmdbQuery
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 
@@ -29,7 +30,7 @@ internal class NsbxApi(
     override val name: String
         get() = "NSBX"
 
-    private val origin = "https://extension.works.again.with.nsbx"
+    private val origin = REFERER_URL
     private val headers = mapOf(
         "Origin" to origin,
         "Referer" to origin,
@@ -61,11 +62,11 @@ internal class NsbxApi(
                     url = "$baseUrl/search?provider=$provider&query=${Uri.encode(query)}",
                     headers = headers,
                 ).execute().body?.string()
-                    ?: throw IllegalStateException("[NSBX]> Could not search for film")
+                    ?: throw IllegalStateException("[$name]> Could not search for film")
 
                 val searchResponse = fromJson<Map<String, String>>(searchRawResponse)
                 val encryptedSourceId = searchResponse["url"]
-                    ?: throw IllegalStateException("[NSBX]> Could not get encrypted source id")
+                    ?: throw IllegalStateException("[$name]> Could not get encrypted source id")
 
                 val source = client.request(
                     url = "$baseUrl/provider?resourceId=$encryptedSourceId&provider=$provider",
@@ -76,7 +77,7 @@ internal class NsbxApi(
 
                         if (!it.isSuccessful || stringResponse == null || stringResponse.contains("\"error\"")) {
                             errorLog(stringResponse ?: "Unknown NSBX Error")
-                            throw IllegalStateException("[NSBX]> Could not get source link")
+                            throw IllegalStateException("[$name]> Could not get source link")
                         }
 
                         fromJson<NsbxSource>(stringResponse)
@@ -120,7 +121,7 @@ internal class NsbxApi(
             }
         }
 
-        throw IllegalStateException("[NSBX]> Could not get source link")
+        throw IllegalStateException("[$name]> Could not get source link")
     }
 
     private fun getAvailableProviders(): List<String> {
@@ -128,7 +129,7 @@ internal class NsbxApi(
             url = "$baseUrl/status",
             headers = headers
         ).execute().body?.string()
-            ?: throw NullPointerException("[NSBX]> Could not get available providers")
+            ?: throw NullPointerException("[$name]> Could not get available providers")
 
         return fromJson<NsbxProviders>(response).providers
     }
@@ -148,7 +149,7 @@ internal class NsbxApi(
 
         val response = client.request(tmdbQuery)
             .execute().body?.string()
-            ?: throw NullPointerException("[NSBX]> Could not get TMDB ID")
+            ?: throw NullPointerException("[$name]> Could not get IMDb ID")
 
         val tmdbResponse = fromJson<TmdbQueryDto>(response)
 

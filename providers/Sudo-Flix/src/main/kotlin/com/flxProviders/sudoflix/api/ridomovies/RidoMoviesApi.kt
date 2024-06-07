@@ -102,13 +102,13 @@ class RidoMoviesApi(
                 val stringResponse = it.body?.string()
 
                 if (!it.isSuccessful || stringResponse == null) {
-                    throw IllegalStateException("Could not get full slug [RidoMoviesApi]")
+                    throw IllegalStateException("[$name]> Could not get full slug")
                 }
 
                 fromJson<RidoMoviesSearchDto>(stringResponse)
             }
 
-        val noSearchResultsException = IllegalStateException("Could not find full slug [RidoMoviesApi]")
+        val noSearchResultsException = IllegalStateException("[$name]> Could not find full slug")
         if (initialResponse.data.items.isEmpty()) {
             throw noSearchResultsException
         }
@@ -142,7 +142,7 @@ class RidoMoviesApi(
                 val responseStr = it.body?.string()
 
                 if (!it.isSuccessful || responseStr == null) {
-                    throw IllegalStateException("Could not get episode ids [RidoMoviesApi]")
+                    throw IllegalStateException("[$name]> Could not get episode ids")
                 }
 
                 regexPattern.findAll(responseStr)
@@ -151,7 +151,7 @@ class RidoMoviesApi(
                     }.toList()
             }
 
-        val noEpisodeIdFoundException = IllegalStateException("Could not find the episode id [RidoMoviesApi]")
+        val noEpisodeIdFoundException = IllegalStateException("[$name]> Could not find the episode id")
         if (episodeIds.isEmpty()) {
             throw noEpisodeIdFoundException
         }
@@ -171,7 +171,7 @@ class RidoMoviesApi(
             .use {
                 val stringResponse = it.body?.string()
 
-                val noEmbedDetailsException = IllegalStateException("Could not get embed details [RidoMoviesApi]")
+                val noEmbedDetailsException = IllegalStateException("[$name]> Could not get embed details")
                 if (!it.isSuccessful || stringResponse == null) {
                     throw noEmbedDetailsException
                 }
