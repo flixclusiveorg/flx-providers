@@ -37,7 +37,7 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 10000,
+        "versionCode": 10001,
         "description": "A flixclusive adapter for Stremio addons. Currently supports streaming addons only; catalogues will not work 'yet'.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/Stremio.flx",
         "versionName": "1.0.0",
