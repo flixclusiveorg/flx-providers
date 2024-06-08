@@ -15,7 +15,7 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 10000,
+        "versionCode": 10001,
         "description": "NOTICE: This provider uses WebView to scrape content. This might lag.\n\nStream seamlessly in adjustable HD resolution (1080p) with blazing-fast loading speeds. Offers HLS media.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/FlixHQ.flx",
         "versionName": "1.0.0",
@@ -41,10 +41,10 @@
                 "name": "sussy-code"
             }
         ],
-        "versionCode": 11000,
+        "versionCode": 11100,
         "description": "A forked clone of the old movie-web.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/Sudo-Flix.flx",
-        "versionName": "1.1.0",
+        "versionName": "1.1.1",
         "name": "Sudo-Flix"
     },
     {
