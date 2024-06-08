@@ -127,7 +127,7 @@ internal fun StreamioScreen(
                     .padding(10.dp)
             ) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -135,7 +135,7 @@ internal fun StreamioScreen(
                         contentDescription = stringResource(UtilR.string.add_provider)
                     )
 
-                    Text(stringResource(UtilR.string.add_provider))
+                    Text("Add stremio addon")
                 }
             }
         }
