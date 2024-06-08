@@ -1,4 +1,4 @@
-package com.flxProviders.flixhq.extractors.vidcloud.dto
+package com.flxProviders.flixhq.extractors.rabbitstream.dto
 
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.model.provider.Subtitle

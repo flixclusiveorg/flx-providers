@@ -13,7 +13,6 @@ import kotlinx.coroutines.test.runTest
 import okhttp3.OkHttpClient
 import org.junit.Before
 import org.junit.Test
-import java.net.URL
 
 class ExtractorsUnitTest {
     private lateinit var client: OkHttpClient
@@ -33,9 +32,7 @@ class ExtractorsUnitTest {
         val extractor = MixDrop(client)
 
         extractor.extract(
-            url = URL(url),
-            mediaId = "",
-            episodeId = "",
+            url = url,
             onLinkLoaded = {},
             onSubtitleLoaded = {}
         )
@@ -47,9 +44,7 @@ class ExtractorsUnitTest {
         val extractor = UpStream(client)
 
         extractor.extract(
-            url = URL(url),
-            mediaId = "",
-            episodeId = "",
+            url = url,
             onLinkLoaded = {},
             onSubtitleLoaded = {}
         )
@@ -61,9 +56,7 @@ class ExtractorsUnitTest {
         val extractor = FileLions(client)
 
         extractor.extract(
-            url = URL(url),
-            mediaId = "",
-            episodeId = "",
+            url = url,
             onLinkLoaded = {},
             onSubtitleLoaded = {}
         )
@@ -75,9 +68,7 @@ class ExtractorsUnitTest {
         val extractor = DoodStream(client)
 
         extractor.extract(
-            url = URL(url),
-            mediaId = "",
-            episodeId = "",
+            url = url,
             onLinkLoaded = {},
             onSubtitleLoaded = {}
         )
@@ -89,9 +80,7 @@ class ExtractorsUnitTest {
         val extractor = DropLoad(client)
 
         extractor.extract(
-            url = URL(url),
-            mediaId = "",
-            episodeId = "",
+            url = url,
             onLinkLoaded = {},
             onSubtitleLoaded = {}
         )
@@ -103,9 +92,7 @@ class ExtractorsUnitTest {
         val extractor = StreamVid(client)
 
         extractor.extract(
-            url = URL(url),
-            mediaId = "",
-            episodeId = "",
+            url = url,
             onLinkLoaded = {},
             onSubtitleLoaded = {}
         )
@@ -117,9 +104,7 @@ class ExtractorsUnitTest {
         val extractor = VTube(client)
 
         extractor.extract(
-            url = URL(url),
-            mediaId = "",
-            episodeId = "",
+            url = url,
             onLinkLoaded = {},
             onSubtitleLoaded = {}
         )
@@ -131,9 +116,7 @@ class ExtractorsUnitTest {
         val extractor = StreamWish(client)
 
         extractor.extract(
-            url = URL(url),
-            mediaId = "",
-            episodeId = "",
+            url = url,
             onLinkLoaded = {},
             onSubtitleLoaded = {}
         )

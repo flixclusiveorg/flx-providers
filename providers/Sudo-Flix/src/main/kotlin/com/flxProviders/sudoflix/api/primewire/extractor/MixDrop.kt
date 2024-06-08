@@ -11,9 +11,9 @@ import okhttp3.OkHttpClient
 import java.net.URL
 
 internal class MixDrop(
-    private val client: OkHttpClient
-) : Extractor() {
-    override val host: String
+    client: OkHttpClient
+) : Extractor(client) {
+    override val baseUrl: String
         get() = "https://mixdrop.ag"
     override val name: String
         get() = "MixDrop"
@@ -22,9 +22,7 @@ internal class MixDrop(
     private val linkRegex = Regex("""MDCore\.wurl="(.*?)";""")
 
     override suspend fun extract(
-        url: URL,
-        mediaId: String,
-        episodeId: String,
+        url: String,
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
@@ -65,10 +63,10 @@ internal class MixDrop(
         )
     }
 
-    private fun getProperMixDropUrl(url: URL): HttpUrl {
-        return if (!url.host.contains("mixdrop")) {
+    private fun getProperMixDropUrl(url: String): HttpUrl {
+        return if (!URL(url).host.contains("mixdrop")) {
             client.request(
-                url = url.toString()
+                url = url
             ).execute()
                 .use {
                     if (!it.isSuccessful) {

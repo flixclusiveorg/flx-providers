@@ -27,7 +27,6 @@ import com.flxProviders.sudoflix.api.util.TmdbQueryDto
 import com.flxProviders.sudoflix.api.util.getTmdbQuery
 import okhttp3.OkHttpClient
 import org.jsoup.nodes.Document
-import java.net.URL
 
 @Suppress("SpellCheckingInspection")
 internal class PrimeWireApi(
@@ -90,9 +89,7 @@ internal class PrimeWireApi(
 
                     safeCall {
                         extractor.extract(
-                            url = URL(url),
-                            mediaId = "",
-                            episodeId = "",
+                            url = url,
                             onLinkLoaded = {
                                 linksLoaded++
                                 onLinkLoaded(it)

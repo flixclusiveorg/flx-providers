@@ -12,7 +12,6 @@ import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.dto.FilmInfo
 import com.flixclusive.provider.dto.SearchResultItem
 import com.flixclusive.provider.dto.SearchResults
-import com.flixclusive.provider.extractor.Extractor
 import com.flixclusive.provider.util.FlixclusiveWebView
 import com.flixclusive.provider.util.TvShowCacheData
 import com.flixclusive.provider.util.WebViewCallback
@@ -22,13 +21,13 @@ import com.flxProviders.flixhq.api.util.getServerName
 import com.flxProviders.flixhq.api.util.getServerUrl
 import com.flxProviders.flixhq.api.util.replaceWhitespaces
 import com.flxProviders.flixhq.api.util.toSearchResultItem
-import com.flxProviders.flixhq.extractors.vidcloud.VidCloud
+import com.flxProviders.flixhq.extractors.rabbitstream.UpCloud
+import com.flxProviders.flixhq.extractors.rabbitstream.VidCloud
 import com.flxProviders.flixhq.webview.FlixHQWebView
 import com.flxProviders.flixhq.webview.util.removeAccents
 import okhttp3.OkHttpClient
 import org.jsoup.Jsoup
 
-@Suppress("SpellCheckingInspection")
 class FlixHQApi(
     client: OkHttpClient
 ) : ProviderApi(client) {
@@ -37,6 +36,12 @@ class FlixHQApi(
     override val useWebView = true
 
     private var tvCacheData: TvShowCacheData = TvShowCacheData()
+
+    @Suppress("SpellCheckingInspection")
+    internal val extractors = mapOf(
+        "vidcloud" to VidCloud(client),
+        "upcloud" to UpCloud(client),
+    )
 
     override suspend fun search(
         film: Film,
@@ -208,7 +213,7 @@ class FlixHQApi(
         filmId: String,
         episode: Int?,
         season: Int?,
-    ): Pair<String, List<Pair<String, String>>> {
+    ): List<Pair<String, String>> {
         val isTvShow = season != null && episode != null
 
         val episodeId = if (isTvShow) {
@@ -231,7 +236,7 @@ class FlixHQApi(
             ?: throw IllegalStateException("No available servers for this film")
 
         val doc = Jsoup.parse(data)
-        return episodeId to doc.select(".nav > li")
+        return doc.select(".nav > li")
             .mapAsync { element ->
                 val anchorElement = element.select("a")
 

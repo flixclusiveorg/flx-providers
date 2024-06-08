@@ -12,12 +12,11 @@ import com.flxProviders.sudoflix.api.ridomovies.RidoMoviesConstant.RIDO_MOVIES_B
 import com.flxProviders.sudoflix.api.util.JsUnpacker
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
-import java.net.URL
 
 internal class CloseLoad(
-    private val client: OkHttpClient
-) : Extractor() {
-    override val host: String
+    client: OkHttpClient
+) : Extractor(client) {
+    override val baseUrl: String
         get() = "https://closeload.top"
     override val name: String
         get() = "CloseLoad"
@@ -27,9 +26,7 @@ internal class CloseLoad(
     ).toHeaders()
 
     override suspend fun extract(
-        url: URL,
-        mediaId: String,
-        episodeId: String,
+        url: String,
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {

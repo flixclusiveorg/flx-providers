@@ -23,8 +23,7 @@ import com.flixclusive.provider.util.FlixclusiveWebView
 import com.flixclusive.provider.util.WebViewCallback
 import com.flxProviders.flixhq.api.FlixHQApi
 import com.flxProviders.flixhq.api.dto.FlixHQInitialSourceData
-import com.flxProviders.flixhq.extractors.vidcloud.VidCloud
-import com.flxProviders.flixhq.extractors.vidcloud.dto.VidCloudKey
+import com.flxProviders.flixhq.extractors.rabbitstream.dto.VidCloudKey
 import com.flxProviders.flixhq.webview.util.getMediaId
 import com.flxProviders.flixhq.webview.util.setup
 import com.flxProviders.flixhq.webview.util.toReferer
@@ -33,9 +32,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
-import java.net.URL
 import java.net.URLDecoder
 
+@Suppress("SpellCheckingInspection")
 internal const val INJECTOR_SCRIPT = "javascript:(function() {  function shift(y) {      return [          (4278190080 & y) >> 24,          (16711680 & y) >> 16,          (65280 & y) >> 8,          255 & y      ];  }  function shiftArray(toShift, shiftNums) {      try {          for (let i = 0; i < toShift.length; i++) {              toShift[i] = toShift[i] ^ shiftNums[i % shiftNums.length];          }      } catch (err) {          return null;      }  }  function checkClipboard() {    try {      var iframeWindow = window;      if (iframeWindow.clipboard) {        clearInterval(pollingInterval);        const browserVersion = iframeWindow.browser_version;        const kId = iframeWindow.localStorage.getItem('kid');        const kVersion = iframeWindow.localStorage.getItem('kversion');        const arrayKeys = new Uint8Array(iframeWindow.clipboard());        shiftArray(arrayKeys, shift(parseInt(kVersion)));        const finalKeys = btoa(String.fromCharCode.apply(null, new Uint8Array(arrayKeys)));        var body = document.body;        body.innerHTML = `<div style='text-align: center;'><h1 style='font-size: 60px; color: white'>Your E4 keys are:</h1><p style='font-weight: bold; font-size: 30px; color: white'>`+finalKeys+`</p><h1 style='font-size: 60px; color: white'>Other details are:</h1><p style='font-weight: bold; font-size: 30px; color: white'>BrowserVersion = `+browserVersion+`</p><br/><p style='font-weight: bold; font-size: 30px; color: white'>ID = `+kId+`</p><br/><p style='font-weight: bold; font-size: 30px; color: white'>Version = `+kVersion+`</p></div>`;                console.log(`{'e4Key': '`+finalKeys+`', 'browserVersion': '`+browserVersion+`', 'kVersion': '`+kVersion+`', 'kId': '`+kId+`'}`);      } else {        setTimeout(checkClipboard, 200);      }    } catch (error) {      setTimeout(checkClipboard, 500);    }  }  var pollingInterval = setInterval(checkClipboard, 500);})();"
 
 @SuppressLint("ViewConstructor")
@@ -101,7 +100,7 @@ class FlixHQWebView(
                 api.getMediaId(film = filmToScrape)
             } ?: return callback.updateDialogState(SourceDataState.Unavailable())
 
-            val (episodeId, servers) = withContext(ioDispatcher) {
+            val servers = withContext(ioDispatcher) {
                 api.getEpisodeIdAndServers(
                     filmId = filmId,
                     episode = episodeData?.episode,
@@ -111,16 +110,14 @@ class FlixHQWebView(
 
             val validServers = servers.filter {
                 it.first.equals("vidcloud", true)
-//                || it.first.equals("upcloud", true)
+                || it.first.equals("upcloud", true)
             }
 
             if (validServers.isEmpty())
                 throw Exception("No valid servers found!")
 
             debugLog("Valid servers: $validServers")
-            val extractor = VidCloud(mClient)
-
-            validServers.mapAsync { (_, serverEmbedUrl) ->
+            validServers.mapAsync { (serverName, serverEmbedUrl) ->
                 val initialSourceData = withContext(ioDispatcher) {
                     mClient.request(url = "${api.baseUrl}/ajax/episode/sources/${serverEmbedUrl.split('.').last()}").execute().body?.string()
                 } ?: throw Exception("Can't find decryption key!")
@@ -139,12 +136,13 @@ class FlixHQWebView(
                     filmId = filmId
                 )
 
+                val extractor = api.extractors[serverName.lowercase()]
+                    ?: throw Exception("Extractor not found!")
+
                 withContext(ioDispatcher) {
                     extractor.key = key!!
                     extractor.extract(
-                        url = URL(serverUrl),
-                        mediaId = filmId,
-                        episodeId = episodeId,
+                        url = serverUrl,
                         onLinkLoaded = callback::onLinkLoaded,
                         onSubtitleLoaded = callback::onSubtitleLoaded
                     )

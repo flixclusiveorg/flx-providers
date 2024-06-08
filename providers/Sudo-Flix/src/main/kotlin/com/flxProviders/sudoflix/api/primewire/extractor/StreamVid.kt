@@ -6,12 +6,11 @@ import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.provider.extractor.Extractor
 import com.flxProviders.sudoflix.api.util.JsUnpacker
 import okhttp3.OkHttpClient
-import java.net.URL
 
 internal class StreamVid(
-    private val client: OkHttpClient
-) : Extractor() {
-    override val host: String
+    client: OkHttpClient
+) : Extractor(client) {
+    override val baseUrl: String
         get() = "https://streamvid.net"
     override val name: String
         get() = "StreamVid"
@@ -20,16 +19,12 @@ internal class StreamVid(
     private val linkRegex = Regex("""src:"(https://[^"]+)"""")
 
     override suspend fun extract(
-        url: URL,
-        mediaId: String,
-        episodeId: String,
+        url: String,
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
-        val streamPage = client.request(
-            url = url.toString()
-        ).execute()
-            .body?.string()
+        val streamPage = client.request(url = url)
+            .execute().body?.string()
             ?: throw Exception("[$name]> Failed to load page")
 
         val packed = packedRegex.find(streamPage)

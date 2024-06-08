@@ -12,15 +12,15 @@ import java.net.URL
 import kotlin.random.Random
 
 internal class UpStream(
-    private val client: OkHttpClient
-) : Extractor() {
-    override val host: String
+    client: OkHttpClient
+) : Extractor(client) {
+    override val baseUrl: String
         get() = "https://upstream.to"
     override val name: String
         get() = "Upstream"
 
-    val packedRegex = Regex("""(eval\(function\(p,a,c,k,e,d\).*\)\)\))""")
-    val linkRegex = Regex("""sources:\[\{file:"(.*?)"""")
+    private val packedRegex = Regex("""(eval\(function\(p,a,c,k,e,d\).*\)\)\))""")
+    private val linkRegex = Regex("""sources:\[\{file:"(.*?)"""")
 
     private fun getRandomUserAgent(): String {
         val osPlatforms = listOf(
@@ -57,13 +57,11 @@ internal class UpStream(
     }
 
     override suspend fun extract(
-        url: URL,
-        mediaId: String,
-        episodeId: String,
+        url: String,
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
-        val embedUrl = getEmbedUrl(url = url)
+        val embedUrl = getEmbedUrl(url = URL(url))
 
         val streamPage = client.request(
             url = embedUrl,
@@ -98,7 +96,7 @@ internal class UpStream(
             !url.host.contains("upstream", true) -> {
                 val redirectedUrl = getRedirectedUrl(
                     client = client,
-                    url = url
+                    url = url.toString()
                 )
                 getEmbedUrl(URL(redirectedUrl))
             }

@@ -7,25 +7,22 @@ import com.flixclusive.provider.extractor.Extractor
 import com.flxProviders.sudoflix.api.ridomovies.RidoMoviesConstant.RIDO_MOVIES_BASE_URL
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
-import java.net.URL
 
 internal class Ridoo(
-    private val client: OkHttpClient
-) : Extractor() {
-    override val host: String
+    client: OkHttpClient
+) : Extractor(client) {
+    override val baseUrl: String
         get() = "https://ridoo.net"
     override val name: String
         get() = "Ridoo"
 
     override suspend fun extract(
-        url: URL,
-        mediaId: String,
-        episodeId: String,
+        url: String,
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
         val response = client.request(
-            url = url.toString(),
+            url = url,
             headers = mapOf(
                 "Referer" to "$RIDO_MOVIES_BASE_URL/"
             ).toHeaders()

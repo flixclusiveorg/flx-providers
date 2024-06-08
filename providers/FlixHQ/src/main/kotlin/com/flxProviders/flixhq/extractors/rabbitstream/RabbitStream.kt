@@ -1,4 +1,4 @@
-package com.flxProviders.flixhq.extractors.vidcloud
+package com.flxProviders.flixhq.extractors.rabbitstream
 
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
@@ -10,33 +10,33 @@ import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.provider.extractor.Extractor
-import com.flxProviders.flixhq.extractors.vidcloud.dto.DecryptedSource
-import com.flxProviders.flixhq.extractors.vidcloud.dto.VidCloudEmbedData
-import com.flxProviders.flixhq.extractors.vidcloud.dto.VidCloudEmbedData.Companion.toSubtitle
-import com.flxProviders.flixhq.extractors.vidcloud.dto.VidCloudEmbedDataCustomDeserializer
-import com.flxProviders.flixhq.extractors.vidcloud.dto.VidCloudKey
+import com.flxProviders.flixhq.extractors.rabbitstream.dto.DecryptedSource
+import com.flxProviders.flixhq.extractors.rabbitstream.dto.VidCloudEmbedData
+import com.flxProviders.flixhq.extractors.rabbitstream.dto.VidCloudEmbedData.Companion.toSubtitle
+import com.flxProviders.flixhq.extractors.rabbitstream.dto.VidCloudEmbedDataCustomDeserializer
+import com.flxProviders.flixhq.extractors.rabbitstream.dto.VidCloudKey
 import okhttp3.Headers
 import okhttp3.OkHttpClient
 import java.net.URL
 
-/**
- *
- * Also known as vidcloud
- * */
-class VidCloud(
-    private val client: OkHttpClient,
-) : Extractor() {
-    override val name: String = "upcloud"
-    override val alternateNames: List<String>
-        get() = listOf("vidcloud")
-    override val host: String = "https://rabbitstream.net"
+internal class VidCloud(client: OkHttpClient): RabbitStream(client) {
+    override val name = "VidCloud"
+}
+internal class UpCloud(client: OkHttpClient): RabbitStream(client) {
+    override val name = "UpCloud"
+}
+
+
+internal open class RabbitStream(
+    client: OkHttpClient,
+) : Extractor(client) {
+    override val name: String = "RabbitStream"
+    override val baseUrl: String = "https://rabbitstream.net"
 
     var key = VidCloudKey()
 
     override suspend fun extract(
-        url: URL,
-        mediaId: String,
-        episodeId: String,
+        url: String,
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit,
     ) {
@@ -44,13 +44,13 @@ class VidCloud(
             throw Exception("Key has not been set!")
         }
 
-        val id = url.path.split('/').last().split('?').first()
+        val id = URL(url).path.split('/').last().split('?').first()
         val options = Headers.Builder()
             .add("X-Requested-With", "XMLHttpRequest")
-            .add("Referer", url.toString())
+            .add("Referer", url)
             .build()
 
-        val sourceEndpoint = "$host/ajax/v2/embed-4/getSources?id=$id&v=${key.kVersion}&h=${key.kId}&b=${key.browserVersion}"
+        val sourceEndpoint = "$baseUrl/ajax/v2/embed-4/getSources?id=$id&v=${key.kVersion}&h=${key.kId}&b=${key.browserVersion}"
         val response = client.request(
             url = sourceEndpoint,
             headers = options,

@@ -3,13 +3,12 @@ package com.flxProviders.sudoflix.api.primewire.util
 import com.flixclusive.core.util.network.request
 import com.flixclusive.provider.extractor.Extractor
 import okhttp3.OkHttpClient
-import java.net.URL
 
 internal fun Extractor.getRedirectedUrl(
     client: OkHttpClient,
-    url: URL,
+    url: String,
 ): String {
-    return client.request(url = url.toString())
+    return client.request(url = url)
         .execute()
         .use {
             val redirectedUrl = it.request.url

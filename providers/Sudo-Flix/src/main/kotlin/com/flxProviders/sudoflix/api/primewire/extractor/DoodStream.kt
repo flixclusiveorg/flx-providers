@@ -11,9 +11,9 @@ import java.net.URL
 import kotlin.random.Random
 
 internal class DoodStream(
-    private val client: OkHttpClient
-) : Extractor() {
-    override val host: String
+    client: OkHttpClient
+) : Extractor(client) {
+    override val baseUrl: String
         get() = "https://dood.re"
     override val name: String
         get() = "DoodStream"
@@ -22,9 +22,7 @@ internal class DoodStream(
     private val pathRegex = Regex("""\$.get\('/pass_md5([^']+)""")
 
     override suspend fun extract(
-        url: URL,
-        mediaId: String,
-        episodeId: String,
+        url: String,
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
@@ -65,21 +63,24 @@ internal class DoodStream(
         onLinkLoaded(
             SourceLink(
                 url = downloadUrl,
-                name = name
+                name = name,
+                customHeaders = mapOf(
+                    "Referer" to "$baseUrl/"
+                )
             )
         )
     }
 
-    private fun getEmbedUrl(url: URL): URL {
-        return when(url.host.contains("dood", true)) {
+    private fun getEmbedUrl(url: String): URL {
+        return when(URL(url).host.contains("dood", true)) {
             false -> {
                 val redirectedUrl = getRedirectedUrl(
                     client = client,
                     url = url
                 )
-                getEmbedUrl(URL(redirectedUrl))
+                getEmbedUrl(redirectedUrl)
             }
-            else -> url
+            else -> URL(url)
         }
     }
 

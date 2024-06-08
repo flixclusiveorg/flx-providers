@@ -16,7 +16,6 @@ import com.flxProviders.sudoflix.api.ridomovies.extractor.CloseLoad
 import com.flxProviders.sudoflix.api.ridomovies.extractor.Ridoo
 import okhttp3.OkHttpClient
 import org.jsoup.Jsoup
-import java.net.URL
 
 class RidoMoviesApi(
     client: OkHttpClient
@@ -66,18 +65,14 @@ class RidoMoviesApi(
         when {
             embedUrl.contains("closeload") -> {
                 closeLoad.extract(
-                    url = URL(embedUrl),
-                    mediaId = fullSlug,
-                    episodeId = episodeId,
+                    url = embedUrl,
                     onLinkLoaded = onLinkLoaded,
                     onSubtitleLoaded = onSubtitleLoaded
                 )
             }
             embedUrl.contains("ridoo") -> {
                 ridoo.extract(
-                    url = URL(embedUrl),
-                    mediaId = fullSlug,
-                    episodeId = episodeId,
+                    url = embedUrl,
                     onLinkLoaded = onLinkLoaded,
                     onSubtitleLoaded = onSubtitleLoaded
                 )
