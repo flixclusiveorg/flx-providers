@@ -22,6 +22,28 @@
         "name": "FlixHQ"
     },
     {
+        "iconUrl": "https://i.imgur.com/Hoq93zL.png",
+        "repositoryUrl": "https://github.com/Flixclusive/flx-providers",
+        "providerType": {
+            "type": "Movies, TV Shows, etc."
+        },
+        "status": "Beta",
+        "language": {
+            "languageCode": "Multiple"
+        },
+        "authors": [
+            {
+                "githubLink": "https://github.com/rhenwinch",
+                "name": "rhenwinch"
+            }
+        ],
+        "versionCode": 10000,
+        "description": "A flixclusive adapter for Stremio addons. Currently supports streaming addons only; catalogues will not work 'yet'.",
+        "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/Stremio.flx",
+        "versionName": "1.0.0",
+        "name": "Stremio"
+    },
+    {
         "iconUrl": "https://i.imgur.com/dBgb2CR.png",
         "repositoryUrl": "https://github.com/Flixclusive/flx-providers",
         "providerType": {
