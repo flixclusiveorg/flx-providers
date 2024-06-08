@@ -4,6 +4,7 @@ include(
     "SuperStream",
     "FlixHQ",
     "Sudo-Flix",
+    "Stremio",
 )
 
 rootProject.children.forEach {
