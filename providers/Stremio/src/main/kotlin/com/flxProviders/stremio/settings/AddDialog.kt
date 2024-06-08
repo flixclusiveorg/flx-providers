@@ -77,9 +77,13 @@ internal fun AddDialog(
     val buttonMinHeight = 60.dp
 
     var textFieldValue by remember {
-        val text = clipboardManager.getText()
-            ?.text?.let(::parseStremioAddonUrl)
-            ?: ""
+        val text = clipboardManager.getText()?.text
+            ?.let {
+                when {
+                    it.contains("manifest.json") -> parseStremioAddonUrl(it)
+                    else -> ""
+                }
+            } ?: ""
 
         mutableStateOf(text.createTextFieldValue())
     }
