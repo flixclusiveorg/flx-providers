@@ -228,7 +228,7 @@ internal fun AddDialog(
                         ),
                         shape = MaterialTheme.shapes.medium,
                         modifier = Modifier
-                            .weight(1F)
+                            .weight(weight = 1F, fill = true)
                             .heightIn(min = buttonMinHeight)
                             .padding(5.dp)
                     ) {
@@ -249,7 +249,7 @@ internal fun AddDialog(
                         ),
                         shape = MaterialTheme.shapes.medium,
                         modifier = Modifier
-                            .weight(1F)
+                            .weight(weight = 1F, fill = true)
                             .heightIn(min = buttonMinHeight)
                             .padding(5.dp)
                     ) {
