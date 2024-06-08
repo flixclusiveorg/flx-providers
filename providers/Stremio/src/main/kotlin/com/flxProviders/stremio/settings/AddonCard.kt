@@ -49,7 +49,7 @@ internal fun AddonCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .weight(1F)
+                    .weight(weight = 1F, fill = true)
                     .padding(3.dp)
             ) {
                 ImageWithSmallPlaceholder(

@@ -76,7 +76,10 @@ internal fun StreamioScreen(
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        item {
+                        item(
+                            key = null,
+                            contentType = null
+                        ) {
                             Text(
                                 text = "Addons ヾ(⌐■_■)ノ♪",
                                 textAlign = TextAlign.Center,
@@ -88,7 +91,11 @@ internal fun StreamioScreen(
                                     .padding(8.dp)
                             )
                         }
-                        items(addons) {
+                        items(
+                            items = addons,
+                            key = null,
+                            contentType = { null }
+                        ) {
                             AddonCard(
                                 addon = it,
                                 onRemove = {

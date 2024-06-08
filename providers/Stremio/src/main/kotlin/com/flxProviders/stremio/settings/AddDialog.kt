@@ -165,7 +165,7 @@ internal fun AddDialog(
                         },
                         keyboardActions = KeyboardActions(
                             onGo = {
-                                focusManager.clearFocus()
+                                focusManager.clearFocus(force = false)
                                 keyboardController?.hide()
 
                                 if(textFieldValue.text.isEmpty()) {
@@ -218,7 +218,7 @@ internal fun AddDialog(
                             }
 
                             keyboardController?.hide()
-                            focusManager.clearFocus()
+                            focusManager.clearFocus(force = false)
 
                             onAdd(textFieldValue.text)
                         },
