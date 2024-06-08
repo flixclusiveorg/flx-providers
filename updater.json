@@ -15,7 +15,7 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 10001,
+        "versionCode": 10002,
         "description": "NOTICE: This provider uses WebView to scrape content. This might lag.\n\nStream seamlessly in adjustable HD resolution (1080p) with blazing-fast loading speeds. Offers HLS media.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/FlixHQ.flx",
         "versionName": "1.0.0",
@@ -41,7 +41,7 @@
                 "name": "sussy-code"
             }
         ],
-        "versionCode": 11100,
+        "versionCode": 11101,
         "description": "A forked clone of the old movie-web.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/Sudo-Flix.flx",
         "versionName": "1.1.1",
@@ -63,7 +63,7 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 11000,
+        "versionCode": 11001,
         "description": "NOTICE: This provider doesn't work sometimes, idk why.\n\nA classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/SuperStream.flx",
         "versionName": "1.1.0",
