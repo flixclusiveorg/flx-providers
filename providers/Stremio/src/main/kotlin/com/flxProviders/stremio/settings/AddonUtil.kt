@@ -10,14 +10,18 @@ import okhttp3.OkHttpClient
 
 internal object AddonUtil {
     fun parseStremioAddonUrl(url: String): String {
-        val regex = Regex("""(https?://[^/]+)""")
-        val streamioRegex = Regex("""streamio://([^/]+)""")
+        val regex = Regex("""(https?://.+)(?=/+)""")
+        val basicUrlRegex = Regex("""(https?://.+)""")
+        val streamioRegex = Regex("""streamio://(.+)(?=/+)""")
+
+        val stremioRegexUrl = streamioRegex.find(url)?.groupValues?.get(1) ?: ""
 
         return when {
             regex.containsMatchIn(url) -> regex.find(url)?.groupValues?.get(1) ?: ""
-            streamioRegex.containsMatchIn(url) -> "https://${streamioRegex.find(url)?.groupValues?.get(1) ?: ""}"
+            streamioRegex.containsMatchIn(url) -> "https://$stremioRegexUrl"
+            basicUrlRegex.containsMatchIn(url) -> basicUrlRegex.find(url)?.groupValues?.get(1) ?: ""
             else -> ""
-        }.replace("http://", "https://")
+        }
     }
 
 
