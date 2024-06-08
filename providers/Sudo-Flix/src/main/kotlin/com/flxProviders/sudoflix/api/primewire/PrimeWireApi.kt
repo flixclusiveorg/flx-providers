@@ -26,6 +26,7 @@ import com.flxProviders.sudoflix.api.primewire.util.decrypt.getLinks
 import com.flxProviders.sudoflix.api.util.TmdbQueryDto
 import com.flxProviders.sudoflix.api.util.getTmdbQuery
 import okhttp3.OkHttpClient
+import org.jsoup.nodes.Document
 import java.net.URL
 
 @Suppress("SpellCheckingInspection")
@@ -68,6 +69,8 @@ internal class PrimeWireApi(
         val id = getMediaId(imdbId = imdbId)
         val availableServers = getAvailableServers(
             id = id,
+            season = season,
+            episode = episode,
             filmType = film.filmType
         )
 
@@ -139,12 +142,21 @@ internal class PrimeWireApi(
 
     private fun getAvailableServers(
         id: Int,
+        episode: Int?,
+        season: Int?,
         filmType: FilmType
     ): List<Pair<String, String>> {
-        val html = client.request(
+        var html = client.request(
             url = "$baseUrl/${filmType.type}/$id"
         ).execute()
             .asJsoup()
+
+        if (episode != null && season != null) {
+            html = html.getEpisodePageUrl(
+                season = season,
+                episode = episode
+            )
+        }
 
         val encryptedLinks = html.select("#user-data").attr("v")
         val decryptedLinks = getLinks(encryptedLinks)
@@ -166,5 +178,19 @@ internal class PrimeWireApi(
         }
 
         return serverNameAndEmbedLink.toList()
+    }
+
+    private fun Document.getEpisodePageUrl(
+        season: Int,
+        episode: Int,
+    ): Document {
+        val episodeLink = select(".show_season[data-id='${season}'] > div > a")
+            .find {
+                it.attr("href").contains("-episode-$episode", true)
+            }?.attr("href") ?: throw NullPointerException("[$name]> Could not find episode link")
+
+        return client.request(
+            url = "$baseUrl$episodeLink"
+        ).execute().asJsoup()
     }
 }
