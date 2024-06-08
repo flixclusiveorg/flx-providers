@@ -128,6 +128,9 @@ internal class NsbxApi(
         ).execute().body?.string()
             ?: throw NullPointerException("[$name]> Could not get available providers")
 
+        if (response.contains("\"error\""))
+            throw IllegalStateException("[$name]> Internal server error")
+
         return fromJson<NsbxProviders>(response).providers
     }
 
