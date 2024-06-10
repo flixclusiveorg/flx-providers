@@ -12,7 +12,7 @@ internal object AddonUtil {
     fun parseStremioAddonUrl(url: String): String {
         val regex = Regex("""(https?://.+)(?=/+)""")
         val basicUrlRegex = Regex("""(https?://.+)""")
-        val streamioRegex = Regex("""streamio://(.+)(?=/+)""")
+        val streamioRegex = Regex("""stremio://(.+)(?=/+)""")
 
         val stremioRegexUrl = streamioRegex.find(url)?.groupValues?.get(1) ?: ""
 
