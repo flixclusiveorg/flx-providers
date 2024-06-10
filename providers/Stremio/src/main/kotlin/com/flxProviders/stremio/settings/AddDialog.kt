@@ -80,7 +80,7 @@ internal fun AddDialog(
         val text = clipboardManager.getText()?.text
             ?.let {
                 when {
-                    it.contains("manifest.json") -> parseStremioAddonUrl(it)
+                    it.contains("manifest.json") || it.contains("stremio://") -> parseStremioAddonUrl(it)
                     else -> ""
                 }
             } ?: ""
@@ -93,11 +93,12 @@ internal fun AddDialog(
 
     var addJob by remember { mutableStateOf<Job?>(null) }
 
-    fun onAdd(url: String) {
+
+    fun addToAddonList(url: String) {
         if (addJob?.isActive == true) return
 
         addJob = scope.launch {
-            if (url.isBlank()) {
+            if(url.isBlank()) {
                 isError = true
                 return@launch
             }
@@ -106,7 +107,7 @@ internal fun AddDialog(
                 client.getManifest(addonUrl = url)
             }
             if (addon == null) {
-                context.showToast("[Stremio]> Failed to parse addon url [$url]")
+                context.showToast("[Stremio]> Failed to parse addon url [${textFieldValue.text}]")
                 isError = true
                 return@launch
             }
@@ -124,6 +125,23 @@ internal fun AddDialog(
 
             onDismiss()
         }
+    }
+
+    val onClickAdd = onClickAdd@ {
+        var text = textFieldValue.text
+
+        val isDirtyUrl =
+            text.contains("stremio://", true)
+            || text.contains("manifest.json", true)
+
+        if (isDirtyUrl) {
+            text = parseStremioAddonUrl(text)
+        }
+
+        keyboardController?.hide()
+        focusManager.clearFocus(force = false)
+
+        addToAddonList(text)
     }
 
     BasicAlertDialog(
@@ -168,17 +186,7 @@ internal fun AddDialog(
                             textFieldValue = it
                         },
                         keyboardActions = KeyboardActions(
-                            onGo = {
-                                focusManager.clearFocus(force = false)
-                                keyboardController?.hide()
-
-                                if(textFieldValue.text.isEmpty()) {
-                                    isError = true
-                                    return@KeyboardActions
-                                }
-
-                                onAdd(textFieldValue.text)
-                            }
+                            onGo = { onClickAdd() }
                         ),
                         placeholder = {
                             Text(
@@ -212,20 +220,7 @@ internal fun AddDialog(
 
                 Row {
                     Button(
-                        onClick = {
-                            val isDirtyUrl =
-                                textFieldValue.text.contains("stremio://", true)
-                                || textFieldValue.text.contains("manifest.json", true)
-
-                            if (isDirtyUrl) {
-                                textFieldValue = parseStremioAddonUrl(textFieldValue.text).createTextFieldValue()
-                            }
-
-                            keyboardController?.hide()
-                            focusManager.clearFocus(force = false)
-
-                            onAdd(textFieldValue.text)
-                        },
+                        onClick = onClickAdd,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary.onMediumEmphasis(),
                             contentColor = Color.White
