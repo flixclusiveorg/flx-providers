@@ -37,7 +37,7 @@ flixclusive {
     versionMajor = 1
     versionMinor = 0
     versionPatch = 0
-    versionBuild = 2
+    versionBuild = 3
 
     // Extra authors for specific provider
     // author(

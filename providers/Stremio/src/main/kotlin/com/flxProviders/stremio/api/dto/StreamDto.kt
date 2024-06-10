@@ -29,8 +29,20 @@ internal data class StreamDto(
 
             return SourceLink(
                 url = URL(url).toString(),
-                name = name!!
+                name = fixSourceName(name, title)
             )
+        }
+
+        private fun fixSourceName(
+            name: String?,
+            title: String?
+        ): String {
+            return when {
+                name?.contains("[RD+]", true) == true -> "[RD+] $title".trim()
+                name?.contains("[RD download]", true) == true -> "[RD download] $title".trim()
+                !name.isNullOrEmpty() && !title.isNullOrEmpty() -> "$name $title".trim()
+                else -> title ?: name ?: ""
+            }
         }
     }
 }
