@@ -89,18 +89,18 @@ class StremioApi(
 
         val addons = settings.getAddons()
 
-        addons.mapAsync {
+        addons.mapAsync { addon ->
             val streams = safeCall {
                 client.request(
-                    url = "${it.baseUrl}/$slug"
+                    url = "${addon.baseUrl}/$slug"
                 ).execute().fromJson<StreamResponse>().streams
             } ?: return@mapAsync
 
-            streams.forEach {
-                val sourceLink = it.toSourceLink()
+            streams.forEach { stream ->
+                val sourceLink = stream.toSourceLink()
                 if (sourceLink != null) onLinkLoaded(sourceLink)
 
-                it.subtitles?.forEach sub@ { subtitle ->
+                stream.subtitles?.forEach sub@ { subtitle ->
                     val isValidUrl = isValidUrl(subtitle.url)
                     if (!isValidUrl) return@sub
 
