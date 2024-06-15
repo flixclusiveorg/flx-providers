@@ -22,16 +22,17 @@ flixclusive {
     """.trimIndent())
 
     changelog.set("""
-        # v1.2.0 (2024-06-15)
+        # v1.2.0-b1
         
         ### 🔧 Changes:
-        - [x] SuperStream 1 search fixed, _again_.
+        - [x] Migrate to new changes of SuperStream
+        - [x] Fix SuperStream not loading links
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 2
     versionPatch = 0
-    versionBuild = 0
+    versionBuild = 1
 
     iconUrl.set("https://i.imgur.com/KgMakl9.png") // OPTIONAL
 

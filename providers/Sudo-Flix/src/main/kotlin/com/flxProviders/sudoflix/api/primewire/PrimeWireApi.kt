@@ -58,8 +58,6 @@ internal class PrimeWireApi(
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
-        var linksLoaded = 0
-
         val imdbId = getImdbId(
             filmId = filmId,
             filmType = film.filmType
@@ -90,19 +88,13 @@ internal class PrimeWireApi(
                     safeCall {
                         extractor.extract(
                             url = url,
-                            onLinkLoaded = {
-                                linksLoaded++
-                                onLinkLoaded(it)
-                            },
+                            onLinkLoaded = onLinkLoaded,
                             onSubtitleLoaded = onSubtitleLoaded
                         )
                     }
                 }
             },
         )
-
-        if (linksLoaded == 0)
-            throw Exception("[$name]> No links could be loaded")
     }
 
     private fun getImdbId(

@@ -46,17 +46,13 @@ class StremioApi(
             filmType = film.filmType
         )
 
-        var linksLoaded = 0
         asyncCalls(
             {
                 getLinks(
                     imdbId = imdbId,
                     season = season,
                     episode = episode,
-                    onLinkLoaded = {
-                        linksLoaded++
-                        onLinkLoaded(it)
-                    },
+                    onLinkLoaded = onLinkLoaded,
                     onSubtitleLoaded = onSubtitleLoaded
                 )
             },
@@ -69,9 +65,6 @@ class StremioApi(
                 )
             },
         )
-
-        if (linksLoaded == 0)
-            throw Exception("[$name]> No links found")
     }
 
     private suspend fun getLinks(

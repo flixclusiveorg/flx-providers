@@ -50,8 +50,6 @@ class SudoFlixApi(
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
-        var resultsLoaded = 0
-
         providersList.mapAsync {
             safeCall {
                 it.getSourceLinks(
@@ -59,17 +57,11 @@ class SudoFlixApi(
                     film = film,
                     season = season,
                     episode = episode,
-                    onLinkLoaded = {
-                        resultsLoaded++
-                        onLinkLoaded(it)
-                    },
+                    onLinkLoaded = onLinkLoaded,
                     onSubtitleLoaded = onSubtitleLoaded
                 )
             }
         }
-
-        if (resultsLoaded == 0)
-            throw Exception("[$name]> No links could be loaded")
     }
 
     /**
