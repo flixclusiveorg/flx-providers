@@ -1,27 +1,33 @@
 package com.flxProviders.superstream.api
 
 import com.flixclusive.core.util.coroutines.asyncCalls
+import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.film.FilmType
+import com.flixclusive.core.util.network.fromJson
+import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.provider.SubtitleSource
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.provider.ProviderApi
-import com.flixclusive.provider.dto.FilmInfo
+import com.flixclusive.provider.dto.SearchResultItem
 import com.flixclusive.provider.dto.SearchResults
-import com.flixclusive.provider.util.TvShowCacheData
-import com.flxProviders.superstream.api.dto.SuperStreamMediaDetailResponse
-import com.flxProviders.superstream.api.dto.SuperStreamMediaDetailResponse.Companion.toMediaInfo
-import com.flxProviders.superstream.api.dto.SuperStreamSearchResponse
-import com.flxProviders.superstream.api.dto.SuperStreamSearchResponse.SuperStreamSearchItem.Companion.toSearchResultItem
-import com.flxProviders.superstream.api.util.Constants.APP_VERSION
-import com.flxProviders.superstream.api.util.Constants.appIdSecond
-import com.flxProviders.superstream.api.util.SuperStreamUtil.SSMediaType.Companion.fromFilmType
-import com.flxProviders.superstream.api.util.SuperStreamUtil.getExpiryDate
-import com.flxProviders.superstream.api.util.SuperStreamUtil.raiseOnError
-import com.flxProviders.superstream.api.util.superStreamCall
+import com.flxProviders.superstream.BuildConfig
+import com.flxProviders.superstream.api.dto.ExternalResponse
+import com.flxProviders.superstream.api.dto.ExternalSources
+import com.flxProviders.superstream.api.dto.ITEMS_PER_PAGE
+import com.flxProviders.superstream.api.dto.SearchData
+import com.flxProviders.superstream.api.dto.TmdbQueryDto
+import com.flxProviders.superstream.api.util.SuperStreamUtil
+import com.flxProviders.superstream.api.util.SuperStreamUtil.BoxType.Companion.fromFilmType
+import com.flxProviders.superstream.api.util.getTmdbQuery
+import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
+import org.jsoup.Jsoup
+import java.util.Locale
+import kotlin.random.Random
 
 /**
  *
@@ -39,37 +45,6 @@ class SuperStreamApi(
     override val name: String
         get() = "SuperStream"
 
-    private var tvCacheData = TvShowCacheData()
-
-    /**
-     * Retrieves detailed information about a film.
-     * @param filmId The ID of the film.
-     * @param filmType The type of film.
-     * @return a [FilmInfo] instance containing the film's information.
-     */
-    override suspend fun getFilmInfo(
-        filmId: String,
-        filmType: FilmType
-    ): FilmInfo {
-        if (tvCacheData.filmInfo?.id == filmId)
-            return tvCacheData.filmInfo!!
-
-        val apiQuery = if (filmType == FilmType.MOVIE) {
-            """{"childmode":"0","uid":"","app_version":"$APP_VERSION","appid":"$appIdSecond","module":"Movie_detail","channel":"Website","mid":"$filmId","lang":"en","expired_date":"${getExpiryDate()}","platform":"android","oss":"","group":""}"""
-        } else {
-            """{"childmode":"0","uid":"","app_version":"$APP_VERSION","appid":"$appIdSecond","module":"TV_detail_1","display_all":"1","channel":"Website","lang":"en","expired_date":"${getExpiryDate()}","platform":"android","tid":"$filmId"}"""
-        }
-
-        val data = client.superStreamCall<SuperStreamMediaDetailResponse>(apiQuery)
-        data?.msg?.raiseOnError("Failed to fetch movie info.")
-
-
-        val result = data!!.toMediaInfo(filmType == FilmType.MOVIE)
-        tvCacheData = TvShowCacheData(id = filmId, result)
-
-        return result
-    }
-
     /**
      * Obtains source links for the provided film, season, and episode.
      * @param filmId The ID of the film. The ID must come from the [search] method.
@@ -86,49 +61,19 @@ class SuperStreamApi(
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
-        var linksLoadedCount = 0
-        var error: Throwable? = null
-
-        asyncCalls(
-            {
-                try {
-                    client.getSourceLinksFromFourthApi(
-                        filmId = filmId,
-                        filmType = fromFilmType(filmType = film.filmType),
-                        season = season,
-                        episode = episode,
-                        onSubtitleLoaded = onSubtitleLoaded,
-                        onLinkLoaded = {
-                            linksLoadedCount++
-                            onLinkLoaded(it)
-                        }
-                    )
-                } catch (e: Throwable) {
-                    error = e
-                }
-            },
-            {
-                val tvShowInfo = when {
-                    season != null -> getFilmInfo(filmId, film.filmType)
-                    else -> null
-                }
-
-                client.getSourceLinksFromSecondApi(
-                    filmId = filmId,
-                    season = season,
-                    episode = episode,
-                    tvShowInfo = tvShowInfo,
-                    onSubtitleLoaded = onSubtitleLoaded,
-                    onLinkLoaded = {
-                        linksLoadedCount++
-                        onLinkLoaded(it)
-                    }
-                )
-            },
+        val mediaId = getMediaId(
+            tmdbId = filmId,
+            filmType = film.filmType
         )
 
-        if (linksLoadedCount == 0)
-            throw error ?: IllegalStateException("[SuperStream]> No links loaded.")
+        client.getSourceLinksFromFourthApi(
+            filmId = mediaId,
+            filmType = fromFilmType(filmType = film.filmType),
+            season = season,
+            episode = episode,
+            onSubtitleLoaded = onSubtitleLoaded,
+            onLinkLoaded = onLinkLoaded
+        )
     }
 
     /**
@@ -141,21 +86,211 @@ class SuperStreamApi(
         film: Film,
         page: Int,
     ): SearchResults {
-        val itemsPerPage = 20
-        val apiQuery =
-            // Originally 8 pagelimit
-            """{"childmode":"0","app_version":"$APP_VERSION","appid":"$appIdSecond","module":"Search5","channel":"Website","page":"$page","lang":"en","type":"all","keyword":"${film.title}","pagelimit":"$itemsPerPage","expired_date":"${getExpiryDate()}","platform":"android"}"""
-
-        val response = client.superStreamCall<SuperStreamSearchResponse>(apiQuery, true)
-
-        val mappedItems = response?.results?.map {
-            it.toSearchResultItem()
-        } ?: throw NullPointerException("Cannot search on SuperStream")
-
         return SearchResults(
             currentPage = page,
-            results = mappedItems,
-            hasNextPage = (page * itemsPerPage) < response.total
+            results = listOf(
+                SearchResultItem(
+                    id = film.id.toString(),
+                    tmdbId = film.id,
+                )
+            ),
+            hasNextPage = false
         )
+    }
+
+    private fun getMediaId(
+        tmdbId: String,
+        filmType: FilmType
+    ): String {
+        val imdbId = getImdbId(tmdbId, filmType)
+        val apiQuery = String.format(Locale.ROOT, BuildConfig.SUPERSTREAM_THIRD_API, imdbId, ITEMS_PER_PAGE, Random.nextInt(0, Int.MAX_VALUE))
+
+
+        val response = client.request(apiQuery).execute()
+            .fromJson<SearchData>("[$name]> Couldn't search for $tmdbId")
+
+        val id = response.data.results.find {
+            it.imdbId.equals(imdbId, true)
+        }?.id ?: throw Exception("[$name]> Film with ID $imdbId was not found.")
+
+        return id
+    }
+
+    private fun getImdbId(
+        filmId: String,
+        filmType: FilmType
+    ): String {
+        val tmdbQuery = getTmdbQuery(
+            id = filmId,
+            filmType = filmType.type
+        )
+
+        val tmdbResponse = client.request(tmdbQuery)
+            .execute().fromJson<TmdbQueryDto>("[$name]> Could not get TMDB response")
+
+        return tmdbResponse.imdbId
+            ?: tmdbResponse.externalIds["imdb_id"] as String
+    }
+
+    private suspend fun OkHttpClient.getSourceLinksFromFourthApi(
+        filmId: String,
+        filmType: SuperStreamUtil.BoxType,
+        season: Int?,
+        episode: Int?,
+        onSubtitleLoaded: (Subtitle) -> Unit,
+        onLinkLoaded: (SourceLink) -> Unit,
+    ) {
+        val firstAPI = BuildConfig.SUPERSTREAM_FIRST_API
+        val secondAPI = BuildConfig.SUPERSTREAM_SECOND_API
+
+        val (seasonSlug, episodeSlug) = getEpisodeSlug(season, episode)
+        val shareKey = request(
+            url = "$firstAPI/index/share_link?id=${filmId}&type=${filmType.value}"
+        ).execute().use {
+            val string = it.body?.string()
+
+            if (!it.isSuccessful || string == null) {
+                throw Exception("[$name]> Failed to fetch share key.")
+            }
+
+            fromJson<ExternalResponse>(string)
+                .data?.link?.substringAfterLast("/")
+                ?: throw Exception("[$name]> No share key found.")
+        }
+
+        val headers = mapOf("Accept-Language" to "en")
+        val shareRes = request(
+            url = "$secondAPI/file/file_share_list?share_key=$shareKey",
+            headers = headers.toHeaders(),
+        ).execute().use {
+            val string = it.body?.string()
+
+            if (!it.isSuccessful || string == null) {
+                throw Exception("[$name]> Failed to fetch share key.")
+            }
+
+            fromJson<ExternalResponse>(string).data
+                ?: throw Exception("[$name]> No shared resources found.")
+        }
+
+        val fids = if (season == null) {
+            shareRes.fileList
+        } else {
+            val parentId = shareRes.fileList?.find { it.fileName.equals("season $season", true) }?.fid
+
+            val episodesShareRes = request(
+                url = "$secondAPI/file/file_share_list?share_key=$shareKey&parent_id=$parentId&page=1"
+            ).execute().use {
+                val string = it.body?.string()
+
+                if (!it.isSuccessful || string == null) {
+                    throw Exception("[$name]> Failed to fetch share key.")
+                }
+
+                fromJson<ExternalResponse>(string).data
+                    ?: throw Exception("[$name]> No shared resources found.")
+            }
+
+            episodesShareRes.fileList?.filter {
+                it.fileName?.contains("s${seasonSlug}e${episodeSlug}", true) == true
+            }
+        } ?: throw Exception("[$name]> No FIDs found.")
+
+        fids.mapAsync { fileList ->
+            val player = request("$secondAPI/file/player?fid=${fileList.fid}&share_key=$shareKey").execute()
+                .body?.string()
+                ?: return@mapAsync
+
+            val subtitles = Regex("""\$\(".jw-wrapper"\).prepend\('(.*)'\)""")
+                .find(player)
+                ?.groupValues
+                ?.get(1)
+            val sources = Regex("sources\\s*=\\s*(.*);")
+                .find(player)
+                ?.groupValues
+                ?.get(1)
+            val qualities = Regex("quality_list\\s*=\\s*(.*);")
+                .find(player)
+                ?.groupValues
+                ?.get(1)
+
+            asyncCalls(
+                {
+                    if (subtitles == null)
+                        return@asyncCalls
+
+                    val jsoupObject = Jsoup.parse(subtitles)
+
+                    val div = jsoupObject.selectFirst("div.right2") ?: return@asyncCalls
+                    val languages = div.select("ul")
+
+                    languages.forEach { languageElement ->
+                        val language = languageElement.id()
+                        val subtitleLinks = languageElement.select("li")
+
+                        subtitleLinks.forEachIndexed { i, subtitleLink ->
+                            val link = subtitleLink.attr("data-url")
+
+                            val identifier = if (i == 0) "" else "$i"
+
+                            onSubtitleLoaded(
+                                Subtitle(
+                                    language = "$language [$identifier]",
+                                    url = link,
+                                    type = SubtitleSource.ONLINE
+                                )
+                            )
+                        }
+                    }
+
+                },
+                {
+                    listOf(sources, qualities).forEach { item ->
+                        if (item == null)
+                            return@forEach
+
+                        fromJson<List<ExternalSources>>(item)
+                            .forEach org@ { source ->
+
+                                val isNotAutoAndVideo = !source.label.equals("AUTO", true) && !source.type.equals("video/mp4", true)
+
+                                if(isNotAutoAndVideo)
+                                    return@org
+
+                                val url = (source.hlsUrl ?: source.file)
+                                    ?.replace("\\/", "/")
+                                    ?: return@org
+
+                                onLinkLoaded(
+                                    SourceLink(
+                                        name = "[$name]> ${source.label}",
+                                        url = url
+                                    )
+                                )
+                            }
+                    }
+                },
+            )
+        }
+    }
+
+    private fun getEpisodeSlug(
+        season: Int? = null,
+        episode: Int? = null,
+    ): Pair<String, String> {
+        if (season == null && episode == null) {
+            return "" to ""
+        }
+
+        val seasonSlug = when {
+            season!! < 10 -> "0$season"
+            else -> "$season"
+        }
+        val episodeSlug = when {
+            episode!! < 10 -> "0$episode"
+            else -> "$episode"
+        }
+
+        return seasonSlug to episodeSlug
     }
 }

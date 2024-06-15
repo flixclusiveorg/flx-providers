@@ -11,7 +11,6 @@ android {
         buildConfigField("String", "SUPERSTREAM_FIRST_API", "\"${properties.getProperty("SUPERSTREAM_FIRST_API")}\"")
         buildConfigField("String", "SUPERSTREAM_SECOND_API", "\"${properties.getProperty("SUPERSTREAM_SECOND_API")}\"")
         buildConfigField("String", "SUPERSTREAM_THIRD_API", "\"${properties.getProperty("SUPERSTREAM_THIRD_API")}\"")
-        buildConfigField("String", "SUPERSTREAM_FOURTH_API", "\"${properties.getProperty("SUPERSTREAM_FOURTH_API")}\"")
     }
 }
 
@@ -22,17 +21,17 @@ flixclusive {
         A classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.
     """.trimIndent())
 
-    versionMajor = 1
-    versionMinor = 1
-    versionPatch = 0
-    versionBuild = 1
+    changelog.set("""
+        # v1.2.0 (2024-06-15)
+        
+        ### 🔧 Changes:
+        - [x] SuperStream 1 search fixed, _again_.
+    """.trimIndent())
 
-    // Extra authors for specific provider
-    // author(
-    //    name = "...",
-    //    githubLink = "https://github.com/...",
-    // )
-    // ===
+    versionMajor = 1
+    versionMinor = 2
+    versionPatch = 0
+    versionBuild = 0
 
     iconUrl.set("https://i.imgur.com/KgMakl9.png") // OPTIONAL
 
