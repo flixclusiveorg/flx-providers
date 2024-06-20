@@ -88,11 +88,11 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 12002,
+        "versionCode": 12100,
         "description": "NOTICE: This provider doesn't work sometimes, idk why.\n\nA classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/SuperStream.flx",
-        "changelog": "# v1.2.0-b2\n\n### \ud83d\udd27 Changes:\n- [x] Update code to keep up with new app structure for its new catalog system\n- [x] Custom catalogs will be added soon.",
-        "versionName": "1.2.0",
+        "changelog": "# v1.2.1\n\n### \ud83d\udd27 Changes:\n- [x] Fix failed to find shared key issue\n---\n\n# v1.2.0-b2\n\n### \ud83d\udd27 Changes:\n- [x] Update code to keep up with new app structure for its new catalog system\n- [x] Custom catalogs will be added soon.",
+        "versionName": "1.2.1",
         "name": "SuperStream"
     }
 ]
