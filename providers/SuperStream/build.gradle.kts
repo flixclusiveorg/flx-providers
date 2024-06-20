@@ -23,6 +23,12 @@ flxProvider {
     """.trimIndent())
 
     changelog.set("""
+        # v1.2.1
+        
+        ### 🔧 Changes:
+        - [x] Fix failed to find shared key issue
+        ---
+        
         # v1.2.0-b2
         
         ### 🔧 Changes:
@@ -32,8 +38,8 @@ flxProvider {
 
     versionMajor = 1
     versionMinor = 2
-    versionPatch = 0
-    versionBuild = 2
+    versionPatch = 1
+    versionBuild = 0
 
     iconUrl.set("https://i.imgur.com/KgMakl9.png") // OPTIONAL
 

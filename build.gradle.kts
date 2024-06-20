@@ -45,12 +45,17 @@ fun Project.flxProvider(configuration: FlixclusiveProviderExtension.() -> Unit) 
 
 fun Project.android(configuration: BaseExtension.() -> Unit) = extensions.getByName<BaseExtension>("android").configuration()
 
+plugins {
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10" apply false
+}
+
 subprojects {
     apply(plugin = "com.android.library")
     // Remove if using Java
     apply(plugin = "kotlin-android")
 
     apply(plugin = "com.flixclusive.gradle")
+    apply(plugin = "org.jetbrains.kotlin.plugin.serialization")
 
     // Fill out with your info
     flxProvider {
@@ -104,7 +109,6 @@ subprojects {
 
         coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
-
         // ============= START: SCRAPING TOOLS =============
         val okHttpBom = platform("com.squareup.okhttp3:okhttp-bom:4.12.0")
         implementation(okHttpBom)
@@ -118,8 +122,10 @@ subprojects {
         implementation("com.google.code.gson:gson:2.10.1")
         // ============== END: SCRAPING TOOLS =============
 
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
         // ============= START: FOR TESTING ===============
         testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+        testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
         testImplementation("junit:junit:4.13.2")
         testImplementation("io.mockk:mockk:1.13.8")
         // ============== END: FOR TESTING ================

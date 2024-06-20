@@ -7,7 +7,7 @@ import java.util.Locale
 internal object SuperStreamUtil {
 
     enum class BoxType(val value: Int) {
-        Series(value = 1),
+        Series(value = 2),
         Movies(value = 1);
 
         companion object {
