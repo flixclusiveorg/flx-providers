@@ -11,10 +11,11 @@ android {
         buildConfigField("String", "SUPERSTREAM_FIRST_API", "\"${properties.getProperty("SUPERSTREAM_FIRST_API")}\"")
         buildConfigField("String", "SUPERSTREAM_SECOND_API", "\"${properties.getProperty("SUPERSTREAM_SECOND_API")}\"")
         buildConfigField("String", "SUPERSTREAM_THIRD_API", "\"${properties.getProperty("SUPERSTREAM_THIRD_API")}\"")
+        buildConfigField("String", "SUPERSTREAM_FOURTH_API", "\"${properties.getProperty("SUPERSTREAM_FOURTH_API")}\"")
     }
 }
 
-flixclusive {
+flxProvider {
     description.set("""
         NOTICE: This provider doesn't work sometimes, idk why.
         
@@ -22,17 +23,17 @@ flixclusive {
     """.trimIndent())
 
     changelog.set("""
-        # v1.2.0-b1
+        # v1.2.0-b2
         
         ### 🔧 Changes:
-        - [x] Migrate to new changes of SuperStream
-        - [x] Fix SuperStream not loading links
+        - [x] Update code to keep up with new app structure for its new catalog system
+        - [x] Custom catalogs will be added soon.
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 2
     versionPatch = 0
-    versionBuild = 1
+    versionBuild = 2
 
     iconUrl.set("https://i.imgur.com/KgMakl9.png") // OPTIONAL
 

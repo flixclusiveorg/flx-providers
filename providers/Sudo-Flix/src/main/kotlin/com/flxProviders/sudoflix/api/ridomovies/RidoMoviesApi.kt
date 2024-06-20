@@ -6,9 +6,9 @@ import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.tmdb.FilmDetails
+import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.provider.ProviderApi
-import com.flixclusive.provider.dto.FilmInfo
-import com.flixclusive.provider.dto.SearchResults
 import com.flxProviders.sudoflix.api.ridomovies.RidoMoviesConstant.RIDO_MOVIES_BASE_URL
 import com.flxProviders.sudoflix.api.ridomovies.dto.RidoMoviesEmbedDto
 import com.flxProviders.sudoflix.api.ridomovies.dto.RidoMoviesSearchDto
@@ -26,19 +26,12 @@ class RidoMoviesApi(
     override val baseUrl: String
         get() = RIDO_MOVIES_BASE_URL
 
-    private val defaultMethodError = IllegalAccessException("This method is not necessary to be called for RidoMovies")
-
     private val closeLoad = CloseLoad(client)
     private val ridoo = Ridoo(client)
 
-    override suspend fun getFilmInfo(
-        filmId: String,
-        filmType: FilmType
-    ): FilmInfo = throw defaultMethodError
-
     override suspend fun getSourceLinks(
-        filmId: String,
-        film: Film,
+        watchId: String,
+        film: FilmDetails,
         season: Int?,
         episode: Int?,
         onLinkLoaded: (SourceLink) -> Unit,
@@ -46,10 +39,10 @@ class RidoMoviesApi(
     ) {
         val fullSlug = getFullSlug(
             filmTitle = film.title,
-            tmdbId = film.id
+            tmdbId = film.tmdbId!!
         )
 
-        var episodeId = ""
+        val episodeId: String
         val iframeSourceUrl = if (film.filmType == FilmType.TV_SHOW) {
             episodeId = getEpisodeId(
                 fullSlug = fullSlug,
@@ -79,11 +72,6 @@ class RidoMoviesApi(
             }
         }
     }
-
-    override suspend fun search(
-        film: Film,
-        page: Int
-    ): SearchResults = throw defaultMethodError
 
     private fun getFullSlug(
         filmTitle: String,

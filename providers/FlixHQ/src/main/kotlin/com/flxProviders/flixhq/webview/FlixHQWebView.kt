@@ -17,8 +17,8 @@ import com.flixclusive.core.util.network.USER_AGENT
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.SourceDataState
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.FilmDetails
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.util.FlixclusiveWebView
 import com.flixclusive.provider.util.WebViewCallback
 import com.flxProviders.flixhq.api.FlixHQApi
@@ -43,8 +43,8 @@ class FlixHQWebView(
     private val mClient: OkHttpClient,
     private val api: FlixHQApi,
 
-    private val filmToScrape: Film,
-    private val episodeData: TMDBEpisode?,
+    private val filmToScrape: FilmDetails,
+    private val episodeData: Episode?,
     private val callback: WebViewCallback,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     context: Context,
@@ -96,14 +96,14 @@ class FlixHQWebView(
 
     override suspend fun startScraping() {
         try {
-            val filmId = withContext(ioDispatcher) {
+            val watchId = withContext(ioDispatcher) {
                 api.getMediaId(film = filmToScrape)
             } ?: return callback.updateDialogState(SourceDataState.Unavailable())
 
             val servers = withContext(ioDispatcher) {
                 api.getEpisodeIdAndServers(
-                    filmId = filmId,
-                    episode = episodeData?.episode,
+                    watchId = watchId,
+                    episode = episodeData?.number,
                     season = episodeData?.season
                 )
             }
@@ -133,7 +133,7 @@ class FlixHQWebView(
 
                 waitForKeyToBeAttached(
                     serverUrl = serverUrl,
-                    filmId = filmId
+                    filmId = watchId
                 )
 
                 val extractor = api.extractors[serverName.lowercase()]

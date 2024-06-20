@@ -58,7 +58,6 @@ internal class DoodStream(
         val expiry = System.currentTimeMillis() + eightHoursInMillis
 
         val downloadUrl = "${nextPage}${generateRandomToken()}?token=${token}&expiry=${expiry}"
-        println(downloadUrl)
 
         onLinkLoaded(
             SourceLink(

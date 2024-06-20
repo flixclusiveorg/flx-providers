@@ -10,12 +10,10 @@ import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
-import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.provider.ProviderApi
 import com.flxProviders.sudoflix.api.nsbx.dto.NsbxProviders
 import com.flxProviders.sudoflix.api.nsbx.dto.NsbxSource
-import com.flxProviders.sudoflix.api.util.TmdbQueryDto
-import com.flxProviders.sudoflix.api.util.getTmdbQuery
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 
@@ -34,8 +32,8 @@ internal class NsbxApi(
     ).toHeaders()
 
     override suspend fun getSourceLinks(
-        filmId: String,
-        film: Film,
+        watchId: String,
+        film: FilmDetails,
         season: Int?,
         episode: Int?,
         onLinkLoaded: (SourceLink) -> Unit,
@@ -49,10 +47,9 @@ internal class NsbxApi(
         for (i in availableProviders.indices) {
             try {
                 val provider = availableProviders[i]
-                val query = getFilmQuery(
-                    filmId = filmId,
+                val query = film.getQuery(
                     season = season,
-                    episode = episode,
+                    episode = episode
                 )
 
                 val searchRawResponse = client.request(
@@ -134,27 +131,14 @@ internal class NsbxApi(
         return fromJson<NsbxProviders>(response).providers
     }
 
-    private fun getFilmQuery(
-        filmId: String,
+    private fun FilmDetails.getQuery(
         season: Int?,
         episode: Int?,
     ): String {
-        val tmdbFilmType = if (season != null) FilmType.TV_SHOW.type else FilmType.MOVIE.type
         val filmType = if (season != null) "show" else FilmType.MOVIE.type
 
-        val tmdbQuery = getTmdbQuery(
-            id = filmId,
-            filmType = tmdbFilmType
-        )
-
-        val response = client.request(tmdbQuery)
-            .execute().body?.string()
-            ?: throw NullPointerException("[$name]> Could not get IMDb ID")
-
-        val tmdbResponse = fromJson<TmdbQueryDto>(response)
-
         return """
-            {"title":"${tmdbResponse.title}","releaseYear":${tmdbResponse.releaseYear},"tmdbId":"${tmdbResponse.tmdbId}","imdbId":"${tmdbResponse.imdbId ?: tmdbResponse.externalIds["imdb_id"]}","type":"$filmType","season":"${season ?: ""}","episode":"${episode ?: ""}"}
+            {"title":"$title","releaseYear":${year},"tmdbId":"$tmdbId","imdbId":"$imdbId","type":"$filmType","season":"${season ?: ""}","episode":"${episode ?: ""}"}
         """.trimIndent()
     }
 }

@@ -7,20 +7,21 @@ import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.TMDBEpisode
+import com.flixclusive.model.tmdb.FilmDetails
+import com.flixclusive.model.tmdb.FilmSearchItem
+import com.flixclusive.model.tmdb.Movie
+import com.flixclusive.model.tmdb.SearchResponseData
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
-import com.flixclusive.provider.dto.FilmInfo
-import com.flixclusive.provider.dto.SearchResultItem
-import com.flixclusive.provider.dto.SearchResults
 import com.flixclusive.provider.util.FlixclusiveWebView
-import com.flixclusive.provider.util.TvShowCacheData
 import com.flixclusive.provider.util.WebViewCallback
+import com.flxProviders.flixhq.api.util.TvShowCacheData
 import com.flxProviders.flixhq.api.util.getEpisodeId
 import com.flxProviders.flixhq.api.util.getSeasonId
 import com.flxProviders.flixhq.api.util.getServerName
 import com.flxProviders.flixhq.api.util.getServerUrl
 import com.flxProviders.flixhq.api.util.replaceWhitespaces
-import com.flxProviders.flixhq.api.util.toSearchResultItem
+import com.flxProviders.flixhq.api.util.toFilmSearchItem
 import com.flxProviders.flixhq.extractors.rabbitstream.UpCloud
 import com.flxProviders.flixhq.extractors.rabbitstream.VidCloud
 import com.flxProviders.flixhq.webview.FlixHQWebView
@@ -31,8 +32,12 @@ import org.jsoup.Jsoup
 class FlixHQApi(
     client: OkHttpClient
 ) : ProviderApi(client) {
+    companion object {
+        internal const val FLIXHQ_PROVIDER_NAME = "FlixHQ"
+    }
+
     override val baseUrl: String = "https://flixhq.to"
-    override val name: String = "FlixHQ"
+    override val name: String = FLIXHQ_PROVIDER_NAME
     override val useWebView = true
 
     private var tvCacheData: TvShowCacheData = TvShowCacheData()
@@ -44,12 +49,19 @@ class FlixHQApi(
     )
 
     override suspend fun search(
-        film: Film,
-        page: Int
-    ): SearchResults {
-        val query = film.title.removeAccents()
+        title: String,
+        page: Int,
+        id: String?,
+        imdbId: String?,
+        tmdbId: Int?
+    ): SearchResponseData<FilmSearchItem> {
+        val query = title.removeAccents()
 
-        var searchResult = SearchResults(page, false, listOf())
+        var searchResult = SearchResponseData<FilmSearchItem>(
+            page = page,
+            hasNextPage = false,
+            results = emptyList()
+        )
 
         client.request(
             url = "${baseUrl}/search/${
@@ -63,66 +75,71 @@ class FlixHQApi(
                     ?.hasClass("active") == false
             )
 
-            val results = mutableListOf<SearchResultItem>()
+            val results = mutableListOf<FilmSearchItem>()
 
             doc.select(".film_list-wrap > div.flw-item").forEach { element ->
-                results.add(element.toSearchResultItem(baseUrl))
+                results.add(element.toFilmSearchItem(baseUrl))
             }
 
             return searchResult.copy(results = results)
         }
 
-        return SearchResults()
+        return SearchResponseData()
     }
 
-    override suspend fun getFilmInfo(
-        filmId: String,
-        filmType: FilmType
-    ): FilmInfo {
-        var filmIdToUse = filmId
-        if (!filmId.startsWith(baseUrl)) {
-            filmIdToUse = "$baseUrl/$filmId"
+    override suspend fun getFilmDetails(film: Film): FilmDetails {
+        var watchIdToUse = film.identifier
+        val filmType = film.filmType
+        
+        if (!watchIdToUse.startsWith(baseUrl)) {
+            watchIdToUse = "$baseUrl/$watchIdToUse"
         }
 
-        if (tvCacheData.filmInfo?.id == filmIdToUse)
+        if (tvCacheData.filmInfo?.id == watchIdToUse)
             return tvCacheData.filmInfo!!
 
-        var filmInfo = FilmInfo(
-            id = filmIdToUse.split("to/").last(),
-            title = ""
+        var filmDetails = Movie(
+            id = watchIdToUse.split("to/").last(),
+            providerName = film.providerName,
+            title = film.title,
+            posterImage = film.posterImage,
+            backdropImage = film.backdropImage,
+            homePage = film.homePage,
         )
 
-        val response = client.request(url = filmIdToUse).execute()
+        val response = client.request(url = watchIdToUse).execute()
         val data = response.body?.string()
 
         if (data != null) {
             val doc = Jsoup.parse(data)
-            filmInfo = filmInfo.copy(
+            filmDetails = filmDetails.copy(
                 title = doc.select(".heading-name > a:nth-child(1)").text()
             )
 
             val uid = doc.select(".watch_block").attr("data-id")
             val releaseDate = Jsoup.parse(data).select("div.row-line:nth-child(3)").text()
                 .replace("Released: ", "").trim()
-            filmInfo = filmInfo.copy(yearReleased = releaseDate.split("-").first())
+            val year = releaseDate.split("-").firstOrNull()?.toIntOrNull()
+
+            filmDetails = filmDetails.copy(year = year)
 
             if (filmType == FilmType.MOVIE) {
-                filmInfo = filmInfo.copy(
+                filmDetails = filmDetails.copy(
                     id = uid,
-                    title = "${filmInfo.title} Movie",
+                    title = "${filmDetails.title} Movie",
                 )
             }
 
-            tvCacheData = TvShowCacheData(id = uid, filmInfo)
-            return filmInfo
+            tvCacheData = TvShowCacheData(id = uid, filmDetails)
+            return filmDetails
         }
 
         throw NullPointerException("FilmInfo is null!")
     }
 
     override suspend fun getSourceLinks(
-        filmId: String,
-        film: Film,
+        watchId: String,
+        film: FilmDetails,
         season: Int?,
         episode: Int?,
         onLinkLoaded: (SourceLink) -> Unit,
@@ -132,8 +149,8 @@ class FlixHQApi(
     override fun getWebView(
         context: Context,
         callback: WebViewCallback,
-        film: Film,
-        episode: TMDBEpisode?,
+        film: FilmDetails,
+        episode: Episode?,
     ): FlixclusiveWebView {
         return FlixHQWebView(
             mClient = client,
@@ -146,12 +163,12 @@ class FlixHQApi(
     }
 
     internal fun getEpisodeId(
-        filmId: String,
+        watchId: String,
         episode: Int,
         season: Int,
     ): String {
-        val filmIdToUse = filmId.split("-").last()
-        val isSameId = tvCacheData.id == filmIdToUse
+        val watchIdToUse = watchId.split("-").last()
+        val isSameId = tvCacheData.id == watchIdToUse
 
         val ajaxReqUrl: (String, Boolean) -> String = { id, isSeasons ->
             "$baseUrl/ajax/season/${if (isSeasons) "list" else "episodes"}/$id"
@@ -167,7 +184,7 @@ class FlixHQApi(
 
         if (tvCacheData.seasons == null || !isSameId) {
             val responseSeasons =
-                client.request(url = ajaxReqUrl(filmIdToUse, true)).execute()
+                client.request(url = ajaxReqUrl(watchIdToUse, true)).execute()
             val dataSeasons = responseSeasons.body?.string()
                 ?: throw Exception("Failed to fetch season data from provider")
 
@@ -177,7 +194,7 @@ class FlixHQApi(
             tvCacheData = if (isSameId) {
                 tvCacheData.copy(seasons = seasonsDoc)
             } else {
-                TvShowCacheData(id = filmIdToUse, seasons = seasonsDoc)
+                TvShowCacheData(id = watchIdToUse, seasons = seasonsDoc)
             }
         }
 
@@ -200,7 +217,7 @@ class FlixHQApi(
             tvCacheData.copy(episodes = episodes)
         } else {
             TvShowCacheData(
-                id = filmIdToUse,
+                id = watchIdToUse,
                 seasons = seasons,
                 episodes = episodes
             )
@@ -210,7 +227,7 @@ class FlixHQApi(
     }
 
     internal suspend fun getEpisodeIdAndServers(
-        filmId: String,
+        watchId: String,
         episode: Int?,
         season: Int?,
     ): List<Pair<String, String>> {
@@ -218,14 +235,14 @@ class FlixHQApi(
 
         val episodeId = if (isTvShow) {
             getEpisodeId(
-                filmId = filmId,
+                watchId = watchId,
                 episode = episode!!,
                 season = season!!
             )
-        } else filmId.split("-").last()
+        } else watchId.split("-").last()
 
         val fetchServerUrl =
-            if (filmId.contains("movie")) {
+            if (watchId.contains("movie")) {
                 "$baseUrl/ajax/episode/list/$episodeId"
             } else {
                 "$baseUrl/ajax/episode/servers/$episodeId"
@@ -240,7 +257,7 @@ class FlixHQApi(
             .mapAsync { element ->
                 val anchorElement = element.select("a")
 
-                anchorElement.getServerName(filmId) to anchorElement.getServerUrl(baseUrl, filmId)
+                anchorElement.getServerName(watchId) to anchorElement.getServerUrl(baseUrl, watchId)
             }
     }
 }

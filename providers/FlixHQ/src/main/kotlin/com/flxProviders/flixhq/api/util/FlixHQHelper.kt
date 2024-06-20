@@ -1,7 +1,8 @@
 package com.flxProviders.flixhq.api.util
 
 import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.provider.dto.SearchResultItem
+import com.flixclusive.model.tmdb.FilmSearchItem
+import com.flxProviders.flixhq.api.FlixHQApi.Companion.FLIXHQ_PROVIDER_NAME
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.util.Locale
@@ -47,18 +48,27 @@ internal fun String.replaceWhitespaces(toReplace: String) = replace(
     toReplace
 )
 
-internal fun Element.toSearchResultItem(baseUrl: String): SearchResultItem {
-    val releaseDate = select("div.film-detail > div.fd-infor > span:nth-child(1)").text()
+internal fun Element.toFilmSearchItem(baseUrl: String): FilmSearchItem {
+    val filmType = when {
+        select("div.film-detail > div.fd-infor > span.float-right").text() == "Movie" -> FilmType.MOVIE
+        else -> FilmType.TV_SHOW
+    }
 
-    return SearchResultItem(
+    val year = if (filmType == FilmType.MOVIE) {
+        val rawYear = select("div.film-detail > div.fd-infor > span:nth-child(1)").text()
+
+        rawYear.toIntOrNull()
+    } else null
+
+
+    return FilmSearchItem(
         id = select("div.film-poster > a").attr("href").substring(1),
+        providerName = FLIXHQ_PROVIDER_NAME,
         title = select("div.film-detail > h2 > a").attr("title"),
-        url = "${baseUrl}${select("div.film-poster > a").attr("href")}",
-        image = select("div.film-poster > img").attr("data-src"),
-        releaseDate = if (releaseDate.isNotBlank() && releaseDate.toIntOrNull() != null) releaseDate else null,
-        seasons = if (releaseDate.contains("SS")) releaseDate.split("SS")[1].trim()
-            .toIntOrNull() else null,
-        filmType = if (select("div.film-detail > div.fd-infor > span.float-right").text() == "Movie") FilmType.MOVIE else FilmType.TV_SHOW
+        posterImage = select("div.film-poster > img").attr("data-src"),
+        homePage = "${baseUrl}${select("div.film-poster > a").attr("href")}",
+        year = year,
+        filmType = filmType
     )
 }
 

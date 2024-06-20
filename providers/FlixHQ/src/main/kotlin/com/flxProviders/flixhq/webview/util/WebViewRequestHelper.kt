@@ -29,7 +29,10 @@ internal suspend fun FlixHQApi.getMediaId(
             }
 
             val searchResponse = search(
-                film = film,
+                title = film.title.removeAccents(),
+                imdbId = film.imdbId,
+                tmdbId = film.tmdbId,
+                id = film.id,
                 page = i
             )
 
@@ -37,38 +40,25 @@ internal suspend fun FlixHQApi.getMediaId(
                 return null
 
             for (result in searchResponse.results) {
-                if (result.tmdbId == film.id) {
-                    id = result.id
-                    break
-                }
-
                 val titleMatches = result.title.equals(film.title, ignoreCase = true)
-                val filmTypeMatches = result.filmType?.type == film.filmType.type
-                val releaseDateMatches =
-                    result.releaseDate == film.dateReleased.split(" ").last()
+                val filmTypeMatches = result.filmType.type == film.filmType.type
+                val yearMatches =
+                    result.year == film.year && film.year != null
 
                 if (titleMatches && filmTypeMatches && film is TvShow) {
-                    if (film.seasons.size == result.seasons || releaseDateMatches) {
-                        id = result.id
-                        break
-                    }
+                    val tvShowInfo = getFilmDetails(film = film) as TvShow
 
-                    val tvShowInfo = getFilmInfo(
-                        filmId = result.id!!,
-                        filmType = film.filmType
-                    )
+                    val tvYearMatches =
+                        tvShowInfo.year == film.year && film.year != null
+                    val seasonCountMatches = film.seasons.size == tvShowInfo.totalSeasons
 
-                    val tvReleaseDateMatches =
-                        tvShowInfo.yearReleased == film.dateReleased.split("-").first()
-                    val seasonCountMatches = film.seasons.size == tvShowInfo.seasons
-
-                    if (tvReleaseDateMatches || seasonCountMatches) {
+                    if (tvYearMatches || seasonCountMatches) {
                         id = result.id
                         break
                     }
                 }
 
-                if (titleMatches && filmTypeMatches && releaseDateMatches) {
+                if (titleMatches && filmTypeMatches && yearMatches) {
                     id = result.id
                     break
                 }

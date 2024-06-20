@@ -10,7 +10,7 @@ import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.provider.ProviderApi
 import com.flxProviders.sudoflix.api.opensubs.SubtitleUtil.fetchSubtitles
 import com.flxProviders.sudoflix.api.primewire.extractor.DoodStream
@@ -23,8 +23,6 @@ import com.flxProviders.sudoflix.api.primewire.extractor.UpStream
 import com.flxProviders.sudoflix.api.primewire.extractor.VTube
 import com.flxProviders.sudoflix.api.primewire.extractor.Voe
 import com.flxProviders.sudoflix.api.primewire.util.decrypt.getLinks
-import com.flxProviders.sudoflix.api.util.TmdbQueryDto
-import com.flxProviders.sudoflix.api.util.getTmdbQuery
 import okhttp3.OkHttpClient
 import org.jsoup.nodes.Document
 
@@ -51,18 +49,15 @@ internal class PrimeWireApi(
     )
 
     override suspend fun getSourceLinks(
-        filmId: String,
-        film: Film,
+        watchId: String,
+        film: FilmDetails,
         season: Int?,
         episode: Int?,
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
-        val imdbId = getImdbId(
-            filmId = filmId,
-            filmType = film.filmType
-        )
-
+        val imdbId = film.imdbId
+            ?: throw NullPointerException("[$name]> Could not get IMDB ID")
         val id = getMediaId(imdbId = imdbId)
         val availableServers = getAvailableServers(
             id = id,
@@ -95,25 +90,6 @@ internal class PrimeWireApi(
                 }
             },
         )
-    }
-
-    private fun getImdbId(
-        filmId: String,
-        filmType: FilmType
-    ): String {
-        val tmdbQuery = getTmdbQuery(
-            id = filmId,
-            filmType = filmType.type
-        )
-
-        val response = client.request(tmdbQuery)
-            .execute().body?.string()
-            ?: throw NullPointerException("[$name]> Could not get TMDB response")
-
-        val tmdbResponse = fromJson<TmdbQueryDto>(response)
-
-        return tmdbResponse.imdbId
-            ?: tmdbResponse.externalIds["imdb_id"] as String
     }
 
     private fun getMediaId(imdbId: String): Int {

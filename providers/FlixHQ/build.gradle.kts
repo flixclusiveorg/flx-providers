@@ -29,17 +29,25 @@ android {
     }
 }
 
-flixclusive {
+flxProvider {
     description.set("""
         NOTICE: This provider uses WebView to scrape content. This might lag.
         
         Stream seamlessly in adjustable HD resolution (1080p) with blazing-fast loading speeds. Offers HLS media.
     """.trimIndent())
 
+    changelog.set("""
+        # v1.0.0-b3
+        
+        ### 🔧 Changes:
+        - [x] Update code to keep up with new app structure for its new catalog system
+        - [x] Custom catalogs will be added soon.
+    """.trimIndent())
+
     versionMajor = 1
     versionMinor = 0
     versionPatch = 0
-    versionBuild = 2
+    versionBuild = 3
 
     // Extra authors for specific provider
     // author(

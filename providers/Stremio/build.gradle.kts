@@ -29,15 +29,23 @@ android {
     }
 }
 
-flixclusive {
+flxProvider {
     description.set("""
         A flixclusive adapter for Stremio addons. Currently supports streaming addons only; catalogues will not work 'yet'.
+    """.trimIndent())
+
+    changelog.set("""
+        # v1.0.0-b6
+        
+        ### 🔧 Changes:
+        - [x] Update code to keep up with new app structure for its new catalog system
+        - [x] Custom catalogs will be added soon.
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 0
     versionPatch = 0
-    versionBuild = 5
+    versionBuild = 6
 
     // Extra authors for specific provider
     // author(

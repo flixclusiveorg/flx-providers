@@ -10,16 +10,14 @@ import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.tmdb.FilmDetails
+import com.flixclusive.model.tmdb.FilmSearchItem
+import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.provider.ProviderApi
-import com.flixclusive.provider.dto.SearchResultItem
-import com.flixclusive.provider.dto.SearchResults
 import com.flixclusive.provider.settings.ProviderSettingsManager
 import com.flxProviders.stremio.api.dto.StreamDto.Companion.toSourceLink
 import com.flxProviders.stremio.api.dto.StreamResponse
-import com.flxProviders.stremio.api.dto.TmdbQueryDto
 import com.flxProviders.stremio.api.util.OpenSubtitlesUtil.fetchSubtitles
-import com.flxProviders.stremio.api.util.getTmdbQuery
 import com.flxProviders.stremio.api.util.isValidUrl
 import com.flxProviders.stremio.settings.AddonUtil.getAddons
 import okhttp3.OkHttpClient
@@ -34,17 +32,15 @@ class StremioApi(
         get() = "Stremio"
 
     override suspend fun getSourceLinks(
-        filmId: String,
-        film: Film,
+        watchId: String,
+        film: FilmDetails,
         season: Int?,
         episode: Int?,
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
-        val imdbId = getImdbId(
-            filmId = filmId,
-            filmType = film.filmType
-        )
+        val imdbId = film.imdbId
+            ?: throw NullPointerException("[$name]> Could not get IMDB ID")
 
         asyncCalls(
             {
@@ -103,30 +99,28 @@ class StremioApi(
         }
     }
 
-    override suspend fun search(film: Film, page: Int): SearchResults {
-        return SearchResults(
+    override suspend fun search(
+        title: String,
+        page: Int,
+        id: String?,
+        imdbId: String?,
+        tmdbId: Int?
+    ): SearchResponseData<FilmSearchItem> {
+        // TODO("Add catalog system")
+
+        return SearchResponseData(
             results = listOf(
-                SearchResultItem(
-                    id = film.id.toString(),
-                    tmdbId = film.id
+                FilmSearchItem(
+                    id = id ?: tmdbId?.toString() ?: imdbId!!,
+                    title = title,
+                    providerName = name,
+                    posterImage = null,
+                    backdropImage = null,
+                    homePage = null,
+                    filmType = FilmType.MOVIE
                 )
             )
         )
     }
 
-    private fun getImdbId(
-        filmId: String,
-        filmType: FilmType
-    ): String {
-        val tmdbQuery = getTmdbQuery(
-            id = filmId,
-            filmType = filmType.type
-        )
-
-        val tmdbResponse = client.request(tmdbQuery)
-            .execute().fromJson<TmdbQueryDto>("[$name]> Could not get TMDB response")
-
-        return tmdbResponse.imdbId
-            ?: tmdbResponse.externalIds["imdb_id"] as String
-    }
 }

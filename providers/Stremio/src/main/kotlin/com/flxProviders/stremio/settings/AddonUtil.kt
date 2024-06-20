@@ -26,10 +26,7 @@ internal object AddonUtil {
 
 
     fun ProviderSettingsManager.getAddons(): List<StremioAddOn> {
-        val json = getString(STREAMIO_ADDONS_KEY, null)
-            ?: return emptyList()
-
-        return fromJson<List<StremioAddOn>>(json)
+        return getObject(STREAMIO_ADDONS_KEY) ?: emptyList()
     }
 
     fun ProviderSettingsManager.addAddon(

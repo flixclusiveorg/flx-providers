@@ -2,27 +2,23 @@ package com.flxProviders.superstream.api
 
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
-import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.tmdb.FilmDetails
+import com.flixclusive.model.tmdb.FilmSearchItem
+import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.provider.ProviderApi
-import com.flixclusive.provider.dto.SearchResultItem
-import com.flixclusive.provider.dto.SearchResults
 import com.flxProviders.superstream.BuildConfig
 import com.flxProviders.superstream.api.dto.ExternalResponse
 import com.flxProviders.superstream.api.dto.ExternalSources
 import com.flxProviders.superstream.api.dto.ITEMS_PER_PAGE
 import com.flxProviders.superstream.api.dto.SearchData
-import com.flxProviders.superstream.api.dto.TmdbQueryDto
+import com.flxProviders.superstream.api.dto.SearchData.Companion.toSearchResponseData
 import com.flxProviders.superstream.api.util.SuperStreamUtil
 import com.flxProviders.superstream.api.util.SuperStreamUtil.BoxType.Companion.fromFilmType
-import com.flxProviders.superstream.api.util.getTmdbQuery
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 import org.jsoup.Jsoup
@@ -39,35 +35,23 @@ import kotlin.random.Random
 class SuperStreamApi(
     client: OkHttpClient
 ) : ProviderApi(client) {
-    /**
-     * The name of the provider.
-     */
-    override val name: String
-        get() = "SuperStream"
+    companion object {
+        internal const val DEFAULT_PROVIDER_NAME = "SuperStream"
+    }
 
-    /**
-     * Obtains source links for the provided film, season, and episode.
-     * @param filmId The ID of the film. The ID must come from the [search] method.
-     * @param film The [Film] object of the film. It could either be a [Movie] or [TvShow].
-     * @param episode The episode number. Defaults to null if the film is a movie.
-     * @param onLinkLoaded A callback function invoked when a [SourceLink] is loaded.
-     * @param onSubtitleLoaded A callback function invoked when a [Subtitle] is loaded.
-     */
+    override val name: String
+        get() = DEFAULT_PROVIDER_NAME
+
     override suspend fun getSourceLinks(
-        filmId: String,
-        film: Film,
+        watchId: String,
+        film: FilmDetails,
         season: Int?,
         episode: Int?,
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
-        val mediaId = getMediaId(
-            tmdbId = filmId,
-            filmType = film.filmType
-        )
-
         client.getSourceLinksFromFourthApi(
-            filmId = mediaId,
+            watchId = watchId,
             filmType = fromFilmType(filmType = film.filmType),
             season = season,
             episode = episode,
@@ -76,64 +60,25 @@ class SuperStreamApi(
         )
     }
 
-    /**
-     * Performs a search for films based on the provided query.
-     * @param film The [Film] object of the film. It could either be a [Movie] or [TvShow].
-     * @param page The page number for paginated results. Defaults to 1.
-     * @return a [SearchResults] instance containing the search results.
-     */
     override suspend fun search(
-        film: Film,
+        title: String,
         page: Int,
-    ): SearchResults {
-        return SearchResults(
-            currentPage = page,
-            results = listOf(
-                SearchResultItem(
-                    id = film.id.toString(),
-                    tmdbId = film.id,
-                )
-            ),
-            hasNextPage = false
-        )
-    }
-
-    private fun getMediaId(
-        tmdbId: String,
-        filmType: FilmType
-    ): String {
-        val imdbId = getImdbId(tmdbId, filmType)
-        val apiQuery = String.format(Locale.ROOT, BuildConfig.SUPERSTREAM_THIRD_API, imdbId, ITEMS_PER_PAGE, Random.nextInt(0, Int.MAX_VALUE))
+        id: String?,
+        imdbId: String?,
+        tmdbId: Int?
+    ): SearchResponseData<FilmSearchItem> {
+        val query = imdbId ?: title
+        val apiQuery = String.format(Locale.ROOT, BuildConfig.SUPERSTREAM_THIRD_API, query, ITEMS_PER_PAGE, Random.nextInt(0, Int.MAX_VALUE))
 
 
         val response = client.request(apiQuery).execute()
             .fromJson<SearchData>("[$name]> Couldn't search for $tmdbId")
 
-        val id = response.data.results.find {
-            it.imdbId.equals(imdbId, true)
-        }?.id ?: throw Exception("[$name]> Film with ID $imdbId was not found.")
-
-        return id
-    }
-
-    private fun getImdbId(
-        filmId: String,
-        filmType: FilmType
-    ): String {
-        val tmdbQuery = getTmdbQuery(
-            id = filmId,
-            filmType = filmType.type
-        )
-
-        val tmdbResponse = client.request(tmdbQuery)
-            .execute().fromJson<TmdbQueryDto>("[$name]> Could not get TMDB response")
-
-        return tmdbResponse.imdbId
-            ?: tmdbResponse.externalIds["imdb_id"] as String
+        return response.toSearchResponseData()
     }
 
     private suspend fun OkHttpClient.getSourceLinksFromFourthApi(
-        filmId: String,
+        watchId: String,
         filmType: SuperStreamUtil.BoxType,
         season: Int?,
         episode: Int?,
@@ -145,7 +90,7 @@ class SuperStreamApi(
 
         val (seasonSlug, episodeSlug) = getEpisodeSlug(season, episode)
         val shareKey = request(
-            url = "$firstAPI/index/share_link?id=${filmId}&type=${filmType.value}"
+            url = "$firstAPI/index/share_link?id=${watchId}&type=${filmType.value}"
         ).execute().use {
             val string = it.body?.string()
 
