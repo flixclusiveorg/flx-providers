@@ -47,7 +47,7 @@ flxProvider {
     versionMajor = 1
     versionMinor = 0
     versionPatch = 0
-    versionBuild = 3
+    versionBuild = 4
 
     // Extra authors for specific provider
     // author(
