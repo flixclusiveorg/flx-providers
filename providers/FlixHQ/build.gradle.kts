@@ -37,17 +37,13 @@ flxProvider {
     """.trimIndent())
 
     changelog.set("""
-        # v1.0.0-b3
-        
-        ### 🔧 Changes:
-        - [x] Update code to keep up with new app structure for its new catalog system
-        - [x] Custom catalogs will be added soon.
+        ### FlixHQ is still broken. I'm too lazy to fix this provider now - their devs just wont give up :')
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 0
     versionPatch = 0
-    versionBuild = 4
+    versionBuild = 5
 
     // Extra authors for specific provider
     // author(
