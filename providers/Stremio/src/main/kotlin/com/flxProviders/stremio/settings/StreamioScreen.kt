@@ -75,7 +75,7 @@ internal fun StreamioScreen(
             val updatedAddon = client.downloadAddon(url = url)
 
             if (updatedAddon == null) {
-                context.showToast("Failed to parse addon url [${editAddon!!.name}]")
+                context.showToast("Failed to parse addon url [${addon.name}]")
                 return@launch
             }
 
