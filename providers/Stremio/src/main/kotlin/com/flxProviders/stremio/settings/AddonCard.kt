@@ -23,16 +23,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
-import com.flxProviders.stremio.api.dto.StremioAddOn
+import com.flxProviders.stremio.api.model.Addon
+import com.flxProviders.stremio.settings.util.LocalResources
+import com.flxProviders.stremio.settings.util.getBitmapFromImage
+import com.flxProviders.stremio.settings.util.getDrawable
 import java.net.URL
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
 
 @Composable
 internal fun AddonCard(
-    addon: StremioAddOn,
+    addon: Addon,
+    onUpdateManifest: () -> Unit,
+    onEdit: () -> Unit,
     onRemove: () -> Unit,
 ) {
+    val resources = LocalResources.current
+
     OutlinedCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -67,7 +74,7 @@ internal fun AddonCard(
                     val host = remember { URL(addon.baseUrl).host }
 
                     Text(
-                        text = addon.name ?: host ?: "Unknown Addon",
+                        text = addon.name,
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
@@ -85,15 +92,50 @@ internal fun AddonCard(
                 }
             }
 
-            IconButton(
-                onClick = onRemove,
-                modifier = Modifier
-                    .padding(3.dp)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 3.dp)
             ) {
-                Icon(
-                    painter = painterResource(id = UiCommonR.drawable.delete),
-                    contentDescription = null
-                )
+                IconButton(onClick = onUpdateManifest) {
+                    val refreshIcon = remember {
+                        resources.getDrawable("refresh")?.getBitmapFromImage()
+                    }
+
+                    if (refreshIcon != null) {
+                        Icon(
+                            bitmap = refreshIcon,
+                            contentDescription = null
+                        )
+                    }
+                }
+
+                IconButton(onClick = onEdit) {
+                    val modifyIcon = remember {
+                        resources.getDrawable("modify")?.getBitmapFromImage()
+                    }
+
+                    if (modifyIcon != null) {
+                        Icon(
+                            bitmap = modifyIcon,
+                            contentDescription = null
+                        )
+                    }
+                }
+
+                IconButton(onClick = onRemove) {
+                    val deleteIcon = remember {
+                        resources.getDrawable("delete")
+                            ?.getBitmapFromImage()
+                    }
+
+                    if (deleteIcon != null) {
+                        Icon(
+                            bitmap = deleteIcon,
+                            contentDescription = null
+                        )
+                    }
+                }
             }
         }
     }

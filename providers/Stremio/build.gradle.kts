@@ -3,6 +3,7 @@ import com.flixclusive.gradle.entities.ProviderType
 import com.flixclusive.gradle.entities.Status
 
 dependencies {
+    implementation("androidx.core:core:1.13.1")
     /**
      * Custom dependencies for each provider should be implemented here.
      * */
@@ -42,7 +43,7 @@ flxProvider {
         - [x] Custom catalogs will be added soon.
     """.trimIndent())
 
-    versionMajor = 1
+    versionMajor = 2
     versionMinor = 0
     versionPatch = 0
     versionBuild = 7
@@ -61,5 +62,7 @@ flxProvider {
     providerType.set(ProviderType.All)
 
     status.set(Status.Beta)
+
+    requiresResources.set(true)
 }
 

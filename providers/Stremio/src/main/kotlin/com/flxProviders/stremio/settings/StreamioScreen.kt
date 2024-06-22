@@ -2,7 +2,6 @@
 
 package com.flxProviders.stremio.settings
 
-import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -37,12 +36,10 @@ import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.provider.settings.ProviderSettingsManager
 import com.flxProviders.stremio.api.model.Addon
-import com.flxProviders.stremio.settings.util.AddonAddResponse
 import com.flxProviders.stremio.settings.util.AddonUtil.downloadAddon
 import com.flxProviders.stremio.settings.util.AddonUtil.getAddons
 import com.flxProviders.stremio.settings.util.AddonUtil.removeAddon
 import com.flxProviders.stremio.settings.util.AddonUtil.updateAddon
-import com.flxProviders.stremio.settings.util.Duplicate
 import com.flxProviders.stremio.settings.util.Failed
 import com.flxProviders.stremio.settings.util.Success
 import kotlinx.coroutines.Job
@@ -69,12 +66,13 @@ internal fun StreamioScreen(
     val scope = rememberCoroutineScope()
     var updateJob by remember { mutableStateOf<Job?>(null) }
 
-    val updateAddon = updateAddon@ {
-        if (updateJob?.isActive == true || editAddon == null)
-            return@updateAddon
+    fun updateAddon(addon: Addon) {
+        if (updateJob?.isActive == true)
+            return
 
         updateJob = scope.launch {
-            val updatedAddon = client.downloadAddon("${editAddon?.baseUrl}/manifest.json")
+            val url = addon.baseUrl ?: return@launch
+            val updatedAddon = client.downloadAddon(url = url)
 
             if (updatedAddon == null) {
                 context.showToast("Failed to parse addon url [${editAddon!!.name}]")
@@ -143,7 +141,7 @@ internal fun StreamioScreen(
                             AddonCard(
                                 addon = it,
                                 onEdit = { editAddon = it },
-                                onUpdateManifest = updateAddon,
+                                onUpdateManifest = { updateAddon(it) },
                                 onRemove = {
                                     val success = settings.removeAddon(it)
 

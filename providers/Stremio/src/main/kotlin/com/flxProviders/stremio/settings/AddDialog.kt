@@ -1,5 +1,6 @@
 package com.flxProviders.stremio.settings
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
@@ -48,13 +49,16 @@ import com.flixclusive.core.ui.common.util.createTextFieldValue
 import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.provider.settings.ProviderSettingsManager
-import com.flxProviders.stremio.settings.AddonUtil.addAddon
-import com.flxProviders.stremio.settings.AddonUtil.getManifest
-import com.flxProviders.stremio.settings.AddonUtil.parseStremioAddonUrl
-import kotlinx.coroutines.Dispatchers
+import com.flxProviders.stremio.api.model.Addon
+import com.flxProviders.stremio.settings.util.AddonAddResponse
+import com.flxProviders.stremio.settings.util.AddonUtil.addAddon
+import com.flxProviders.stremio.settings.util.AddonUtil.downloadAddon
+import com.flxProviders.stremio.settings.util.AddonUtil.parseStremioAddonUrl
+import com.flxProviders.stremio.settings.util.Duplicate
+import com.flxProviders.stremio.settings.util.Failed
+import com.flxProviders.stremio.settings.util.Success
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import com.flixclusive.core.ui.common.R as UiCommonR
 import com.flixclusive.core.util.R as UtilR
@@ -64,6 +68,7 @@ import com.flixclusive.core.util.R as UtilR
 internal fun AddDialog(
     settings: ProviderSettingsManager,
     client: OkHttpClient,
+    addonToEdit: Addon?,
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -72,12 +77,13 @@ internal fun AddDialog(
     val clipboardManager = LocalClipboardManager.current
 
     val scope = rememberCoroutineScope()
+    var addJob by remember { mutableStateOf<Job?>(null) }
 
 
     val buttonMinHeight = 60.dp
 
     var textFieldValue by remember {
-        val text = clipboardManager.getText()?.text
+        var text = clipboardManager.getText()?.text
             ?.let {
                 when {
                     it.contains("manifest.json") || it.contains("stremio://") -> parseStremioAddonUrl(it)
@@ -85,13 +91,15 @@ internal fun AddDialog(
                 }
             } ?: ""
 
+        if (addonToEdit != null)
+            text = addonToEdit.baseUrl ?: text
+
         mutableStateOf(text.createTextFieldValue())
     }
 
     var isError by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
 
-    var addJob by remember { mutableStateOf<Job?>(null) }
 
 
     fun addToAddonList(url: String) {
@@ -103,24 +111,35 @@ internal fun AddDialog(
                 return@launch
             }
 
-            val addon = withContext(Dispatchers.IO) {
-                client.getManifest(addonUrl = url)
-            }
+            val addon = client.downloadAddon(url = url)
+
             if (addon == null) {
-                context.showToast("[Stremio]> Failed to parse addon url [${textFieldValue.text}]")
-                isError = true
+                context.showToast("Failed to parse addon url [${textFieldValue.text}]")
                 return@launch
             }
 
-            if (addon.isCatalog) {
-                context.showToast("[Stremio]> ${addon.name} is a catalog. Flixclusive doesn't support those yet.")
-                isError = true
-                return@launch
-            }
+            when (val response = settings.addAddon(addon = addon)) {
+                Duplicate -> {
+                    context.showToast("Addon [${addon.name}] is already installed!")
+                }
+                is Failed -> {
+                    context.showToast("Failed to add addon [${addon.name}]: ${response.error}")
+                }
+                Success -> {
+                    if (addon.needsConfiguration) {
+                        context.showToast(
+                            message = "${addon.name} seems to need configuration. Make sure you've configured the addon properly.",
+                            duration = Toast.LENGTH_LONG
+                        )
+                    }
 
-            val success = settings.addAddon(addon = addon)
-            if (!success) {
-                context.showToast("[Stremio]> Failed to add addon")
+                    if (addon.hasCatalog) {
+                        context.showToast(
+                            message = "${addon.name} has catalogs. In order to load them, you must restart the app.",
+                            duration = Toast.LENGTH_LONG
+                        )
+                    } else context.showToast("Addon [${addon.name}] has been added!")
+                }
             }
 
             onDismiss()
@@ -136,6 +155,11 @@ internal fun AddDialog(
 
         if (isDirtyUrl) {
             text = parseStremioAddonUrl(text)
+        }
+
+        if (text.equals(addonToEdit?.baseUrl, true)) {
+            onDismiss()
+            return@onClickAdd
         }
 
         keyboardController?.hide()
@@ -232,7 +256,7 @@ internal fun AddDialog(
                             .padding(5.dp)
                     ) {
                         Text(
-                            text = "Add",
+                            text = if (addonToEdit != null) "Update" else "Add",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier
