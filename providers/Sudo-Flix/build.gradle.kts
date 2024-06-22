@@ -8,17 +8,16 @@ flxProvider {
     """.trimIndent())
 
     changelog.set("""
-        # v1.1.1-b2
+        # v1.1.2
         
         ### 🔧 Changes:
-        - [x] Update code to keep up with new app structure for its new catalog system
-        - [x] Custom catalogs will be added soon.
+        - [x] Improve RidoMovies
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 1
-    versionPatch = 1
-    versionBuild = 4
+    versionPatch = 2
+    versionBuild = 0
 
     // Extra authors for specific provider
      author(

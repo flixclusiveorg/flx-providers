@@ -16,7 +16,8 @@ internal data class RidoMoviesSearchItem(
 )
 
 internal data class RidoMoviesSearchItemContentTable(
-    val tmdbId: Int
+    val tmdbId: Int,
+    val imdbId: String
 )
 
 internal data class RidoMoviesPaginationData(

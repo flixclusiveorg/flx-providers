@@ -38,8 +38,8 @@ class RidoMoviesApi(
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
         val fullSlug = getFullSlug(
-            filmTitle = film.title,
-            tmdbId = film.tmdbId!!
+            imdbId = film.imdbId ?: film.title,
+            tmdbId = film.tmdbId
         )
 
         val episodeId: String
@@ -74,12 +74,11 @@ class RidoMoviesApi(
     }
 
     private fun getFullSlug(
-        filmTitle: String,
-        tmdbId: Int,
+        imdbId: String,
+        tmdbId: Int?,
     ): String {
-        val filmTitleQuery = filmTitle.replace(" ", "+")
         val initialResponse = client.request(
-            url = "$baseUrl/core/api/search?q=$filmTitleQuery"
+            url = "$baseUrl/core/api/search?q=$imdbId"
         ).execute()
             .use {
                 val stringResponse = it.body?.string()
@@ -97,7 +96,7 @@ class RidoMoviesApi(
         }
 
         initialResponse.data.items.forEach {
-            if (it.contentTable.tmdbId == tmdbId) {
+            if (it.contentTable.tmdbId == tmdbId || it.contentTable.imdbId == imdbId) {
                 return it.fullSlug
             }
         }
