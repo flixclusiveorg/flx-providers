@@ -11,6 +11,7 @@ import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.FilmDetails
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
 import com.flxProviders.sudoflix.api.opensubs.SubtitleUtil.fetchSubtitles
 import com.flxProviders.sudoflix.api.primewire.extractor.DoodStream
@@ -51,8 +52,7 @@ internal class PrimeWireApi(
     override suspend fun getSourceLinks(
         watchId: String,
         film: FilmDetails,
-        season: Int?,
-        episode: Int?,
+        episode: Episode?,
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
@@ -61,8 +61,8 @@ internal class PrimeWireApi(
         val id = getMediaId(imdbId = imdbId)
         val availableServers = getAvailableServers(
             id = id,
-            season = season,
-            episode = episode,
+            season = episode?.season,
+            episode = episode?.number,
             filmType = film.filmType
         )
 
@@ -70,8 +70,8 @@ internal class PrimeWireApi(
             {
                 client.fetchSubtitles(
                     imdbId = imdbId,
-                    season = season,
-                    episode = episode,
+                    season = episode?.season,
+                    episode = episode?.number,
                     onSubtitleLoaded = onSubtitleLoaded
                 )
             },
@@ -107,8 +107,8 @@ internal class PrimeWireApi(
 
     private fun getAvailableServers(
         id: Int,
-        episode: Int?,
         season: Int?,
+        episode: Int?,
         filmType: FilmType
     ): List<Pair<String, String>> {
         var html = client.request(

@@ -8,6 +8,7 @@ import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.SearchResponseData
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
 import com.flxProviders.sudoflix.api.ridomovies.RidoMoviesConstant.RIDO_MOVIES_BASE_URL
 import com.flxProviders.sudoflix.api.ridomovies.dto.RidoMoviesEmbedDto
@@ -32,8 +33,7 @@ class RidoMoviesApi(
     override suspend fun getSourceLinks(
         watchId: String,
         film: FilmDetails,
-        season: Int?,
-        episode: Int?,
+        episode: Episode?,
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
@@ -46,8 +46,8 @@ class RidoMoviesApi(
         val iframeSourceUrl = if (film.filmType == FilmType.TV_SHOW) {
             episodeId = getEpisodeId(
                 fullSlug = fullSlug,
-                season = season!!,
-                episode = episode!!
+                season = episode!!.season,
+                episode = episode.number
             )
 
             "$baseUrl/core/api/episodes/$episodeId/videos"

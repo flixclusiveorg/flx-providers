@@ -11,6 +11,7 @@ import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
 import com.flixclusive.model.tmdb.FilmDetails
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
 import com.flxProviders.sudoflix.api.nsbx.dto.NsbxProviders
 import com.flxProviders.sudoflix.api.nsbx.dto.NsbxSource
@@ -34,8 +35,7 @@ internal class NsbxApi(
     override suspend fun getSourceLinks(
         watchId: String,
         film: FilmDetails,
-        season: Int?,
-        episode: Int?,
+        episode: Episode?,
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
@@ -48,8 +48,8 @@ internal class NsbxApi(
             try {
                 val provider = availableProviders[i]
                 val query = film.getQuery(
-                    season = season,
-                    episode = episode
+                    season = episode?.season,
+                    episode = episode?.number
                 )
 
                 val searchRawResponse = client.request(
@@ -133,7 +133,7 @@ internal class NsbxApi(
 
     private fun FilmDetails.getQuery(
         season: Int?,
-        episode: Int?,
+        episode: Int?
     ): String {
         val filmType = if (season != null) "show" else FilmType.MOVIE.type
 

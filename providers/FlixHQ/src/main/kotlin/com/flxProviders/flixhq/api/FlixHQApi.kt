@@ -140,8 +140,7 @@ class FlixHQApi(
     override suspend fun getSourceLinks(
         watchId: String,
         film: FilmDetails,
-        season: Int?,
-        episode: Int?,
+        episode: Episode?,
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit,
     ) = throw IllegalAccessException("$name uses a WebView!")

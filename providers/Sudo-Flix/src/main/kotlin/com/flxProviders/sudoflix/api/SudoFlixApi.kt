@@ -8,6 +8,7 @@ import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.SearchResponseData
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
 import com.flxProviders.sudoflix.api.nsbx.NsbxApi
 import com.flxProviders.sudoflix.api.primewire.PrimeWireApi
@@ -36,8 +37,7 @@ class SudoFlixApi(
     override suspend fun getSourceLinks(
         watchId: String,
         film: FilmDetails,
-        season: Int?,
-        episode: Int?,
+        episode: Episode?,
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
@@ -46,7 +46,6 @@ class SudoFlixApi(
                 it.getSourceLinks(
                     watchId = watchId,
                     film = film,
-                    season = season,
                     episode = episode,
                     onLinkLoaded = onLinkLoaded,
                     onSubtitleLoaded = onSubtitleLoaded

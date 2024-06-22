@@ -10,6 +10,7 @@ import com.flixclusive.model.provider.SubtitleSource
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.SearchResponseData
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
 import com.flxProviders.superstream.BuildConfig
 import com.flxProviders.superstream.api.dto.ExternalResponse
@@ -45,16 +46,15 @@ class SuperStreamApi(
     override suspend fun getSourceLinks(
         watchId: String,
         film: FilmDetails,
-        season: Int?,
-        episode: Int?,
+        episode: Episode?,
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
         client.getSourceLinksFromFourthApi(
             watchId = watchId,
             filmType = fromFilmType(filmType = film.filmType),
-            season = season,
-            episode = episode,
+            season = episode?.season,
+            episode = episode?.number,
             onSubtitleLoaded = onSubtitleLoaded,
             onLinkLoaded = onLinkLoaded
         )
@@ -80,8 +80,8 @@ class SuperStreamApi(
     private suspend fun OkHttpClient.getSourceLinksFromFourthApi(
         watchId: String,
         filmType: SuperStreamUtil.BoxType,
-        season: Int?,
         episode: Int?,
+        season: Int?,
         onSubtitleLoaded: (Subtitle) -> Unit,
         onLinkLoaded: (SourceLink) -> Unit,
     ) {
