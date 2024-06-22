@@ -32,7 +32,7 @@ android {
 
 flxProvider {
     description.set("""
-        A flixclusive adapter for Stremio addons. Currently supports streaming addons only; catalogues will not work 'yet'.
+        A flixclusive adapter for Stremio addons. Torrent addons, such as Torrentio,  don't work without RD or Debrid accounts.
     """.trimIndent())
 
     changelog.set("""
