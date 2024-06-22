@@ -15,10 +15,10 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 10004,
+        "versionCode": 10005,
         "description": "NOTICE: This provider uses WebView to scrape content. This might lag.\n\nStream seamlessly in adjustable HD resolution (1080p) with blazing-fast loading speeds. Offers HLS media.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/FlixHQ.flx",
-        "changelog": "# v1.0.0-b3\n\n### \ud83d\udd27 Changes:\n- [x] Update code to keep up with new app structure for its new catalog system\n- [x] Custom catalogs will be added soon.",
+        "changelog": "### FlixHQ is still broken. I'm too lazy to fix this provider now - their devs just wont give up :')",
         "versionName": "1.0.0",
         "name": "FlixHQ"
     },
@@ -28,7 +28,7 @@
         "providerType": {
             "type": "Movies, TV Shows, etc."
         },
-        "status": "Beta",
+        "status": "Working",
         "language": {
             "languageCode": "Multiple"
         },
@@ -38,10 +38,10 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 10007,
-        "description": "A flixclusive adapter for Stremio addons. Currently supports streaming addons only; catalogues will not work 'yet'.",
+        "versionCode": 10008,
+        "description": "A flixclusive adapter for Stremio addons. Torrent addons, such as Torrentio,  don't work without RD or Debrid accounts.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/Stremio.flx",
-        "changelog": "# v1.0.0-b6\n\n### \ud83d\udd27 Changes:\n- [x] Update code to keep up with new app structure for its new catalog system\n- [x] Custom catalogs will be added soon.",
+        "changelog": "# Catalogs are here!\n\n### \u2728 New:\n- Add support for streaming, catalog, and metadata addons.\n\n### \ud83d\udcdd Changes:\n- Fix duplicating addons\n- Enhance UI/UX of addons cards",
         "versionName": "1.0.0",
         "name": "Stremio"
     },
@@ -65,11 +65,11 @@
                 "name": "sussy-code"
             }
         ],
-        "versionCode": 11103,
+        "versionCode": 11200,
         "description": "A forked clone of the old movie-web.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/Sudo-Flix.flx",
-        "changelog": "# v1.1.1-b2\n\n### \ud83d\udd27 Changes:\n- [x] Update code to keep up with new app structure for its new catalog system\n- [x] Custom catalogs will be added soon.",
-        "versionName": "1.1.1",
+        "changelog": "# v1.1.2\n\n### \ud83d\udd27 Changes:\n- [x] Improve RidoMovies",
+        "versionName": "1.1.2",
         "name": "Sudo-Flix"
     },
     {
@@ -88,7 +88,7 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 12101,
+        "versionCode": 12102,
         "description": "NOTICE: This provider doesn't work sometimes, idk why.\n\nA classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/SuperStream.flx",
         "changelog": "# v1.2.1\n\n### \ud83d\udd27 Changes:\n- [x] Fix failed to find shared key issue\n---\n\n# v1.2.0-b2\n\n### \ud83d\udd27 Changes:\n- [x] Update code to keep up with new app structure for its new catalog system\n- [x] Custom catalogs will be added soon.",
