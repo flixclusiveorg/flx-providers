@@ -20,6 +20,9 @@ internal object OpenSubtitlesUtil {
         episode: Int? = null,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
+        if (!imdbId.startsWith("tt"))
+            return
+
         val slug = if(season == null) {
             "movie/$imdbId"
         } else {

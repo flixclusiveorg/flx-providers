@@ -1,4 +1,4 @@
-package com.flxProviders.stremio.api.dto
+package com.flxProviders.stremio.api.model
 
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
@@ -10,7 +10,7 @@ import java.net.URL
  *
  * Based from [Hexated's](https://github.com/hexated/cloudstream-extensions-hexated/blob/master/StremioX/src/main/kotlin/com/hexated/StremioX.kt#L243)
  * */
-internal data class StreamDto(
+internal data class Stream(
     val name: String?,
     val title: String?,
     val url: String?,
@@ -23,33 +23,44 @@ internal data class StreamDto(
     val subtitles: List<Subtitle>? = null
 ) {
     companion object {
-        fun StreamDto.toSourceLink(): SourceLink? {
+        fun Stream.toSourceLink(): SourceLink? {
             val isValidUrl = isValidUrl(url)
             if (!isValidUrl) return null
 
             return SourceLink(
                 url = URL(url).toString(),
-                name = fixSourceName(name, title)
+                name = fixSourceName(
+                    name = name,
+                    description = description,
+                    title = title
+                ),
+                customHeaders = extraOptions?.headers
+                    ?.plus(
+                    extraOptions.proxyHeaders
+                        ?.request
+                        ?: emptyMap()
+                    )
             )
         }
 
         private fun fixSourceName(
             name: String?,
+            description: String?,
             title: String?
         ): String {
             return when {
                 name?.contains("[RD+]", true) == true -> "[RD+] $title".trim()
                 name?.contains("[RD download]", true) == true -> "[RD download] $title".trim()
-                !name.isNullOrEmpty() && !title.isNullOrEmpty() -> "$name $title".trim()
-                else -> title ?: name ?: ""
+                else -> "${name?.trimIndent() ?: ""}\n${title?.trimIndent() ?: ""}\n${description?.trimIndent() ?: ""}"
             }
         }
     }
 }
 
 internal data class StreamResponse(
-    val streams: List<StreamDto>,
-)
+    val streams: List<Stream>,
+    override val err: String?,
+) : CommonErrorResponse()
 
 internal data class ProxyHeaders(
     val request: Map<String, String>?,
