@@ -36,17 +36,20 @@ flxProvider {
     """.trimIndent())
 
     changelog.set("""
-        # v1.0.0-b6
+        # Catalogs are here!
         
-        ### 🔧 Changes:
-        - [x] Update code to keep up with new app structure for its new catalog system
-        - [x] Custom catalogs will be added soon.
+        ### ✨ New:
+        - Add support for streaming, catalog, and metadata addons.
+        
+        ### 📝 Changes:
+        - Fix duplicating addons
+        - Enhance UI/UX of addons cards
     """.trimIndent())
 
-    versionMajor = 2
+    versionMajor = 1
     versionMinor = 0
     versionPatch = 0
-    versionBuild = 7
+    versionBuild = 8
 
     // Extra authors for specific provider
     // author(
@@ -61,7 +64,7 @@ flxProvider {
 
     providerType.set(ProviderType.All)
 
-    status.set(Status.Beta)
+    status.set(Status.Working)
 
     requiresResources.set(true)
 }

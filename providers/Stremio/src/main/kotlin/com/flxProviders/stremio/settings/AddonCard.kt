@@ -17,7 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,8 +41,16 @@ internal fun AddonCard(
     onRemove: () -> Unit,
 ) {
     val resources = LocalResources.current
+    val clipboardManager = LocalClipboardManager.current
 
     OutlinedCard(
+        onClick = {
+            val stremioUrl = "${addon.baseUrl}/manifest.json"
+                .replace("https://", "stremio://")
+            clipboardManager.setText(
+                AnnotatedString(text = stremioUrl)
+            )
+        },
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 10.dp)
