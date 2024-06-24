@@ -2,9 +2,13 @@
 
 package com.flxProviders.stremio.api
 
+import android.content.Context
 import androidx.compose.ui.util.fastForEach
+import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.util.coroutines.asyncCalls
+import com.flixclusive.core.util.coroutines.ioLaunch
 import com.flixclusive.core.util.coroutines.mapAsync
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.network.fromJson
@@ -31,28 +35,73 @@ import com.flxProviders.stremio.api.util.OpenSubtitlesUtil.fetchSubtitles
 import com.flxProviders.stremio.api.util.isValidUrl
 import com.flxProviders.stremio.settings.util.AddonUtil.DEFAULT_META_PROVIDER
 import com.flxProviders.stremio.settings.util.AddonUtil.DEFAULT_META_PROVIDER_BASE_URL
+import com.flxProviders.stremio.settings.util.AddonUtil.downloadAddon
 import com.flxProviders.stremio.settings.util.AddonUtil.getAddons
 import com.flxProviders.stremio.settings.util.AddonUtil.toProviderCatalog
+import com.flxProviders.stremio.settings.util.AddonUtil.updateAddon
+import com.flxProviders.stremio.settings.util.Success
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 
 internal const val STREAMIO_ADDONS_KEY = "streamio_addons"
 internal const val ADDON_SOURCE_KEY = "addonSource"
+internal const val ADDONS_MIGRATION_KEY = "addons_has_been_migrated"
 internal const val MEDIA_TYPE_KEY = "type"
 internal const val STREMIO = "Stremio"
 
 internal class StremioApi(
+    context: Context,
     client: OkHttpClient,
     private val settings: ProviderSettingsManager
 ) : ProviderApi(client) {
+    init {
+        ioLaunch {
+            val isSet = settings.getBool(ADDONS_MIGRATION_KEY, false)
+            if (!isSet) {
+                return@ioLaunch
+            }
+
+            var successMigrations = 0
+            val addons = settings.getAddons()
+            addons.forEach { addon ->
+                val url = addon.baseUrl ?: return@ioLaunch
+                val updatedAddon = client.downloadAddon(url = url) ?: return@forEach
+
+                val response = settings.updateAddon(addon = updatedAddon)
+
+                if (response is Success) {
+                    successMigrations++
+                }
+            }
+
+            withContext(Dispatchers.Main) {
+                context.showToast("""
+                    $successMigrations out of ${addons.size} Stremio addons have been migrated successfully addons.
+                    """.trimIndent()
+                )
+            }
+
+            if (successMigrations == addons.size - 1) {
+                settings.setBool(ADDONS_MIGRATION_KEY, true)
+            }
+        }
+    }
+
     override val name: String
         get() = STREMIO
 
     override val catalogs: List<ProviderCatalog>
-        get() = settings.getAddons().flatMap { addon ->
-            addon.catalogs.map { catalog ->
-                catalog.toProviderCatalog()
+        get() = safeCall {
+            settings.getAddons().flatMap { addon ->
+                addon.catalogs?.map { catalog ->
+                    catalog.toProviderCatalog()
+                } ?: emptyList()
             }
-        }
+        } ?: emptyList()
 
     override suspend fun getCatalogItems(
         catalog: ProviderCatalog,

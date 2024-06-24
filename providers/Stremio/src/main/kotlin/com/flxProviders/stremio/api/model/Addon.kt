@@ -7,17 +7,17 @@ import com.flixclusive.model.tmdb.common.tv.Episode
 internal data class Addon(
     val id: String,
     val name: String,
-    val description: String,
     val version: String,
+    val description: String? = null,
     val logo: String? = null,
     val baseUrl: String? = null,
-    val catalogs: List<Catalog> = emptyList(),
+    val catalogs: List<Catalog>? = null,
     val resources: List<*> = listOf<Any>(),
-    val types: List<String> = emptyList(),
+    val types: List<String>? = emptyList(),
     private val behaviorHints: Map<String, Boolean>? = null
 ) {
     val hasCatalog: Boolean
-        get() = catalogs.isNotEmpty()
+        get() = catalogs?.isNotEmpty() == true
 
     val hasStream: Boolean
         get() = resources.has("stream")

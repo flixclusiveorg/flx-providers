@@ -42,14 +42,14 @@ flxProvider {
         - Add support for streaming, catalog, and metadata addons.
         
         ### 📝 Changes:
-        - Fix duplicating addons
-        - Enhance UI/UX of addons cards
+        - Fix catalog not loading the films properly.
+        - Fix support for Debrid catalog
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 0
-    versionPatch = 0
-    versionBuild = 8
+    versionPatch = 1
+    versionBuild = 0
 
     // Extra authors for specific provider
     // author(

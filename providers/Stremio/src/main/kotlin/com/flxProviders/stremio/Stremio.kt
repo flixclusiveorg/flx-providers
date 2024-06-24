@@ -35,6 +35,10 @@ class Stremio : Provider() {
     ): ProviderApi {
         this.client = client
 
-        return StremioApi(client, settings)
+        return StremioApi(
+            context = context!!,
+            client = client,
+            settings = settings
+        )
     }
 }

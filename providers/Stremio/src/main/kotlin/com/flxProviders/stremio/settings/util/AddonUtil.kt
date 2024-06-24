@@ -2,14 +2,13 @@ package com.flxProviders.stremio.settings.util
 
 import com.flixclusive.core.util.exception.actualMessage
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.ProviderCatalog
 import com.flixclusive.provider.settings.ProviderSettingsManager
-import com.flxProviders.stremio.api.STREMIO
 import com.flxProviders.stremio.api.STREAMIO_ADDONS_KEY
+import com.flxProviders.stremio.api.STREMIO
 import com.flxProviders.stremio.api.model.Addon
 import com.flxProviders.stremio.api.model.Catalog
 import com.google.gson.Gson
@@ -107,13 +106,14 @@ internal object AddonUtil {
         return true
     }
 
-    fun OkHttpClient.getManifest(addonUrl: String): Addon? {
+    private fun OkHttpClient.getManifest(addonUrl: String): Addon? {
         return safeCall {
             request(url = "$addonUrl/manifest.json").execute()
                 .fromJson<Addon>().run {
                     copy(
                         baseUrl = addonUrl,
-                        catalogs = catalogs.map {
+                        logo = logo?.replace("svg", "png"),
+                        catalogs = catalogs?.map {
                             it.copy(addonSource = name)
                         }
                     )
