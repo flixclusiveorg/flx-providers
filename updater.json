@@ -38,11 +38,11 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 10008,
+        "versionCode": 10100,
         "description": "A flixclusive adapter for Stremio addons. Torrent addons, such as Torrentio,  don't work without RD or Debrid accounts.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/Stremio.flx",
-        "changelog": "# Catalogs are here!\n\n### \u2728 New:\n- Add support for streaming, catalog, and metadata addons.\n\n### \ud83d\udcdd Changes:\n- Fix duplicating addons\n- Enhance UI/UX of addons cards",
-        "versionName": "1.0.0",
+        "changelog": "# Catalogs are here!\n\n### \u2728 New:\n- Add support for streaming, catalog, and metadata addons.\n- Add support for Debrid catalog\n\n### \ud83d\udcdd Changes:\n- Fix catalog not loading the films properly.",
+        "versionName": "1.0.1",
         "name": "Stremio"
     },
     {
