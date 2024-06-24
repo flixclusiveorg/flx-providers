@@ -56,6 +56,7 @@ internal data class Meta(
             } ?: emptyList()
         }
 
+    @Suppress("USELESS_ELVIS")
     val episodes: List<Episode>
         get() = videos?.mapNotNull {
             if (it.season == null || it.episode == null)
@@ -63,7 +64,7 @@ internal data class Meta(
 
             Episode(
                 id = it.id,
-                title = it.title,
+                title = it.title ?: "Episode ${it.episode}",
                 season = it.season,
                 number = it.episode,
                 image = it.thumbnail,
@@ -85,7 +86,7 @@ internal data class Meta(
 
 internal data class MetaVideo(
     val id: String,
-    val title: String,
+    @SerializedName("title", alternate = ["name"]) val title: String,
     val releaseDate: String,
     val thumbnail: String? = null,
     val overview: String? = null,
