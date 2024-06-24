@@ -13,7 +13,6 @@ import com.flxProviders.stremio.api.ADDON_SOURCE_KEY
 import com.flxProviders.stremio.api.MEDIA_TYPE_KEY
 import com.flxProviders.stremio.api.STREMIO
 import com.google.gson.annotations.SerializedName
-import java.time.format.DateTimeFormatter
 
 internal data class Meta(
     val id: String,
@@ -33,9 +32,30 @@ internal data class Meta(
     @SerializedName("imdb_id") val imdbId: String? = null,
     @SerializedName("imdbRating") val rating: String? = null,
 ) {
+    private val areVideosDebridTvShows: Boolean
+        get() = videos?.firstOrNull()?.season != null
+            && type == "other"
+
+    private val areVideosCachedDebrid: Boolean
+        get() = videos != null
+            && videos.size > 1
+            && type == "other"
+            && !areVideosDebridTvShows
+
     val seasons: List<Season>
         get() {
             val traversedSeason = mutableMapOf<Int, String>()
+
+            if (areVideosCachedDebrid) {
+                return listOf(
+                    Season(
+                        number = 1,
+                        name = "Cache",
+                        episodes = episodes
+                    )
+                )
+            }
+
             return videos?.mapNotNull {
                 if (traversedSeason.contains(it.season) || it.season == null) {
                     return@mapNotNull null
@@ -49,6 +69,7 @@ internal data class Meta(
 
                 val season = Season(
                     number = it.season,
+                    name = "Season ${it.season}",
                     episodes = episodesForThisSeason
                 )
 
@@ -58,20 +79,33 @@ internal data class Meta(
 
     @Suppress("USELESS_ELVIS")
     val episodes: List<Episode>
-        get() = videos?.mapNotNull {
-            if (it.season == null || it.episode == null)
-                return@mapNotNull null
+        get() {
+            var episodeCount = 1
+            return videos?.mapNotNull {
+                if ((it.season == null || it.episode == null) && type != "other")
+                    return@mapNotNull null
 
-            Episode(
-                id = it.id,
-                title = it.title ?: "Episode ${it.episode}",
-                season = it.season,
-                number = it.episode,
-                image = it.thumbnail,
-                overview = it.overview ?: "",
-                airDate = released?.extractDate(),
-            )
-        } ?: emptyList()
+                Episode(
+                    id = it.id,
+                    title = it.title ?: "Episode ${it.episode}",
+                    season = it.season ?: 1,
+                    number = it.episode ?: episodeCount++,
+                    image = it.thumbnail,
+                    overview = it.overview ?: "",
+                    airDate = released?.extractDate(),
+                )
+            } ?: emptyList()
+        }
+
+    val filmType: FilmType
+        get() {
+            return when {
+                type == "tv" || type == "series" -> FilmType.TV_SHOW
+                type == "movie" -> FilmType.MOVIE
+                areVideosDebridTvShows || areVideosCachedDebrid -> FilmType.TV_SHOW
+                else -> FilmType.MOVIE
+            }
+        }
 
     private fun String.extractDate(): String {
         val parts = split("T")
@@ -91,7 +125,7 @@ internal data class MetaVideo(
     val thumbnail: String? = null,
     val overview: String? = null,
     @SerializedName("imdbSeason", alternate = ["season"]) val season: Int? = null,
-    @SerializedName("imdbEpisode", alternate = ["episode"]) val episode: Int? = null
+    @SerializedName("imdbEpisode", alternate = ["episode"]) val episode: Int? = null,
 )
 
 internal data class FetchMetaResponse(
@@ -100,7 +134,7 @@ internal data class FetchMetaResponse(
 ) : CommonErrorResponse()
 
 internal fun Meta.toFilmDetails(addonName: String): FilmDetails {
-    return when (type.getType()) {
+    return when (filmType) {
         FilmType.MOVIE -> {
             Movie(
                 id = id,
@@ -172,7 +206,7 @@ internal fun Meta.toFilmSearchItem(addonName: String): FilmSearchItem {
         rating = rating?.toDoubleOrNull(),
         year = releaseInfo?.extractYear(),
         providerName = STREMIO,
-        filmType = type.getType(),
+        filmType = filmType,
         homePage = website,
         genres = genres?.map {
             Genre(
@@ -185,12 +219,4 @@ internal fun Meta.toFilmSearchItem(addonName: String): FilmSearchItem {
             ADDON_SOURCE_KEY to addonName,
         )
     )
-}
-
-private fun String.getType(): FilmType {
-    return when (this) {
-        "tv", "series" -> FilmType.TV_SHOW
-        "movie" -> FilmType.MOVIE
-        else -> FilmType.MOVIE
-    }
 }

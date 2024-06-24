@@ -40,10 +40,10 @@ flxProvider {
         
         ### ✨ New:
         - Add support for streaming, catalog, and metadata addons.
+        - Add support for Debrid catalog
         
         ### 📝 Changes:
         - Fix catalog not loading the films properly.
-        - Fix support for Debrid catalog
     """.trimIndent())
 
     versionMajor = 1
