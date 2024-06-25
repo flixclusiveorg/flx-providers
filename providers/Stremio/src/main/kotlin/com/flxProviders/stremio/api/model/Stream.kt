@@ -27,6 +27,8 @@ internal data class Stream(
             val isValidUrl = isValidUrl(url)
             if (!isValidUrl) return null
 
+            val headers = (extraOptions?.headers ?: emptyMap()).plus(extraOptions?.proxyHeaders?.request ?: emptyMap())
+
             return SourceLink(
                 url = URL(url).toString(),
                 name = fixSourceName(
@@ -34,12 +36,7 @@ internal data class Stream(
                     description = description,
                     title = title
                 ),
-                customHeaders = extraOptions?.headers
-                    ?.plus(
-                    extraOptions.proxyHeaders
-                        ?.request
-                        ?: emptyMap()
-                    )
+                customHeaders = headers
             )
         }
 
