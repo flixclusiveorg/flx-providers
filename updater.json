@@ -65,11 +65,11 @@
                 "name": "sussy-code"
             }
         ],
-        "versionCode": 11200,
+        "versionCode": 12000,
         "description": "A forked clone of the old movie-web.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/Sudo-Flix.flx",
-        "changelog": "# v1.1.2\n\n### \ud83d\udd27 Changes:\n- [x] Improve RidoMovies",
-        "versionName": "1.1.2",
+        "changelog": "# v1.2.0\n\n### \u2728 New:\n- Added VidSrc.to provider",
+        "versionName": "1.2.0",
         "name": "Sudo-Flix"
     },
     {
