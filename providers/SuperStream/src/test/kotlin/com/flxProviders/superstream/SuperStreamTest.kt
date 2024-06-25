@@ -6,6 +6,7 @@ import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flxProviders.superstream.api.SuperStreamApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
@@ -85,8 +86,7 @@ class SuperStreamTest {
         api.getSourceLinks(
             watchId = watchId!!,
             film = tvShow,
-            season = 1,
-            episode = 1,
+            episode = Episode(season = 1, number = 1),
             onLinkLoaded = links::add,
             onSubtitleLoaded = {}
         )
