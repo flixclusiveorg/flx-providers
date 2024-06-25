@@ -85,8 +85,11 @@ internal data class Meta(
                 if ((it.season == null || it.episode == null) && type != "other")
                     return@mapNotNull null
 
+                val episodeId = it.streams?.firstOrNull()
+                    ?.url ?: it.id
+
                 Episode(
-                    id = it.id,
+                    id = episodeId,
                     title = it.title ?: "Episode ${it.episode}",
                     season = it.season ?: 1,
                     number = it.episode ?: episodeCount++,
@@ -124,8 +127,9 @@ internal data class MetaVideo(
     val releaseDate: String,
     val thumbnail: String? = null,
     val overview: String? = null,
+    val streams: List<Stream>? = null,
     @SerializedName("imdbSeason", alternate = ["season"]) val season: Int? = null,
-    @SerializedName("imdbEpisode", alternate = ["episode"]) val episode: Int? = null,
+    @SerializedName("imdbEpisode", alternate = ["episode"]) val episode: Int? = null
 )
 
 internal data class FetchMetaResponse(

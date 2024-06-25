@@ -11,16 +11,16 @@ import java.net.URL
  * Based from [Hexated's](https://github.com/hexated/cloudstream-extensions-hexated/blob/master/StremioX/src/main/kotlin/com/hexated/StremioX.kt#L243)
  * */
 internal data class Stream(
-    val name: String?,
-    val title: String?,
     val url: String?,
-    val description: String?,
-    val ytId: String?,
-    val externalUrl: String?,
-    @SerializedName("behaviorHints") val extraOptions: ExtraOptions?,
-    val infoHash: String?,
+    val name: String? = null,
+    val title: String? = null,
+    val description: String? = null,
+    val ytId: String? = null,
+    val externalUrl: String? = null,
+    val infoHash: String? = null,
     val sources: List<String>? = null,
-    val subtitles: List<Subtitle>? = null
+    val subtitles: List<Subtitle>? = null,
+    @SerializedName("behaviorHints") val extraOptions: ExtraOptions? = null
 ) {
     companion object {
         fun Stream.toSourceLink(): SourceLink? {

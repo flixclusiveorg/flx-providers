@@ -10,7 +10,6 @@ import com.flixclusive.core.util.coroutines.ioLaunch
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.ProviderCatalog
@@ -40,10 +39,7 @@ import com.flxProviders.stremio.settings.util.AddonUtil.getAddons
 import com.flxProviders.stremio.settings.util.AddonUtil.toProviderCatalog
 import com.flxProviders.stremio.settings.util.AddonUtil.updateAddon
 import com.flxProviders.stremio.settings.util.Success
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 
@@ -288,6 +284,17 @@ internal class StremioApi(
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
+        val hasStreamUrlOnEpisode = episode != null && isValidUrl(episode.id)
+        if (hasStreamUrlOnEpisode) {
+            onLinkLoaded(
+                SourceLink(
+                    url = episode!!.id,
+                    name = episode.title,
+                )
+            )
+            return
+        }
+
         val query = when (streamType) {
             null -> getStreamQuery(
                 id = watchId,
@@ -303,13 +310,10 @@ internal class StremioApi(
             )
         }
 
-        debugLog("$baseUrl/$query")
         val response = client.request(
             url = "$baseUrl/$query"
         ).execute()
             .fromJson<StreamResponse>()
-
-        debugLog(response)
 
         if (response.err != null)
             return
