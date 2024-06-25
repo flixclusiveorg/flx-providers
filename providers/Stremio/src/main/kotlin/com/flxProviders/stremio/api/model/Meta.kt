@@ -42,6 +42,10 @@ internal data class Meta(
             && type == "other"
             && !areVideosDebridTvShows
 
+    private val isIPTV: Boolean
+        get() = (type == "events" || type == "tv")
+            && videos == null
+
     val seasons: List<Season>
         get() {
             val traversedSeason = mutableMapOf<Int, String>()
@@ -103,8 +107,8 @@ internal data class Meta(
     val filmType: FilmType
         get() {
             return when {
+                type == "movie" || isIPTV -> FilmType.MOVIE
                 type == "tv" || type == "series" -> FilmType.TV_SHOW
-                type == "movie" -> FilmType.MOVIE
                 areVideosDebridTvShows || areVideosCachedDebrid -> FilmType.TV_SHOW
                 else -> FilmType.MOVIE
             }
