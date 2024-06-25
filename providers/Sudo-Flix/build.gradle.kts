@@ -8,15 +8,15 @@ flxProvider {
     """.trimIndent())
 
     changelog.set("""
-        # v1.1.2
+        # v1.2.0
         
-        ### 🔧 Changes:
-        - [x] Improve RidoMovies
+        ### ✨ New:
+        - Added VidSrc.to provider
     """.trimIndent())
 
     versionMajor = 1
-    versionMinor = 1
-    versionPatch = 2
+    versionMinor = 2
+    versionPatch = 0
     versionBuild = 0
 
     // Extra authors for specific provider

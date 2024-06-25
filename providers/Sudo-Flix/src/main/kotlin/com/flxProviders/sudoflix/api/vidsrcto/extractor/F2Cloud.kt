@@ -1,0 +1,84 @@
+package com.flxProviders.sudoflix.api.vidsrcto.extractor
+
+import com.flixclusive.core.util.log.debugLog
+import com.flixclusive.core.util.network.CryptographyUtil.base64Encode
+import com.flixclusive.core.util.network.fromJson
+import com.flixclusive.core.util.network.request
+import com.flixclusive.model.provider.SourceLink
+import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.provider.extractor.Extractor
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.OkHttpClient
+import javax.crypto.Cipher
+import javax.crypto.spec.SecretKeySpec
+
+internal class F2Cloud(
+    client: OkHttpClient
+) : Extractor(client) {
+    override val baseUrl: String
+        get() = "https://vid2v11.site"
+    override val name: String
+        get() = "F2Cloud"
+
+    override suspend fun extract(
+        url: String,
+        onLinkLoaded: (SourceLink) -> Unit,
+        onSubtitleLoaded: (Subtitle) -> Unit
+    ) {
+        val encodedId = getKey(url = url)
+        val sourcesUrl = getSourcesUrl(id = encodedId, url = url)
+
+        TODO("Fix this broken extractor")
+    }
+
+    private fun getKey(url: String): String {
+        val id = url.substringBefore("?").substringAfterLast("/")
+
+        val keysUrl = "https://raw.githubusercontent.com/Ciarands/vidsrc-keys/main/keys.json"
+        val keys = client.request(keysUrl).execute()
+            .fromJson<List<String>>()
+        return encodeId(id, keys)
+    }
+
+    private fun encodeId(id: String, keyList: List<String>): String {
+        val cipher1 = Cipher.getInstance("RC4")
+        val cipher2 = Cipher.getInstance("RC4")
+        cipher1.init(
+            Cipher.DECRYPT_MODE,
+            SecretKeySpec(keyList[0].toByteArray(), "RC4"),
+            cipher1.parameters
+        )
+        cipher2.init(
+            Cipher.DECRYPT_MODE,
+            SecretKeySpec(keyList[1].toByteArray(), "RC4"),
+            cipher2.parameters
+        )
+        var input = id.toByteArray()
+        input = cipher1.doFinal(input)
+        input = cipher2.doFinal(input)
+        return base64Encode(input).replace("/", "_")
+    }
+
+    private fun getSourcesUrl(
+        id: String,
+        url: String
+    ): String {
+        val script = client.request(
+            url = "$baseUrl/futoken",
+            headers = mapOf("Referer" to url).toHeaders()
+        ).execute()
+            .body?.string()
+            ?: throw Exception("[$name]> Failed to get script")
+
+        val k = Regex("""var\s+k\s*=\s*'([^']+)'""").find(script)
+            ?.groupValues?.get(1)
+            ?: throw Exception("[$name]> Failed to get key from script")
+
+        val a = mutableListOf(k)
+        for (i in id.indices) {
+            a.add((k[i % k.length].code + id[i].code).toString())
+        }
+
+        return "$baseUrl/mediainfo/${a.joinToString(",")}?${url.substringAfter("?")}"
+    }
+}

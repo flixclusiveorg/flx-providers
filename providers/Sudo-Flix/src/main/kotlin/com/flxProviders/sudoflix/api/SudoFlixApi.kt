@@ -13,6 +13,7 @@ import com.flixclusive.provider.ProviderApi
 import com.flxProviders.sudoflix.api.nsbx.NsbxApi
 import com.flxProviders.sudoflix.api.primewire.PrimeWireApi
 import com.flxProviders.sudoflix.api.ridomovies.RidoMoviesApi
+import com.flxProviders.sudoflix.api.vidsrcto.VidSrcToApi
 import okhttp3.OkHttpClient
 
 /**
@@ -32,6 +33,7 @@ class SudoFlixApi(
         NsbxApi(client),
         RidoMoviesApi(client),
         PrimeWireApi(client),
+        VidSrcToApi(client),
     )
 
     override suspend fun getSourceLinks(
