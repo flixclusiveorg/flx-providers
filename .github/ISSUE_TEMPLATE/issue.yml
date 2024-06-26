@@ -1,6 +1,6 @@
 name: 🐞 Issue report
-description: Report a extension issue with a source
-labels: []
+description: Report a provider issue with a source
+labels: [ bug ]
 body:
 
     -   type: input
