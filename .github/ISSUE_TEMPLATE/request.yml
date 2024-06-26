@@ -1,25 +1,25 @@
 name: ⭐ Extension request
-description: Suggest a extension that you would like see added
-labels: []
+description: Suggest a provider that you would like see added
+labels: [ provider request ]
 body:
 
     -   type: input
-        id: source-name
+        id: provider-name
         attributes:
-            label: Source name
+            label: Provider Name
             description: |
-                Provide the Source name.
+                Provide the Provider name.
             placeholder: |
                 Example: "Gogoganime"
         validations:
             required: true
 
     -   type: input
-        id: source-url
+        id: provider-url
         attributes:
-            label: Source URL
+            label: Provider URL
             description: |
-                Provide the Source URL.
+                Provide the Provider URL.
             placeholder: |
                 Example: "https://gogoanimehd.io"
         validations:
@@ -37,7 +37,7 @@ body:
     -   type: input
         id: language
         attributes:
-            label: Source language
+            label: Provider language
             placeholder: |
                 Example: "en"
         validations:
