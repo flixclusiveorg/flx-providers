@@ -40,15 +40,17 @@ flxProvider {
         
         ### ✨ New:
         - Add support for streaming, catalog, and metadata addons.
-        - Add support for Debrid catalog
+        - Add support for debrid catalog
+        - Make debrid movies watchable
+        - Add subtitles when watching debrid caches
         
         ### 📝 Changes:
-        - Fix catalog not loading the films properly.
+        - Manually load catalogs (per option) from an addon.
     """.trimIndent())
 
     versionMajor = 1
-    versionMinor = 0
-    versionPatch = 1
+    versionMinor = 1
+    versionPatch = 0
     versionBuild = 0
 
     // Extra authors for specific provider

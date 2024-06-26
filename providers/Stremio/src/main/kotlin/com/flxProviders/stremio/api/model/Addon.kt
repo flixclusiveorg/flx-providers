@@ -1,8 +1,13 @@
 package com.flxProviders.stremio.api.model
 
+import androidx.compose.ui.util.fastAny
+import androidx.compose.ui.util.fastFilter
+import androidx.compose.ui.util.fastForEach
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.film.FilmType
+import com.flixclusive.model.provider.ProviderCatalog
 import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flxProviders.stremio.settings.util.AddonUtil.toProviderCatalog
 
 internal data class Addon(
     val id: String,
@@ -11,9 +16,9 @@ internal data class Addon(
     val description: String? = null,
     val logo: String? = null,
     val baseUrl: String? = null,
-    val catalogs: List<Catalog>? = null,
     val resources: List<*> = listOf<Any>(),
     val types: List<String>? = emptyList(),
+    internal val catalogs: List<Catalog>? = null,
     private val behaviorHints: Map<String, Boolean>? = null
 ) {
     val hasCatalog: Boolean
@@ -27,6 +32,65 @@ internal data class Addon(
 
     val needsConfiguration: Boolean
         get() = behaviorHints?.get("configurationRequired") ?: false
+
+    fun getAllHomeCatalogs(): List<ProviderCatalog> {
+        val allCatalogs = mutableListOf<ProviderCatalog>()
+
+        catalogs?.fastForEach forEachCatalog@ { catalog ->
+            val optionalCatalogs = mutableListOf<ProviderCatalog>()
+            catalog.extra?.let { extras ->
+                val isCatalogOnlyForSearching = extras.fastAny {
+                    it.name == "search" && it.isRequired == true
+                }
+
+                if (isCatalogOnlyForSearching) {
+                    optionalCatalogs.clear()
+                    return@let
+                }
+
+                extras.fastForEach forEachExtra@ { extra ->
+                    if (extra.name == "skip" || extra.name == "search")
+                        return@forEachExtra
+
+                    if (extra.options?.isNotEmpty() == true) {
+                        extra.options.fastForEach forEachOption@ { option ->
+                            if (option == null) {
+                                return@forEachOption
+                            }
+
+                            val optionalCatalog = Catalog(
+                                id = catalog.id,
+                                name = "${catalog.name.trim()} - $option",
+                                type = catalog.type,
+                                addonSource = catalog.addonSource,
+                                pageSize = catalog.pageSize,
+                                filter = extra.name to option,
+                                extra = extras.fastFilter {
+                                    it.name == "search"
+                                    || it.name == "skip"
+                                }
+                            ).toProviderCatalog(image = logo)
+
+                            optionalCatalogs.add(optionalCatalog)
+                        }
+                    }
+
+                    if (extra.isRequired == true) {
+                        return@forEachCatalog
+                    }
+                }
+            }
+
+            if (optionalCatalogs.isNotEmpty()) {
+                allCatalogs.addAll(optionalCatalogs)
+                return@forEachCatalog
+            }
+
+            allCatalogs.add(catalog.toProviderCatalog(image = logo))
+        }
+
+        return allCatalogs.toList()
+    }
 
     fun getStreamQuery(
         id: String,

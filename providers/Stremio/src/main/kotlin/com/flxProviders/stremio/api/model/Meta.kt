@@ -14,6 +14,12 @@ import com.flxProviders.stremio.api.MEDIA_TYPE_KEY
 import com.flxProviders.stremio.api.STREMIO
 import com.google.gson.annotations.SerializedName
 
+/**
+ * This key/property is for Debrid caches that has the type of _other_
+ * */
+internal const val EMBEDDED_STREAM_KEY = "embedded_stream_key"
+internal const val EMBEDDED_IMDB_ID_KEY = "embedded_imdb_id_key"
+
 internal data class Meta(
     val id: String,
     val type: String,
@@ -28,7 +34,7 @@ internal data class Meta(
     val runtime: String? = null,
     val website: String? = null,
     val genres: List<String>? = null,
-    private val videos: List<MetaVideo>? = null,
+    internal val videos: List<MetaVideo>? = null,
     @SerializedName("imdb_id") val imdbId: String? = null,
     @SerializedName("imdbRating") val rating: String? = null,
 ) {
@@ -41,6 +47,15 @@ internal data class Meta(
             && videos.size > 1
             && type == "other"
             && !areVideosDebridTvShows
+
+    internal val imdbIdFromVideos: String?
+        get() {
+            val sampleId = videos?.find {
+                it.id.startsWith("tt")
+            }?.id
+
+            return sampleId?.split(":")?.first()
+        }
 
     private val isIPTV: Boolean
         get() = (type == "events" || type == "tv")
@@ -94,7 +109,9 @@ internal data class Meta(
 
                 Episode(
                     id = episodeId,
-                    title = it.title ?: "Episode ${it.episode}",
+                    title = it.title.replaceFirstChar { char ->
+                        if (char == '/') Char.MIN_VALUE else char
+                    } ?: "Episode ${it.episode}",
                     season = it.season ?: 1,
                     number = it.episode ?: episodeCount++,
                     image = it.thumbnail,
@@ -142,8 +159,31 @@ internal data class FetchMetaResponse(
 ) : CommonErrorResponse()
 
 internal fun Meta.toFilmDetails(addonName: String): FilmDetails {
+    val properties = mutableMapOf(
+        MEDIA_TYPE_KEY to type,
+        ADDON_SOURCE_KEY to addonName
+    )
+
+    val embeddedImdbId = imdbIdFromVideos
+    if (embeddedImdbId != null) {
+        properties[EMBEDDED_IMDB_ID_KEY] = embeddedImdbId
+    }
+
     return when (filmType) {
         FilmType.MOVIE -> {
+            val debridCacheStreams = videos?.firstOrNull()?.streams
+            val embeddedStreamUrl = if (
+                type == "other"
+                && debridCacheStreams?.isNotEmpty() == true
+                && debridCacheStreams.first().url != null
+            ) {
+                debridCacheStreams.first().url
+            } else null
+
+            if (embeddedStreamUrl != null) {
+                properties[EMBEDDED_STREAM_KEY] = embeddedStreamUrl
+            }
+
             Movie(
                 id = id,
                 title = name,
@@ -163,10 +203,7 @@ internal fun Meta.toFilmDetails(addonName: String): FilmDetails {
                         name = it
                     )
                 } ?: emptyList(),
-                customProperties = mapOf(
-                    MEDIA_TYPE_KEY to type,
-                    ADDON_SOURCE_KEY to addonName,
-                )
+                customProperties = properties.toMap()
             )
         }
         FilmType.TV_SHOW -> {
@@ -193,10 +230,7 @@ internal fun Meta.toFilmDetails(addonName: String): FilmDetails {
                 seasons = seasons,
                 totalSeasons = seasons.size,
                 totalEpisodes = episodes.size,
-                customProperties = mapOf(
-                    MEDIA_TYPE_KEY to type,
-                    ADDON_SOURCE_KEY to addonName,
-                )
+                customProperties = properties.toMap()
             )
         }
     }

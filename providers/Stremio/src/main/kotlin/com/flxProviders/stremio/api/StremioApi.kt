@@ -3,6 +3,7 @@
 package com.flxProviders.stremio.api
 
 import android.content.Context
+import androidx.compose.ui.util.fastFlatMap
 import androidx.compose.ui.util.fastForEach
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.util.coroutines.asyncCalls
@@ -10,6 +11,7 @@ import com.flixclusive.core.util.coroutines.ioLaunch
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.film.FilmType
+import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.ProviderCatalog
@@ -24,6 +26,8 @@ import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.settings.ProviderSettingsManager
 import com.flxProviders.stremio.api.model.Addon
 import com.flxProviders.stremio.api.model.Catalog
+import com.flxProviders.stremio.api.model.EMBEDDED_IMDB_ID_KEY
+import com.flxProviders.stremio.api.model.EMBEDDED_STREAM_KEY
 import com.flxProviders.stremio.api.model.FetchCatalogResponse
 import com.flxProviders.stremio.api.model.FetchMetaResponse
 import com.flxProviders.stremio.api.model.Stream.Companion.toSourceLink
@@ -36,7 +40,6 @@ import com.flxProviders.stremio.settings.util.AddonUtil.DEFAULT_META_PROVIDER
 import com.flxProviders.stremio.settings.util.AddonUtil.DEFAULT_META_PROVIDER_BASE_URL
 import com.flxProviders.stremio.settings.util.AddonUtil.downloadAddon
 import com.flxProviders.stremio.settings.util.AddonUtil.getAddons
-import com.flxProviders.stremio.settings.util.AddonUtil.toProviderCatalog
 import com.flxProviders.stremio.settings.util.AddonUtil.updateAddon
 import com.flxProviders.stremio.settings.util.Success
 import kotlinx.coroutines.Dispatchers
@@ -45,7 +48,7 @@ import okhttp3.OkHttpClient
 
 internal const val STREAMIO_ADDONS_KEY = "streamio_addons"
 internal const val ADDON_SOURCE_KEY = "addonSource"
-internal const val ADDONS_MIGRATION_KEY = "addons_has_been_migrated"
+internal const val ADDONS_MIGRATION_KEY = "addons_has_been_migrated_1" // Just increment by 1
 internal const val MEDIA_TYPE_KEY = "type"
 internal const val STREMIO = "Stremio"
 
@@ -92,10 +95,8 @@ internal class StremioApi(
 
     override val catalogs: List<ProviderCatalog>
         get() = safeCall {
-            settings.getAddons().flatMap { addon ->
-                addon.catalogs?.map { catalog ->
-                    catalog.toProviderCatalog()
-                } ?: emptyList()
+            settings.getAddons().fastFlatMap { addon ->
+                addon.getAllHomeCatalogs()
             }
         } ?: emptyList()
 
@@ -109,6 +110,8 @@ internal class StremioApi(
 
         val query = catalogProperties.getCatalogQuery(page = page)
 
+        debugLog(catalogProperties)
+        debugLog(query)
         val failedFetchErrorMessage = "[${catalog.name}]> Coudn't fetch catalog items"
         val response = client.request(url = "${addon.baseUrl}/$query")
             .execute()
@@ -148,8 +151,12 @@ internal class StremioApi(
                 )
             },
             {
+                val imdbId = film.customProperties[EMBEDDED_IMDB_ID_KEY]
+                    ?: film.imdbId
+                    ?: film.identifier
+
                 client.fetchSubtitles(
-                    imdbId = film.imdbId ?: film.identifier,
+                    imdbId = imdbId,
                     season = episode?.season,
                     episode = episode?.number,
                     onSubtitleLoaded = onSubtitleLoaded
@@ -231,6 +238,16 @@ internal class StremioApi(
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
+        val embeddedStream = customProperties[EMBEDDED_STREAM_KEY]
+        if (embeddedStream != null) {
+            return onLinkLoaded(
+                SourceLink(
+                    name = title,
+                    url = embeddedStream
+                )
+            )
+        }
+
         val addons = settings.getAddons()
         val streamType = customProperties[MEDIA_TYPE_KEY]
         val addonSourceName = customProperties[ADDON_SOURCE_KEY]
@@ -344,23 +361,6 @@ internal class StremioApi(
             nameKey = nameKey,
             url = url
         )
-    }
-
-    private fun Catalog.getCatalogQuery(
-        page: Int = 1,
-        searchQuery: String? = null
-    ): String {
-        var query = "catalog/$type/$id"
-
-        if (page > 1 && canPaginate) {
-            query += "/skip=${page * (pageSize ?: 20)}"
-        }
-
-        if (searchQuery != null) {
-            query += "/search=$searchQuery"
-        }
-
-        return "$query.json"
     }
 
     private fun getAddonByName(name: String): Addon {

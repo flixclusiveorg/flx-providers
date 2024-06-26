@@ -112,7 +112,9 @@ internal object AddonUtil {
                 .fromJson<Addon>().run {
                     copy(
                         baseUrl = addonUrl,
-                        logo = logo?.replace("svg", "png"),
+                        logo = logo
+                            ?.replace("svg", "png")
+                            ?.replace("http:", "https:"),
                         catalogs = catalogs?.map {
                             it.copy(addonSource = name)
                         }
@@ -121,13 +123,14 @@ internal object AddonUtil {
         }
     }
 
-    fun Catalog.toProviderCatalog(): ProviderCatalog {
+    fun Catalog.toProviderCatalog(image: String? = null): ProviderCatalog {
         val json = toJson()
             ?: throw IllegalArgumentException("Invalid catalog")
 
         return ProviderCatalog(
             name = name,
             url = json,
+            image = image,
             providerName = STREMIO,
             canPaginate = canPaginate
         )
