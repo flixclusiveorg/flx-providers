@@ -1,0 +1,59 @@
+name: ⭐ Extension request
+description: Suggest a provider that you would like see added
+labels: [ provider request ]
+body:
+
+    -   type: input
+        id: provider-name
+        attributes:
+            label: Provider Name
+            description: |
+                Provide the Provider name.
+            placeholder: |
+                Example: "Gogoganime"
+        validations:
+            required: true
+
+    -   type: input
+        id: provider-url
+        attributes:
+            label: Provider URL
+            description: |
+                Provide the Provider URL.
+            placeholder: |
+                Example: "https://gogoanimehd.io"
+        validations:
+            required: true
+
+    -   type: input
+        id: package-type
+        attributes:
+            label: Package type
+            placeholder: |
+                Example: "anime"
+        validations:
+            required: false
+
+    -   type: input
+        id: language
+        attributes:
+            label: Provider language
+            placeholder: |
+                Example: "en"
+        validations:
+            required: false
+
+    -   type: textarea
+        id: other-details
+        attributes:
+            label: Other details
+            placeholder: |
+                Additional details and attachments.
+
+    -   type: checkboxes
+        id: acknowledgements
+        attributes:
+            label: Acknowledgements
+            options:
+                -   label: I have searched the existing issues and this is a new ticket, **NOT** a duplicate or related to another open issue.
+                    required: true
