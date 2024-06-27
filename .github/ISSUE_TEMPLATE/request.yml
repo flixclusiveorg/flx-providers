@@ -1,14 +1,14 @@
-name: ⭐ Extension request
-description: Suggest a provider that you would like see added
+name: ⭐ Provider request
+description: Suggest a provider that you would like to be added
 labels: [ provider request ]
 body:
 
     -   type: input
         id: provider-name
         attributes:
-            label: Provider Name
+            label: Provider name
             description: |
-                Provide the Provider name.
+                Provide the provider name.
             placeholder: |
                 Example: "Gogoganime"
         validations:
@@ -19,7 +19,7 @@ body:
         attributes:
             label: Provider URL
             description: |
-                Provide the Provider URL.
+                Provide the provider URL.
             placeholder: |
                 Example: "https://gogoanimehd.io"
         validations:

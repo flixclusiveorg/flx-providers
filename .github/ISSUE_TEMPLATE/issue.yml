@@ -1,14 +1,14 @@
 name: 🐞 Issue report
-description: Report a provider issue with a source
+description: Report an issue with a provider
 labels: [ bug ]
 body:
 
     -   type: input
-        id: source
+        id: provider
         attributes:
-            label: Extension information
+            label: Provider information
             description: |
-                You can find the source name in extensions drawer.
+                You can find the provider name in the provider screen.
             placeholder: |
                 Example: "Stremio"
         validations:
