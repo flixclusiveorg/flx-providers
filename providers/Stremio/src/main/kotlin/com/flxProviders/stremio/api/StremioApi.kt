@@ -3,6 +3,7 @@
 package com.flxProviders.stremio.api
 
 import android.content.Context
+import androidx.compose.ui.util.fastDistinctBy
 import androidx.compose.ui.util.fastFlatMap
 import androidx.compose.ui.util.fastForEach
 import com.flixclusive.core.ui.common.util.showToast
@@ -58,36 +59,7 @@ internal class StremioApi(
     private val settings: ProviderSettingsManager
 ) : ProviderApi(client) {
     init {
-        ioLaunch {
-            val isSet = settings.getBool(ADDONS_MIGRATION_KEY, false)
-            if (!isSet) {
-                return@ioLaunch
-            }
-
-            var successMigrations = 0
-            val addons = settings.getAddons()
-            addons.forEach { addon ->
-                val url = addon.baseUrl ?: return@ioLaunch
-                val updatedAddon = client.downloadAddon(url = url) ?: return@forEach
-
-                val response = settings.updateAddon(addon = updatedAddon)
-
-                if (response is Success) {
-                    successMigrations++
-                }
-            }
-
-            withContext(Dispatchers.Main) {
-                context.showToast("""
-                    $successMigrations out of ${addons.size} Stremio addons have been migrated successfully addons.
-                    """.trimIndent()
-                )
-            }
-
-            if (successMigrations == addons.size - 1) {
-                settings.setBool(ADDONS_MIGRATION_KEY, true)
-            }
-        }
+        context.migrateOldAddons()
     }
 
     override val name: String
@@ -96,7 +68,7 @@ internal class StremioApi(
     override val catalogs: List<ProviderCatalog>
         get() = safeCall {
             settings.getAddons().fastFlatMap { addon ->
-                addon.getAllHomeCatalogs()
+                addon.homeCatalogs
             }
         } ?: emptyList()
 
@@ -110,8 +82,6 @@ internal class StremioApi(
 
         val query = catalogProperties.getCatalogQuery(page = page)
 
-        debugLog(catalogProperties)
-        debugLog(query)
         val failedFetchErrorMessage = "[${catalog.name}]> Coudn't fetch catalog items"
         val response = client.request(url = "${addon.baseUrl}/$query")
             .execute()
@@ -172,20 +142,53 @@ internal class StremioApi(
         imdbId: String?,
         tmdbId: Int?
     ): SearchResponseData<FilmSearchItem> {
-        // TODO("Add catalog system")
-
-        return SearchResponseData(
-            results = listOf(
-                FilmSearchItem(
-                    id = id ?: tmdbId?.toString() ?: imdbId!!,
-                    title = title,
-                    providerName = name,
-                    posterImage = null,
-                    backdropImage = null,
-                    homePage = null,
-                    filmType = FilmType.MOVIE
+        val identifier = id ?: tmdbId?.toString() ?: imdbId
+        if (identifier != null) {
+            return SearchResponseData(
+                results = listOf(
+                    FilmSearchItem(
+                        id = identifier,
+                        title = title,
+                        providerName = name,
+                        posterImage = null,
+                        backdropImage = null,
+                        homePage = null,
+                        filmType = FilmType.MOVIE
+                    )
                 )
             )
+        }
+
+        val results = mutableListOf<FilmSearchItem>()
+        settings.getAddons().mapAsync { addon ->
+            addon.searchableCatalogs.mapAsync { catalog ->
+                val query = catalog.getCatalogQuery(
+                    searchQuery = title,
+                    page = page,
+                )
+
+                val items = safeCall {
+                    val baseUrl = when (catalog.addonSource) {
+                        DEFAULT_META_PROVIDER -> DEFAULT_META_PROVIDER_BASE_URL
+                        else -> addon.baseUrl
+                    }
+
+                    client.request(url = "$baseUrl/$query")
+                        .execute()
+                        .fromJson<FetchCatalogResponse>()
+                        .items?.mapAsync {
+                            it.toFilmSearchItem(addonName = addon.name)
+                        }
+                } ?: emptyList()
+
+                results.addAll(items)
+            }
+        }
+
+        return SearchResponseData(
+            results = results.fastDistinctBy { it.identifier }.toList(),
+            page = page,
+            hasNextPage = results.size >= 20
         )
     }
 
@@ -374,4 +377,37 @@ internal class StremioApi(
 
     private val Film.hasImdbId: Boolean
         get() = imdbId != null || id?.startsWith("tt") == true
+
+    private fun Context.migrateOldAddons() {
+        ioLaunch {
+            val isSet = settings.getBool(ADDONS_MIGRATION_KEY, false)
+            if (!isSet) {
+                return@ioLaunch
+            }
+
+            var successMigrations = 0
+            val addons = settings.getAddons()
+            addons.forEach { addon ->
+                val url = addon.baseUrl ?: return@ioLaunch
+                val updatedAddon = client.downloadAddon(url = url) ?: return@forEach
+
+                val response = settings.updateAddon(addon = updatedAddon)
+
+                if (response is Success) {
+                    successMigrations++
+                }
+            }
+
+            withContext(Dispatchers.Main) {
+                showToast("""
+                    $successMigrations out of ${addons.size} Stremio addons have been migrated successfully addons.
+                    """.trimIndent()
+                )
+            }
+
+            if (successMigrations == addons.size - 1) {
+                settings.setBool(ADDONS_MIGRATION_KEY, true)
+            }
+        }
+    }
 }

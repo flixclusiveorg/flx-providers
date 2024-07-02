@@ -27,7 +27,7 @@ internal data object Duplicate: AddonAddResponse()
 internal object AddonUtil {
     private val gson = Gson()
     const val DEFAULT_META_PROVIDER_BASE_URL = "https://v3-cinemeta.strem.io"
-    const val DEFAULT_META_PROVIDER = "Cinemata"
+    const val DEFAULT_META_PROVIDER = "Cinemeta"
 
     fun parseStremioAddonUrl(url: String): String {
         val regex = Regex("""(https?://.+)(?=/+)""")

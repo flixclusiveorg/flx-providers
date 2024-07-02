@@ -1,12 +1,14 @@
 package com.flxProviders.stremio.api.model
 
 import androidx.compose.ui.util.fastAny
-import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.util.fastMapNotNull
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.model.provider.ProviderCatalog
 import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flxProviders.stremio.settings.util.AddonUtil.DEFAULT_META_PROVIDER
 import com.flxProviders.stremio.settings.util.AddonUtil.toProviderCatalog
 
 internal data class Addon(
@@ -33,64 +35,56 @@ internal data class Addon(
     val needsConfiguration: Boolean
         get() = behaviorHints?.get("configurationRequired") ?: false
 
-    fun getAllHomeCatalogs(): List<ProviderCatalog> {
-        val allCatalogs = mutableListOf<ProviderCatalog>()
+    val homeCatalogs: List<ProviderCatalog>
+        get() {
+            val allCatalogs = mutableListOf<ProviderCatalog>()
 
-        catalogs?.fastForEach forEachCatalog@ { catalog ->
-            val optionalCatalogs = mutableListOf<ProviderCatalog>()
-            catalog.extra?.let { extras ->
-                val isCatalogOnlyForSearching = extras.fastAny {
-                    it.name == "search" && it.isRequired == true
+            catalogs?.fastForEach forEachCatalog@ { catalog ->
+                val isNotValidHomeCatalog = catalog.extra?.fastAny {
+                    it.name != "skip" && it.isRequired == true
                 }
 
-                if (isCatalogOnlyForSearching) {
-                    optionalCatalogs.clear()
-                    return@let
+                if (isNotValidHomeCatalog == true) {
+                    return@forEachCatalog
                 }
 
-                extras.fastForEach forEachExtra@ { extra ->
-                    if (extra.name == "skip" || extra.name == "search")
-                        return@forEachExtra
-
-                    if (extra.options?.isNotEmpty() == true) {
-                        extra.options.fastForEach forEachOption@ { option ->
-                            if (option == null) {
-                                return@forEachOption
-                            }
-
-                            val optionalCatalog = Catalog(
-                                id = catalog.id,
-                                name = "${catalog.name.trim()} - $option",
-                                type = catalog.type,
-                                addonSource = catalog.addonSource,
-                                pageSize = catalog.pageSize,
-                                filter = extra.name to option,
-                                extra = extras.fastFilter {
-                                    it.name == "search"
-                                    || it.name == "skip"
-                                }
-                            ).toProviderCatalog(image = logo)
-
-                            optionalCatalogs.add(optionalCatalog)
-                        }
-                    }
-
-                    if (extra.isRequired == true) {
-                        return@forEachCatalog
-                    }
-                }
+                allCatalogs.add(catalog.toProviderCatalog(image = logo))
             }
 
-            if (optionalCatalogs.isNotEmpty()) {
-                allCatalogs.addAll(optionalCatalogs)
-                return@forEachCatalog
-            }
-
-            allCatalogs.add(catalog.toProviderCatalog(image = logo))
+            return allCatalogs.toList()
         }
 
-        return allCatalogs.toList()
-    }
+    val searchableCatalogs: List<Catalog>
+        get() {
+            val searchableCatalogs = catalogs?.fastMapNotNull { catalog ->
+                val isNotSearchableCatalog = catalog.extra?.fastAny {
+                    it.name != "search" && it.isRequired == true
+                }
+
+                val isSearchableCatalog = catalog.extra?.fastAny { it.name == "search" }
+
+                if (isNotSearchableCatalog == true || isSearchableCatalog == false) {
+                    return@fastMapNotNull null
+                }
+
+                catalog
+            } ?: emptyList()
+
+            return listOf(
+                Catalog(
+                    id = "top",
+                    type = "movie",
+                    addonSource = DEFAULT_META_PROVIDER,
+                    name = "Popular Movies",
+                ),
+                Catalog(
+                    id = "top",
+                    type = "series",
+                    addonSource = DEFAULT_META_PROVIDER,
+                    name = "Popular Series",
+                )
+            ) +  searchableCatalogs
+        }
 
     fun getStreamQuery(
         id: String,

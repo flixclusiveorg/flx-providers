@@ -32,24 +32,16 @@ android {
 
 flxProvider {
     description.set("""
-        A flixclusive adapter for Stremio addons. Torrent addons, such as Torrentio,  don't work without RD or Debrid accounts.
+        A flixclusive adapter for Stremio addons. Torrent addons, such as Torrentio,  don't work without debrid accounts.
     """.trimIndent())
 
     changelog.set("""
-        # Catalogs are here!
-        
         ### ✨ New:
-        - Add support for streaming, catalog, and metadata addons.
-        - Add support for debrid catalog
-        - Make debrid movies watchable
-        - Add subtitles when watching debrid caches
-        
-        ### 📝 Changes:
-        - Manually load catalogs (per option) from an addon.
+        - Add search method to search for movies/series.
     """.trimIndent())
 
     versionMajor = 1
-    versionMinor = 1
+    versionMinor = 2
     versionPatch = 0
     versionBuild = 0
 
