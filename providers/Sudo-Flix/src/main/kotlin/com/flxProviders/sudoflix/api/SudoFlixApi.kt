@@ -63,10 +63,15 @@ class SudoFlixApi(
         imdbId: String?,
         tmdbId: Int?
     ): SearchResponseData<FilmSearchItem> {
+        val identifier = id ?: tmdbId?.toString() ?: imdbId
+        if (identifier == null) {
+            throw IllegalStateException("$name is not a searchable provider. It is a set of providers combined into one.")
+        }
+
         return SearchResponseData(
             results = listOf(
                 FilmSearchItem(
-                    id = id ?: tmdbId?.toString() ?: imdbId!!,
+                    id = identifier,
                     title = title,
                     providerName = name,
                     filmType = FilmType.MOVIE,
