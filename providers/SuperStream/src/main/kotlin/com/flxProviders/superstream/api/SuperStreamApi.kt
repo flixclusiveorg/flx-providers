@@ -7,6 +7,7 @@ import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
+import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.SearchResponseData
@@ -68,13 +69,17 @@ class SuperStreamApi(
         tmdbId: Int?
     ): SearchResponseData<FilmSearchItem> {
         val query = imdbId ?: title
-        val apiQuery = String.format(Locale.ROOT, BuildConfig.SUPERSTREAM_THIRD_API, query, ITEMS_PER_PAGE, Random.nextInt(0, Int.MAX_VALUE))
+        val apiQuery = String.format(Locale.ROOT, BuildConfig.SUPERSTREAM_THIRD_API, query, page, ITEMS_PER_PAGE, Random.nextInt(0, Int.MAX_VALUE))
 
 
         val response = client.request(apiQuery).execute()
             .fromJson<SearchData>("[$name]> Couldn't search for $tmdbId")
 
         return response.toSearchResponseData()
+    }
+
+    override suspend fun getFilmDetails(film: Film): FilmDetails {
+        throw IllegalStateException("Not yet implemented. Please come back soon for future updates.")
     }
 
     private suspend fun OkHttpClient.getSourceLinksFromFourthApi(

@@ -23,23 +23,16 @@ flxProvider {
     """.trimIndent())
 
     changelog.set("""
-        # v1.2.1
+        # v1.2.1-b3
         
         ### 🔧 Changes:
-        - [x] Fix failed to find shared key issue
-        ---
-        
-        # v1.2.0-b2
-        
-        ### 🔧 Changes:
-        - [x] Update code to keep up with new app structure for its new catalog system
-        - [x] Custom catalogs will be added soon.
+        - Fix search method not paginating
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 2
     versionPatch = 1
-    versionBuild = 2
+    versionBuild = 3
 
     iconUrl.set("https://i.imgur.com/KgMakl9.png") // OPTIONAL
 
