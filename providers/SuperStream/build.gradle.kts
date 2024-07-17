@@ -3,7 +3,28 @@ import com.flixclusive.gradle.entities.ProviderType
 import com.flixclusive.gradle.entities.Status
 import org.jetbrains.kotlin.konan.properties.Properties
 
+dependencies {
+    implementation("androidx.core:core:1.13.1")
+    
+    val composeBom = platform("androidx.compose:compose-bom:2024.04.00")
+    implementation(composeBom)
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.runtime:runtime")
+    // ================= END: COMPOSE UI =================
+
+}
+
 android {
+    buildFeatures {
+        compose = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.3"
+    }
+
     defaultConfig {
         val properties = Properties()
         properties.load(project.rootProject.file("local.properties").inputStream())
@@ -17,22 +38,22 @@ android {
 
 flxProvider {
     description.set("""
-        NOTICE: This provider doesn't work sometimes, idk why.
+        REMINDER: This provider needs configuration to work!!
         
         A classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.
     """.trimIndent())
 
     changelog.set("""
-        # v1.2.1-b3
+        # v1.3.0
         
         ### 🔧 Changes:
-        - Fix search method not paginating
+        - Fix embed extractor by adding manual configuration on setting screen.
     """.trimIndent())
 
     versionMajor = 1
-    versionMinor = 2
-    versionPatch = 1
-    versionBuild = 3
+    versionMinor = 3
+    versionPatch = 0
+    versionBuild = 0
 
     iconUrl.set("https://i.imgur.com/KgMakl9.png") // OPTIONAL
 

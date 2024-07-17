@@ -13,14 +13,16 @@ import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
+import com.flixclusive.provider.settings.ProviderSettingsManager
 import com.flxProviders.superstream.BuildConfig
 import com.flxProviders.superstream.api.dto.ExternalResponse
 import com.flxProviders.superstream.api.dto.ExternalSources
 import com.flxProviders.superstream.api.dto.ITEMS_PER_PAGE
 import com.flxProviders.superstream.api.dto.SearchData
 import com.flxProviders.superstream.api.dto.SearchData.Companion.toSearchResponseData
-import com.flxProviders.superstream.api.util.SuperStreamUtil
-import com.flxProviders.superstream.api.util.SuperStreamUtil.BoxType.Companion.fromFilmType
+import com.flxProviders.superstream.api.dto.BoxType
+import com.flxProviders.superstream.api.dto.BoxType.Companion.fromFilmType
+import com.flxProviders.superstream.api.settings.TOKEN_KEY
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 import org.jsoup.Jsoup
@@ -35,7 +37,8 @@ import kotlin.random.Random
  *
  * */
 class SuperStreamApi(
-    client: OkHttpClient
+    client: OkHttpClient,
+    private val settingsManager: ProviderSettingsManager
 ) : ProviderApi(client) {
     companion object {
         internal const val DEFAULT_PROVIDER_NAME = "SuperStream"
@@ -44,6 +47,12 @@ class SuperStreamApi(
     override val name: String
         get() = DEFAULT_PROVIDER_NAME
 
+    private val token: String?
+        get() = settingsManager.getString(TOKEN_KEY, null)
+
+    private val tokenHeaders: Map<String, String>
+        get() = mapOf("Cookie" to "ui=$token")
+
     override suspend fun getSourceLinks(
         watchId: String,
         film: FilmDetails,
@@ -51,7 +60,7 @@ class SuperStreamApi(
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
-        client.getSourceLinksFromFourthApi(
+        getSourceLinksFromFourthApi(
             watchId = watchId,
             filmType = fromFilmType(filmType = film.filmType),
             season = episode?.season,
@@ -82,9 +91,9 @@ class SuperStreamApi(
         throw IllegalStateException("Not yet implemented. Please come back soon for future updates.")
     }
 
-    private suspend fun OkHttpClient.getSourceLinksFromFourthApi(
+    private suspend fun getSourceLinksFromFourthApi(
         watchId: String,
-        filmType: SuperStreamUtil.BoxType,
+        filmType: BoxType,
         episode: Int?,
         season: Int?,
         onSubtitleLoaded: (Subtitle) -> Unit,
@@ -94,7 +103,7 @@ class SuperStreamApi(
         val secondAPI = BuildConfig.SUPERSTREAM_SECOND_API
 
         val (seasonSlug, episodeSlug) = getEpisodeSlug(season, episode)
-        val shareKey = request(
+        val shareKey = client.request(
             url = "$firstAPI/index/share_link?id=${watchId}&type=${filmType.value}"
         ).execute().use {
             val string = it.body?.string()
@@ -108,38 +117,24 @@ class SuperStreamApi(
                 ?: throw Exception("[$name]> No share key found.")
         }
 
-        val headers = mapOf("Accept-Language" to "en")
-        val shareRes = request(
+        val humanizedHeaders = mapOf("Accept-Language" to "en")
+        val shareRes = client.request(
             url = "$secondAPI/file/file_share_list?share_key=$shareKey",
-            headers = headers.toHeaders(),
-        ).execute().use {
-            val string = it.body?.string()
-
-            if (!it.isSuccessful || string == null) {
-                throw Exception("[$name]> Failed to fetch share key.")
-            }
-
-            fromJson<ExternalResponse>(string).data
-                ?: throw Exception("[$name]> No shared resources found.")
-        }
+            headers = humanizedHeaders.toHeaders(),
+        ).execute()
+            .fromJson<ExternalResponse>("[$name]> Failed to fetch share key.").data
+            ?: throw Exception("[$name]> No shared resources found (Stage 1).")
 
         val fids = if (season == null) {
             shareRes.fileList
         } else {
             val parentId = shareRes.fileList?.find { it.fileName.equals("season $season", true) }?.fid
 
-            val episodesShareRes = request(
+            val episodesShareRes = client.request(
                 url = "$secondAPI/file/file_share_list?share_key=$shareKey&parent_id=$parentId&page=1"
-            ).execute().use {
-                val string = it.body?.string()
-
-                if (!it.isSuccessful || string == null) {
-                    throw Exception("[$name]> Failed to fetch share key.")
-                }
-
-                fromJson<ExternalResponse>(string).data
-                    ?: throw Exception("[$name]> No shared resources found.")
-            }
+            ).execute()
+                .fromJson<ExternalResponse>("[$name]> Failed to fetch share key.").data
+                ?: throw Exception("[$name]> No shared resources found (Stage 2).")
 
             episodesShareRes.fileList?.filter {
                 it.fileName?.contains("s${seasonSlug}e${episodeSlug}", true) == true
@@ -147,7 +142,10 @@ class SuperStreamApi(
         } ?: throw Exception("[$name]> No FIDs found.")
 
         fids.mapAsync { fileList ->
-            val player = request("$secondAPI/file/player?fid=${fileList.fid}&share_key=$shareKey").execute()
+            val player = client.request(
+                url = "$secondAPI/file/player?fid=${fileList.fid}&share_key=$shareKey",
+                headers = (humanizedHeaders + tokenHeaders).toHeaders()
+            ).execute()
                 .body?.string()
                 ?: return@mapAsync
 
