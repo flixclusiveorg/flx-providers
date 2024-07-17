@@ -38,11 +38,11 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 12000,
+        "versionCode": 12100,
         "description": "A flixclusive adapter for Stremio addons. Torrent addons, such as Torrentio,  don't work without debrid accounts.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/Stremio.flx",
-        "changelog": "### \u2728 New:\n- Add search method to search for movies/series.",
-        "versionName": "1.2.0",
+        "changelog": "### Fixes:\n- Fixed settings screen not working when Stremio is disabled.",
+        "versionName": "1.2.1",
         "name": "Stremio"
     },
     {
@@ -88,11 +88,11 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 12103,
-        "description": "NOTICE: This provider doesn't work sometimes, idk why.\n\nA classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.",
+        "versionCode": 13000,
+        "description": "REMINDER: This provider needs configuration to work!!\n\nA classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/SuperStream.flx",
-        "changelog": "# v1.2.1-b3\n\n### \ud83d\udd27 Changes:\n- Fix search method not paginating",
-        "versionName": "1.2.1",
+        "changelog": "# v1.3.0\n\n### \ud83d\udd27 Changes:\n- Fix embed extractor by adding manual configuration on setting screen.",
+        "versionName": "1.3.0",
         "name": "SuperStream"
     }
 ]
