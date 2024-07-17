@@ -6,7 +6,8 @@ internal data class NsbxSource(
 )
 
 internal data class Stream(
-    val qualities: Map<String, Quality>,
+    val qualities: Map<String, Quality>? = null, // for VidBinge
+    val playlist: String? = null, // for NSBX
     val captions: List<Caption>,
 )
 

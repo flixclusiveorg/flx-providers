@@ -5,18 +5,23 @@ import com.flixclusive.gradle.entities.Status
 flxProvider {
     description.set("""
         A forked clone of the old movie-web.
+        
+        This is a set of providers. All source code references belong to sudo-flix.
     """.trimIndent())
 
     changelog.set("""
-        # v1.2.0
+        # v1.3.0
         
         ### ✨ New:
-        - Added VidSrc.to provider
+        - Added VidBinge provider
+        
+        ### 🔧 Changes:
+        - Fix NSBX
     """.trimIndent())
 
     versionMajor = 1
-    versionMinor = 2
-    versionPatch = 1
+    versionMinor = 3
+    versionPatch = 0
     versionBuild = 0
 
     // Extra authors for specific provider

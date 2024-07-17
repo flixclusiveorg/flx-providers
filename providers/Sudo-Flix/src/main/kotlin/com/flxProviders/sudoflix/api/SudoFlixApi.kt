@@ -10,7 +10,9 @@ import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
+import com.flxProviders.sudoflix.api.nsbx.AbstractNsbxApi
 import com.flxProviders.sudoflix.api.nsbx.NsbxApi
+import com.flxProviders.sudoflix.api.nsbx.VidBingeApi
 import com.flxProviders.sudoflix.api.primewire.PrimeWireApi
 import com.flxProviders.sudoflix.api.ridomovies.RidoMoviesApi
 import com.flxProviders.sudoflix.api.vidsrcto.VidSrcToApi
@@ -31,6 +33,7 @@ class SudoFlixApi(
 
     private val providersList = listOf(
         NsbxApi(client),
+        VidBingeApi(client),
         RidoMoviesApi(client),
         PrimeWireApi(client),
         VidSrcToApi(client),
