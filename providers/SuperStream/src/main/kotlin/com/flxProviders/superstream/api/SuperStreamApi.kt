@@ -60,6 +60,10 @@ class SuperStreamApi(
         onLinkLoaded: (SourceLink) -> Unit,
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
+        if (token == null) {
+            throw Exception("[$name]> No token found. Have you configured the provider?")
+        }
+
         getSourceLinksFromFourthApi(
             watchId = watchId,
             filmType = fromFilmType(filmType = film.filmType),
