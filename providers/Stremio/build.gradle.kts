@@ -36,13 +36,13 @@ flxProvider {
     """.trimIndent())
 
     changelog.set("""
-        ### ✨ New:
-        - Add search method to search for movies/series.
+        ### Fixes:
+        - Fixed settings screen not working when Stremio is disabled.
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 2
-    versionPatch = 0
+    versionPatch = 1
     versionBuild = 0
 
     // Extra authors for specific provider

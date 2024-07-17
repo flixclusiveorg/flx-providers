@@ -14,7 +14,8 @@ import okhttp3.OkHttpClient
 
 @FlixclusiveProvider
 class Stremio : Provider() {
-    private lateinit var client: OkHttpClient
+    private var client: OkHttpClient
+        = OkHttpClient() // For safety
 
 
     @Composable
