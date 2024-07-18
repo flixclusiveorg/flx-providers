@@ -79,7 +79,8 @@ internal abstract class AbstractNsbxApi(
                                 onLinkLoaded(
                                     SourceLink(
                                         name = serverName,
-                                        url = qualitySource.url
+                                        url = qualitySource.url,
+                                        customHeaders = headers.toMap()
                                     )
                                 )
                             }
@@ -94,7 +95,8 @@ internal abstract class AbstractNsbxApi(
                             onLinkLoaded(
                                 SourceLink(
                                     name = name,
-                                    url = it.playlist
+                                    url = it.playlist,
+                                    customHeaders = headers.toMap()
                                 )
                             )
                         }

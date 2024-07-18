@@ -10,18 +10,18 @@ flxProvider {
     """.trimIndent())
 
     changelog.set("""
-        # v1.3.0
+        # v1.3.1
         
         ### ✨ New:
         - Added VidBinge provider
         
         ### 🔧 Changes:
-        - Fix NSBX
+        - Fix NSBX (again)
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 3
-    versionPatch = 0
+    versionPatch = 1
     versionBuild = 0
 
     // Extra authors for specific provider
