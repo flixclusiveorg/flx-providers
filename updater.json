@@ -65,11 +65,11 @@
                 "name": "sussy-code"
             }
         ],
-        "versionCode": 13000,
+        "versionCode": 13200,
         "description": "A forked clone of the old movie-web.\n\nThis is a set of providers. All source code references belong to sudo-flix.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/Sudo-Flix.flx",
-        "changelog": "# v1.3.0\n\n### \u2728 New:\n- Added VidBinge provider\n\n### \ud83d\udd27 Changes:\n- Fix NSBX",
-        "versionName": "1.3.0",
+        "changelog": "# v1.3.2\n\n### \u2728 New:\n- Added VidBinge provider\n\n### \ud83d\udd27 Changes:\n- Fix NSBX (again)\n- Fix CloseLoad",
+        "versionName": "1.3.2",
         "name": "Sudo-Flix"
     },
     {
