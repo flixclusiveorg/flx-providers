@@ -31,7 +31,7 @@ internal class CloseLoad(
         onSubtitleLoaded: (Subtitle) -> Unit
     ) {
         val response = client.request(
-            url = url.toString(),
+            url = url,
             headers = headers
         ).execute()
 
@@ -70,7 +70,8 @@ internal class CloseLoad(
         onLinkLoaded(
             SourceLink(
                 url = sourceUrl,
-                name = "[$name]> HLS"
+                name = "[$name]> HLS",
+                customHeaders = mapOf("Referer" to "$baseUrl/")
             )
         )
     }
