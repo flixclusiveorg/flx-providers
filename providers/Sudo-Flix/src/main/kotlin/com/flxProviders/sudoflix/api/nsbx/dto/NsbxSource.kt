@@ -2,7 +2,7 @@ package com.flxProviders.sudoflix.api.nsbx.dto
 
 
 internal data class NsbxSource(
-    val streamDto: List<StreamDto>
+    val stream: List<StreamDto>
 )
 
 internal data class StreamDto(

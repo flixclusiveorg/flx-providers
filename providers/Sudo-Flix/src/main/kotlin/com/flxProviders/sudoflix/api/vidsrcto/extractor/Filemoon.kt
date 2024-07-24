@@ -1,9 +1,7 @@
 package com.flxProviders.sudoflix.api.vidsrcto.extractor
 
 import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Stream
-import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.provider.extractor.Extractor
 import com.flxProviders.sudoflix.api.util.JsUnpacker
 import okhttp3.OkHttpClient

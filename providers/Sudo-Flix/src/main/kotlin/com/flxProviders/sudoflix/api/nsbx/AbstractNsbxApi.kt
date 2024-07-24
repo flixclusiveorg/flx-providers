@@ -79,7 +79,7 @@ internal abstract class AbstractNsbxApi(
 
                 asyncCalls(
                     {
-                        source.streamDto.mapAsync {
+                        source.stream.mapAsync {
                             it.qualities?.entries?.mapAsync { (serverName, qualitySource) ->
                                 links.add(
                                     Stream(
@@ -92,7 +92,7 @@ internal abstract class AbstractNsbxApi(
                         }
                     },
                     {
-                        source.streamDto.mapAsync {
+                        source.stream.mapAsync {
                             if (it.playlist == null) {
                                 return@mapAsync
                             }
@@ -107,7 +107,7 @@ internal abstract class AbstractNsbxApi(
                         }
                     },
                     {
-                        source.streamDto.mapAsync {
+                        source.stream.mapAsync {
                             it.captions.mapAsync { caption ->
                                 links.add(
                                     Subtitle(
