@@ -2,9 +2,11 @@ package com.flxProviders.superstream.api
 
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
+import com.flixclusive.core.util.film.filter.FilterList
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.SourceLink
+import com.flixclusive.model.provider.MediaLink
+import com.flixclusive.model.provider.Stream
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
 import com.flixclusive.model.tmdb.Film
@@ -13,15 +15,15 @@ import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
-import com.flixclusive.provider.settings.ProviderSettingsManager
+import com.flixclusive.provider.settings.ProviderSettings
 import com.flxProviders.superstream.BuildConfig
+import com.flxProviders.superstream.api.dto.BoxType
+import com.flxProviders.superstream.api.dto.BoxType.Companion.fromFilmType
 import com.flxProviders.superstream.api.dto.ExternalResponse
 import com.flxProviders.superstream.api.dto.ExternalSources
 import com.flxProviders.superstream.api.dto.ITEMS_PER_PAGE
 import com.flxProviders.superstream.api.dto.SearchData
 import com.flxProviders.superstream.api.dto.SearchData.Companion.toSearchResponseData
-import com.flxProviders.superstream.api.dto.BoxType
-import com.flxProviders.superstream.api.dto.BoxType.Companion.fromFilmType
 import com.flxProviders.superstream.api.settings.TOKEN_KEY
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
@@ -38,39 +40,34 @@ import kotlin.random.Random
  * */
 class SuperStreamApi(
     client: OkHttpClient,
-    private val settingsManager: ProviderSettingsManager
+    private val settings: ProviderSettings
 ) : ProviderApi(client) {
     companion object {
         internal const val DEFAULT_PROVIDER_NAME = "SuperStream"
     }
 
-    override val name: String
-        get() = DEFAULT_PROVIDER_NAME
+    override val name = DEFAULT_PROVIDER_NAME
 
     private val token: String?
-        get() = settingsManager.getString(TOKEN_KEY, null)
+        get() = settings.getString(TOKEN_KEY, null)
 
     private val tokenHeaders: Map<String, String>
         get() = mapOf("Cookie" to "ui=$token")
 
-    override suspend fun getSourceLinks(
+    override suspend fun getLinks(
         watchId: String,
         film: FilmDetails,
-        episode: Episode?,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit
-    ) {
+        episode: Episode?
+    ): List<MediaLink> {
         if (token == null) {
             throw Exception("[$name]> No token found. Have you configured the provider?")
         }
 
-        getSourceLinksFromFourthApi(
+        return getSourceLinksFromFourthApi(
             watchId = watchId,
             filmType = fromFilmType(filmType = film.filmType),
             season = episode?.season,
-            episode = episode?.number,
-            onSubtitleLoaded = onSubtitleLoaded,
-            onLinkLoaded = onLinkLoaded
+            episode = episode?.number
         )
     }
 
@@ -79,7 +76,8 @@ class SuperStreamApi(
         page: Int,
         id: String?,
         imdbId: String?,
-        tmdbId: Int?
+        tmdbId: Int?,
+        filters: FilterList,
     ): SearchResponseData<FilmSearchItem> {
         val query = imdbId ?: title
         val apiQuery = String.format(Locale.ROOT, BuildConfig.SUPERSTREAM_THIRD_API, query, page, ITEMS_PER_PAGE, Random.nextInt(0, Int.MAX_VALUE))
@@ -99,10 +97,8 @@ class SuperStreamApi(
         watchId: String,
         filmType: BoxType,
         episode: Int?,
-        season: Int?,
-        onSubtitleLoaded: (Subtitle) -> Unit,
-        onLinkLoaded: (SourceLink) -> Unit,
-    ) {
+        season: Int?
+    ): List<MediaLink> {
         val firstAPI = BuildConfig.SUPERSTREAM_FIRST_API
         val secondAPI = BuildConfig.SUPERSTREAM_SECOND_API
 
@@ -145,6 +141,7 @@ class SuperStreamApi(
             }
         } ?: throw Exception("[$name]> No FIDs found.")
 
+        val links = mutableListOf<MediaLink>()
         fids.mapAsync { fileList ->
             val player = client.request(
                 url = "$secondAPI/file/player?fid=${fileList.fid}&share_key=$shareKey",
@@ -185,7 +182,7 @@ class SuperStreamApi(
 
                             val identifier = if (i == 0) "" else "$i"
 
-                            onSubtitleLoaded(
+                            links.add(
                                 Subtitle(
                                     language = "$language [$identifier]",
                                     url = link,
@@ -213,8 +210,8 @@ class SuperStreamApi(
                                     ?.replace("\\/", "/")
                                     ?: return@org
 
-                                onLinkLoaded(
-                                    SourceLink(
+                                links.add(
+                                    Stream(
                                         name = "[$name]> ${source.label}",
                                         url = url
                                     )
@@ -224,6 +221,8 @@ class SuperStreamApi(
                 },
             )
         }
+
+        return links
     }
 
     private fun getEpisodeSlug(

@@ -20,9 +20,9 @@ internal class TokenGetterWebView(
         get() = computeVerticalScrollRange() - height
 
     init {
-        settings.javaScriptEnabled = true
-        settings.domStorageEnabled = true
-        settings.userAgentString = USER_AGENT
+        this.settings.javaScriptEnabled = true
+        this.settings.domStorageEnabled = true
+        this.settings.userAgentString = USER_AGENT
 
         webViewClient = TokenGetterWebViewClient(
             settings = settings,
