@@ -7,8 +7,8 @@ import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.network.CryptographyUtil.decryptAes
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.provider.MediaLink
+import com.flixclusive.model.provider.Stream
 import com.flixclusive.provider.extractor.Extractor
 import com.flxProviders.flixhq.extractors.rabbitstream.dto.DecryptedSource
 import com.flxProviders.flixhq.extractors.rabbitstream.dto.VidCloudEmbedData
@@ -37,9 +37,8 @@ internal open class RabbitStream(
 
     override suspend fun extract(
         url: String,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit,
-    ) {
+        customHeaders: Map<String, String>?
+    ): List<MediaLink> {
         if (key.e4Key.isEmpty() || key.kId.isEmpty() || key.kVersion.isEmpty() || key.browserVersion.isEmpty()) {
             throw Exception("Key has not been set!")
         }
@@ -62,7 +61,7 @@ internal open class RabbitStream(
         if(responseBody.isBlank())
             throw Exception("Cannot fetch source")
 
-        val vidCloudEmbedData = fromJson<VidCloudEmbedData>(
+        val data = fromJson<VidCloudEmbedData>(
             json = responseBody,
             serializer = VidCloudEmbedDataCustomDeserializer {
                 safeCall {
@@ -71,55 +70,56 @@ internal open class RabbitStream(
             }
         )
 
-        vidCloudEmbedData.run {
-            if (sources.isEmpty()) {
-                throw Exception("Sources are empty!")
-            }
-
-            onLinkLoaded(
-                SourceLink(
-                    url = sources[0].url,
-                    name = "$name: Auto"
-                )
-            )
-
-            asyncCalls(
-                {
-                    sources.mapAsync { source ->
-                        client.request(
-                            url = source.url,
-                            headers = options
-                        ).execute().body
-                            ?.string()
-                            ?.let { data ->
-                                val urls = data
-                                    .split('\n')
-                                    .filter { line -> line.contains(".m3u8") }
-
-                                val qualities = data
-                                    .split('\n')
-                                    .filter { line -> line.contains("RESOLUTION=") }
-
-                                qualities.mapIndexedAsync { i, s ->
-                                    val qualityTag = "$name: ${s.split('x')[1]}p"
-                                    val dataUrl = urls[i]
-
-                                    onLinkLoaded(
-                                        SourceLink(
-                                            name = qualityTag,
-                                            url = dataUrl
-                                        )
-                                    )
-                                }
-                            }
-                    }
-                },
-                {
-                    vidCloudEmbedData.tracks.mapAsync {
-                        onSubtitleLoaded(it.toSubtitle())
-                    }
-                }
-            )
+        if (data.sources.isEmpty()) {
+            throw Exception("Sources are empty!")
         }
+
+        val links = mutableListOf<MediaLink>()
+        links.add(
+            Stream(
+                url = data.sources[0].url,
+                name = "$name: Auto"
+            )
+        )
+
+        asyncCalls(
+            {
+                data.sources.mapAsync { source ->
+                    client.request(
+                        url = source.url,
+                        headers = options
+                    ).execute().body
+                        ?.string()
+                        ?.let { data ->
+                            val urls = data
+                                .split('\n')
+                                .filter { line -> line.contains(".m3u8") }
+
+                            val qualities = data
+                                .split('\n')
+                                .filter { line -> line.contains("RESOLUTION=") }
+
+                            qualities.mapIndexedAsync { i, s ->
+                                val qualityTag = "$name: ${s.split('x')[1]}p"
+                                val dataUrl = urls[i]
+
+                                links.add(
+                                    Stream(
+                                        name = qualityTag,
+                                        url = dataUrl
+                                    )
+                                )
+                            }
+                        }
+                }
+            },
+            {
+                data.tracks.mapAsync {
+                    links.add(it.toSubtitle())
+                }
+            }
+        )
+
+        return links
     }
 }

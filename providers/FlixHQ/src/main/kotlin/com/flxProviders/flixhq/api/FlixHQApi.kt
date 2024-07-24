@@ -5,8 +5,6 @@ import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.film.filter.FilterList
 import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmSearchItem
@@ -14,8 +12,8 @@ import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
-import com.flixclusive.provider.util.FlixclusiveWebView
-import com.flixclusive.provider.util.WebViewCallback
+import com.flixclusive.provider.webview.ProviderWebView
+import com.flixclusive.provider.webview.ProviderWebViewCallback
 import com.flxProviders.flixhq.api.util.TvShowCacheData
 import com.flxProviders.flixhq.api.util.getEpisodeId
 import com.flxProviders.flixhq.api.util.getSeasonId
@@ -139,25 +137,17 @@ class FlixHQApi(
         throw NullPointerException("FilmInfo is null!")
     }
 
-    override suspend fun getSourceLinks(
-        watchId: String,
-        film: FilmDetails,
-        episode: Episode?,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit,
-    ) = throw IllegalAccessException("$name uses a WebView!")
-
     override fun getWebView(
         context: Context,
-        callback: WebViewCallback,
+        callback: ProviderWebViewCallback,
         film: FilmDetails,
         episode: Episode?,
-    ): FlixclusiveWebView {
+    ): ProviderWebView {
         return FlixHQWebView(
             mClient = client,
             api = this,
             context = context,
-            filmToScrape = film,
+            film = film,
             episodeData = episode,
             callback = callback
         )

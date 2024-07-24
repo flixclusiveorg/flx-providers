@@ -7,8 +7,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import com.flixclusive.core.util.R
-import com.flixclusive.core.util.common.ui.UiText
+import androidx.compose.ui.util.fastForEach
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.debugLog
@@ -16,11 +15,10 @@ import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.USER_AGENT
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.SourceDataState
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.common.tv.Episode
-import com.flixclusive.provider.util.FlixclusiveWebView
-import com.flixclusive.provider.util.WebViewCallback
+import com.flixclusive.provider.webview.ProviderWebView
+import com.flixclusive.provider.webview.ProviderWebViewCallback
 import com.flxProviders.flixhq.api.FlixHQApi
 import com.flxProviders.flixhq.api.dto.FlixHQInitialSourceData
 import com.flxProviders.flixhq.extractors.rabbitstream.dto.VidCloudKey
@@ -42,14 +40,14 @@ internal const val INJECTOR_SCRIPT = "javascript:(function() {  function shift(y
 class FlixHQWebView(
     private val mClient: OkHttpClient,
     private val api: FlixHQApi,
-
-    private val filmToScrape: FilmDetails,
-    private val episodeData: Episode?,
-    private val callback: WebViewCallback,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+
+    film: FilmDetails,
+    episodeData: Episode?,
+    callback: ProviderWebViewCallback,
     context: Context,
-) : FlixclusiveWebView(
-    filmToScrape = filmToScrape,
+) : ProviderWebView(
+    film = film,
     context = context,
     callback = callback,
     episodeData = episodeData
@@ -94,11 +92,11 @@ class FlixHQWebView(
         )
     }
 
-    override suspend fun startScraping() {
+    override suspend fun getLinks() {
         try {
             val watchId = withContext(ioDispatcher) {
-                api.getMediaId(film = filmToScrape)
-            } ?: return callback.updateDialogState(SourceDataState.Unavailable())
+                api.getMediaId(film = film)
+            } ?: return callback.onStop(Throwable("Can't find watch id!"))
 
             val servers = withContext(ioDispatcher) {
                 api.getEpisodeIdAndServers(
@@ -122,8 +120,6 @@ class FlixHQWebView(
                     mClient.request(url = "${api.baseUrl}/ajax/episode/sources/${serverEmbedUrl.split('.').last()}").execute().body?.string()
                 } ?: throw Exception("Can't find decryption key!")
 
-                callback.updateDialogState(SourceDataState.Extracting(UiText.StringResource(R.string.extracting_from_provider_format, "FlixHQ")))
-
                 val serverUrl = withContext(ioDispatcher) {
                     URLDecoder.decode(
                         fromJson<FlixHQInitialSourceData>(initialSourceData).link,
@@ -141,23 +137,17 @@ class FlixHQWebView(
 
                 withContext(ioDispatcher) {
                     extractor.key = key!!
-                    extractor.extract(
-                        url = serverUrl,
-                        onLinkLoaded = callback::onLinkLoaded,
-                        onSubtitleLoaded = callback::onSubtitleLoaded
-                    )
+                    val links = extractor.extract(url = serverUrl)
+                    links.fastForEach(callback::onLinkLoaded)
+
                     key = null
                 }
             }
 
-            return callback.onSuccess(episodeData)
+            return callback.onStop()
         } catch (e: Exception) {
             errorLog(e.stackTraceToString())
-            return callback.updateDialogState(
-                SourceDataState.Error(
-                    UiText.StringValue("[${api.name}]> ${e.localizedMessage}")
-                )
-            )
+            return callback.onStop(e)
         }
     }
 
