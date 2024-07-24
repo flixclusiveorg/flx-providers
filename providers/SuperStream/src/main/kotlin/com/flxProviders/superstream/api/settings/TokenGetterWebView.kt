@@ -5,7 +5,7 @@ import android.content.Context
 import android.webkit.WebView
 import com.flixclusive.core.util.network.CryptographyUtil
 import com.flixclusive.core.util.network.USER_AGENT
-import com.flixclusive.provider.settings.ProviderSettingsManager
+import com.flixclusive.provider.settings.ProviderSettings
 
 private const val GET_TOKEN_URL_ENCODED
     = "aHR0cHM6Ly93d3cuZmViYm94LmNvbS9sb2dpbi9nb29nbGU/anVtcD0lMkY="
@@ -13,7 +13,7 @@ private const val GET_TOKEN_URL_ENCODED
 @SuppressLint("SetJavaScriptEnabled", "ViewConstructor")
 internal class TokenGetterWebView(
     context: Context,
-    settingsManager: ProviderSettingsManager,
+    settings: ProviderSettings,
     onTokenReceived: () -> Unit
 ) : WebView(context) {
     val verticalScrollRange: Int
@@ -25,7 +25,7 @@ internal class TokenGetterWebView(
         settings.userAgentString = USER_AGENT
 
         webViewClient = TokenGetterWebViewClient(
-            settingsManager = settingsManager,
+            settings = settings,
             onTokenReceived = onTokenReceived
         )
 

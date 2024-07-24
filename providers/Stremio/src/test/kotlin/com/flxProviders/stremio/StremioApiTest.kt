@@ -3,7 +3,7 @@ package com.flxProviders.stremio
 import com.flixclusive.core.util.log.LogRule
 import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.network.fromJson
-import com.flixclusive.provider.settings.ProviderSettingsManager
+import com.flixclusive.provider.settings.ProviderSettings
 import com.flxProviders.stremio.api.StremioApi
 import com.flxProviders.stremio.api.model.FetchCatalogResponse
 import okhttp3.OkHttpClient

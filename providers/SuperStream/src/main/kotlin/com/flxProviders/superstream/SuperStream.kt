@@ -14,7 +14,7 @@ class SuperStream : Provider() {
 
     @Composable
     override fun SettingsScreen() {
-        GetTokenScreen(settingsManager = settings)
+        GetTokenScreen(settings = settings)
     }
 
     override fun getApi(
@@ -23,7 +23,7 @@ class SuperStream : Provider() {
     ): ProviderApi {
         return SuperStreamApi(
             client = client,
-            settingsManager = settings
+            settings = settings
         )
     }
 }

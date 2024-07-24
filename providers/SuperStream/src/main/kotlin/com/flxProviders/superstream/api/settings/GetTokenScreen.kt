@@ -38,7 +38,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.flixclusive.core.ui.common.util.showToast
-import com.flixclusive.provider.settings.ProviderSettingsManager
+import com.flixclusive.provider.settings.ProviderSettings
 import kotlin.math.roundToInt
 
 private fun getTokenStatusLabel(
@@ -63,11 +63,11 @@ private fun getTokenStatusLabel(
 
 @Composable
 internal fun GetTokenScreen(
-    settingsManager: ProviderSettingsManager,
+    settings: ProviderSettings,
 ) {
     val context = LocalContext.current
     var tokenStatus by remember {
-        val index = settingsManager.getInt(TOKEN_STATUS_KEY, 0)
+        val index = settings.getInt(TOKEN_STATUS_KEY, 0)
 
         mutableStateOf(TokenStatus.entries[index])
     }
@@ -81,7 +81,7 @@ internal fun GetTokenScreen(
     val webView = remember(context) {
         TokenGetterWebView(
             context = context,
-            settingsManager = settingsManager,
+            settings = settings,
             onTokenReceived = {
                 context.showToast("Token has been set successfully!")
                 tokenStatus = TokenStatus.Online
@@ -153,8 +153,8 @@ internal fun GetTokenScreen(
                 }
 
                 tokenStatus = TokenStatus.Offline
-                settingsManager.remove(TOKEN_KEY)
-                settingsManager.setInt(TOKEN_STATUS_KEY, tokenStatus.ordinal)
+                settings.remove(TOKEN_KEY)
+                settings.setInt(TOKEN_STATUS_KEY, tokenStatus.ordinal)
 
                 context.showToast("Token has been reset!")
             },

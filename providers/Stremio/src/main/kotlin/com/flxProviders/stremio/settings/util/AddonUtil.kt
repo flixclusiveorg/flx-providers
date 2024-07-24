@@ -6,7 +6,7 @@ import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.ProviderCatalog
-import com.flixclusive.provider.settings.ProviderSettingsManager
+import com.flixclusive.provider.settings.ProviderSettings
 import com.flxProviders.stremio.api.STREAMIO_ADDONS_KEY
 import com.flxProviders.stremio.api.STREMIO
 import com.flxProviders.stremio.api.model.Addon
@@ -45,7 +45,7 @@ internal object AddonUtil {
     }
 
 
-    fun ProviderSettingsManager.getAddons(): List<Addon> {
+    fun ProviderSettings.getAddons(): List<Addon> {
         return getObject(STREAMIO_ADDONS_KEY) ?: emptyList()
     }
     
@@ -60,7 +60,7 @@ internal object AddonUtil {
         return addon
     }
 
-    fun ProviderSettingsManager.addAddon(addon: Addon): AddonAddResponse {
+    fun ProviderSettings.addAddon(addon: Addon): AddonAddResponse {
         try {
             val addons = getAddons().toMutableList()
             if (addons.contains(addon))
@@ -76,7 +76,7 @@ internal object AddonUtil {
         }
     }
 
-    fun ProviderSettingsManager.updateAddon(addon: Addon): AddonAddResponse {
+    fun ProviderSettings.updateAddon(addon: Addon): AddonAddResponse {
         try {
             val addons = getAddons().toMutableList()
             val index = addons.indexOfFirst { it == addon }
@@ -94,7 +94,7 @@ internal object AddonUtil {
         }
     }
 
-    fun ProviderSettingsManager.removeAddon(
+    fun ProviderSettings.removeAddon(
         addon: Addon
     ): Boolean {
         safeCall {

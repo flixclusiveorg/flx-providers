@@ -148,7 +148,7 @@ internal data class MetaVideo(
     val releaseDate: String,
     val thumbnail: String? = null,
     val overview: String? = null,
-    val streams: List<Stream>? = null,
+    val streams: List<StreamDto>? = null,
     @SerializedName("imdbSeason", alternate = ["season"]) val season: Int? = null,
     @SerializedName("imdbEpisode", alternate = ["episode"]) val episode: Int? = null
 )

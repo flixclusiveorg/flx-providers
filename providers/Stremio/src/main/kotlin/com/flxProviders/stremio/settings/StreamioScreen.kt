@@ -34,7 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.flixclusive.core.ui.common.util.showToast
-import com.flixclusive.provider.settings.ProviderSettingsManager
+import com.flixclusive.provider.settings.ProviderSettings
 import com.flxProviders.stremio.api.model.Addon
 import com.flxProviders.stremio.settings.util.AddonUtil.downloadAddon
 import com.flxProviders.stremio.settings.util.AddonUtil.getAddons
@@ -50,7 +50,7 @@ import com.flixclusive.core.util.R as UtilR
 
 @Composable
 internal fun StreamioScreen(
-    settings: ProviderSettingsManager,
+    settings: ProviderSettings,
     client: OkHttpClient
 ) {
     val context = LocalContext.current

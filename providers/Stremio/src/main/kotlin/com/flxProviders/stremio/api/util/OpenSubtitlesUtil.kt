@@ -17,11 +17,10 @@ internal object OpenSubtitlesUtil {
     fun OkHttpClient.fetchSubtitles(
         imdbId: String,
         season: Int? = null,
-        episode: Int? = null,
-        onSubtitleLoaded: (Subtitle) -> Unit
-    ) {
+        episode: Int? = null
+    ): List<Subtitle> {
         if (!imdbId.startsWith("tt"))
-            return
+            return emptyList()
 
         val slug = if(season == null) {
             "movie/$imdbId"
@@ -32,8 +31,9 @@ internal object OpenSubtitlesUtil {
         val subtitles = safeCall {
             request("$OPEN_SUBS_STREMIO_ENDPOINT/subtitles/$slug.json")
                 .execute().fromJson<OpenSubtitleStremioDto>()
-        } ?: return
+        } ?: return emptyList()
 
+        val links = mutableListOf<Subtitle>()
         subtitles.subtitles.forEach { subtitle ->
             val subtitleDto = Subtitle(
                 url = subtitle["url"] ?: return@forEach,
@@ -41,7 +41,9 @@ internal object OpenSubtitlesUtil {
                 type = SubtitleSource.ONLINE
             )
 
-            onSubtitleLoaded(subtitleDto)
+            links.add(subtitleDto)
         }
+
+        return links
     }
 }

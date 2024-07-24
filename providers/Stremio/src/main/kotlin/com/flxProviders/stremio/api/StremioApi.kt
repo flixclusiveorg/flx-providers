@@ -12,26 +12,26 @@ import com.flixclusive.core.util.coroutines.ioLaunch
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.log.debugLog
+import com.flixclusive.core.util.film.filter.FilterList
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
+import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.provider.ProviderCatalog
-import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.provider.Stream
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
-import com.flixclusive.provider.settings.ProviderSettingsManager
+import com.flixclusive.provider.settings.ProviderSettings
 import com.flxProviders.stremio.api.model.Addon
 import com.flxProviders.stremio.api.model.Catalog
 import com.flxProviders.stremio.api.model.EMBEDDED_IMDB_ID_KEY
 import com.flxProviders.stremio.api.model.EMBEDDED_STREAM_KEY
 import com.flxProviders.stremio.api.model.FetchCatalogResponse
 import com.flxProviders.stremio.api.model.FetchMetaResponse
-import com.flxProviders.stremio.api.model.Stream.Companion.toSourceLink
+import com.flxProviders.stremio.api.model.StreamDto.Companion.toStreamLink
 import com.flxProviders.stremio.api.model.StreamResponse
 import com.flxProviders.stremio.api.model.toFilmDetails
 import com.flxProviders.stremio.api.model.toFilmSearchItem
@@ -56,7 +56,7 @@ internal const val STREMIO = "Stremio"
 internal class StremioApi(
     context: Context,
     client: OkHttpClient,
-    private val settings: ProviderSettingsManager
+    private val settings: ProviderSettings
 ) : ProviderApi(client) {
     init {
         context.migrateOldAddons()
@@ -104,35 +104,38 @@ internal class StremioApi(
         )
     }
 
-    override suspend fun getSourceLinks(
+    override suspend fun getLinks(
         watchId: String,
         film: FilmDetails,
-        episode: Episode?,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit
-    ) {
+        episode: Episode?
+    ): List<MediaLink> {
+        val links = mutableListOf<MediaLink>()
+        
         asyncCalls(
             {
-                film.getLinks(
+                val streamLinks = film.getLinks(
                     watchId = watchId,
-                    episode = episode,
-                    onLinkLoaded = onLinkLoaded,
-                    onSubtitleLoaded = onSubtitleLoaded
+                    episode = episode
                 )
+                
+                links.addAll(streamLinks)
             },
             {
                 val imdbId = film.customProperties[EMBEDDED_IMDB_ID_KEY]
                     ?: film.imdbId
                     ?: film.identifier
 
-                client.fetchSubtitles(
+                val subtitles = client.fetchSubtitles(
                     imdbId = imdbId,
                     season = episode?.season,
-                    episode = episode?.number,
-                    onSubtitleLoaded = onSubtitleLoaded
+                    episode = episode?.number
                 )
+
+                links.addAll(subtitles)
             },
         )
+        
+        return links
     }
 
     override suspend fun search(
@@ -140,7 +143,8 @@ internal class StremioApi(
         page: Int,
         id: String?,
         imdbId: String?,
-        tmdbId: Int?
+        tmdbId: Int?,
+        filters: FilterList,
     ): SearchResponseData<FilmSearchItem> {
         val identifier = id ?: tmdbId?.toString() ?: imdbId
         if (identifier != null) {
@@ -237,14 +241,12 @@ internal class StremioApi(
 
     private suspend fun FilmDetails.getLinks(
         watchId: String,
-        episode: Episode?,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit
-    ) {
+        episode: Episode?
+    ): List<MediaLink> {
         val embeddedStream = customProperties[EMBEDDED_STREAM_KEY]
         if (embeddedStream != null) {
-            return onLinkLoaded(
-                SourceLink(
+            return listOf(
+                Stream(
                     name = title,
                     url = embeddedStream
                 )
@@ -255,44 +257,42 @@ internal class StremioApi(
         val streamType = customProperties[MEDIA_TYPE_KEY]
         val addonSourceName = customProperties[ADDON_SOURCE_KEY]
         val isFromStremio = providerName.equals(STREMIO, true)
-        val id = if (isFromStremio) watchId else imdbId ?: return
+        val id = if (isFromStremio) watchId else imdbId
+            ?: throw IllegalArgumentException("[$id]> IMDB ID should not be null!")
 
         if (addonSourceName != null) {
             val addonSource = getAddonByName(name = addonSourceName)
             if (addonSource.hasStream) {
-                var linksLoaded = 0
-                addonSource.getStream(
+                val streams = addonSource.getStream(
                     watchId = id,
                     filmType = filmType,
                     streamType = streamType,
                     episode = episode,
-                    isFromStremio = isFromStremio,
-                    onLinkLoaded = {
-                        linksLoaded++
-                        onLinkLoaded(it)
-                    },
-                    onSubtitleLoaded = onSubtitleLoaded
+                    isFromStremio = isFromStremio
                 )
 
-                if (linksLoaded > 0)
-                    return
+                if (streams.isNotEmpty())
+                    return streams
             }
         }
 
+        val links = mutableListOf<MediaLink>()
         addons.mapAsync { addon ->
             if (!addon.hasStream)
                 return@mapAsync
 
-            addon.getStream(
+            val streams = addon.getStream(
                 watchId = id,
                 filmType = filmType,
                 streamType = streamType,
                 episode = episode,
-                isFromStremio = isFromStremio,
-                onLinkLoaded = onLinkLoaded,
-                onSubtitleLoaded = onSubtitleLoaded
+                isFromStremio = isFromStremio
             )
+
+            links.addAll(streams)
         }
+
+        return links
     }
 
     private fun Addon.getStream(
@@ -300,19 +300,16 @@ internal class StremioApi(
         filmType: FilmType,
         isFromStremio: Boolean,
         streamType: String?,
-        episode: Episode?,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit
-    ) {
+        episode: Episode?
+    ): List<MediaLink> {
         val hasStreamUrlOnEpisode = episode != null && isValidUrl(episode.id)
         if (hasStreamUrlOnEpisode) {
-            onLinkLoaded(
-                SourceLink(
+            return listOf(
+                Stream(
                     url = episode!!.id,
                     name = episode.title,
                 )
             )
-            return
         }
 
         val query = when (streamType) {
@@ -336,20 +333,23 @@ internal class StremioApi(
             .fromJson<StreamResponse>()
 
         if (response.err != null)
-            return
+            return emptyList()
 
+        val links = mutableListOf<MediaLink>()
         response.streams.forEach { stream ->
-            val sourceLink = stream.toSourceLink()
+            val sourceLink = stream.toStreamLink()
             if (sourceLink != null)
-                onLinkLoaded(sourceLink)
+                links.add(sourceLink)
 
             stream.subtitles?.forEach sub@ { subtitle ->
                 val isValidUrl = isValidUrl(subtitle.url)
                 if (!isValidUrl) return@sub
 
-                onSubtitleLoaded(subtitle)
+                links.add(subtitle)
             }
         }
+
+        return links
     }
 
     private fun getFilmDetailsFromDefaultMetaProvider(

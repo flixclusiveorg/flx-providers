@@ -3,12 +3,12 @@ package com.flxProviders.superstream.api.settings
 import android.webkit.CookieManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import com.flixclusive.provider.settings.ProviderSettingsManager
+import com.flixclusive.provider.settings.ProviderSettings
 
 private const val TOKEN_COOKIE_NAME = "ui"
 
 class TokenGetterWebViewClient(
-    private val settingsManager: ProviderSettingsManager,
+    private val settings: ProviderSettings,
     private val onTokenReceived: () -> Unit
 ) : WebViewClient() {
     private val cookieManager = CookieManager.getInstance()
@@ -18,12 +18,12 @@ class TokenGetterWebViewClient(
             val token = getToken(url)
 
             if (token != null) {
-                settingsManager.setInt(
+                settings.setInt(
                     key = TOKEN_STATUS_KEY,
                     `val` = TokenStatus.Online.ordinal
                 )
 
-                settingsManager.setString(
+                settings.setString(
                     key = TOKEN_KEY,
                     `val` = token
                 )

@@ -1,6 +1,7 @@
 package com.flxProviders.stremio.api.model
 
-import com.flixclusive.model.provider.SourceLink
+import com.flixclusive.model.provider.Flag
+import com.flixclusive.model.provider.Stream
 import com.flixclusive.model.provider.Subtitle
 import com.flxProviders.stremio.api.util.isValidUrl
 import com.google.gson.annotations.SerializedName
@@ -10,7 +11,7 @@ import java.net.URL
  *
  * Based from [Hexated's](https://github.com/hexated/cloudstream-extensions-hexated/blob/master/StremioX/src/main/kotlin/com/hexated/StremioX.kt#L243)
  * */
-internal data class Stream(
+internal data class StreamDto(
     val url: String?,
     val name: String? = null,
     val title: String? = null,
@@ -23,20 +24,22 @@ internal data class Stream(
     @SerializedName("behaviorHints") val extraOptions: ExtraOptions? = null
 ) {
     companion object {
-        fun Stream.toSourceLink(): SourceLink? {
+        fun StreamDto.toStreamLink(): Stream? {
             val isValidUrl = isValidUrl(url)
             if (!isValidUrl) return null
 
             val headers = (extraOptions?.headers ?: emptyMap()).plus(extraOptions?.proxyHeaders?.request ?: emptyMap())
 
-            return SourceLink(
+            return Stream(
                 url = URL(url).toString(),
                 name = fixSourceName(
                     name = name,
                     description = description,
                     title = title
                 ),
-                customHeaders = headers
+                flags = setOf(
+                    Flag.RequiresAuth(customHeaders = headers),
+                )
             )
         }
 
@@ -55,7 +58,7 @@ internal data class Stream(
 }
 
 internal data class StreamResponse(
-    val streams: List<Stream>,
+    val streams: List<StreamDto>,
     override val err: String?,
 ) : CommonErrorResponse()
 
