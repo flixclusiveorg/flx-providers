@@ -1,8 +1,9 @@
 package com.flxProviders.sudoflix.api.primewire.extractor
 
 import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.provider.Flag
+import com.flixclusive.model.provider.MediaLink
+import com.flixclusive.model.provider.Stream
 import com.flixclusive.provider.extractor.Extractor
 import com.flxProviders.sudoflix.api.primewire.util.getRedirectedUrl
 import okhttp3.Headers.Companion.toHeaders
@@ -23,9 +24,8 @@ internal class DoodStream(
 
     override suspend fun extract(
         url: String,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit
-    ) {
+        customHeaders: Map<String, String>?
+    ): List<MediaLink> {
         val embedRawUrl = getEmbedUrl(url)
         val embedUrl = embedRawUrl.toString()
         val embedId = embedUrl.split("/d/").lastOrNull()
@@ -59,12 +59,14 @@ internal class DoodStream(
 
         val downloadUrl = "${nextPage}${generateRandomToken()}?token=${token}&expiry=${expiry}"
 
-        onLinkLoaded(
-            SourceLink(
+        return listOf(
+            Stream(
                 url = downloadUrl,
                 name = name,
-                customHeaders = mapOf(
-                    "Referer" to "$baseUrl/"
+                flags = setOf(
+                    Flag.RequiresAuth(
+                        customHeaders = mapOf("Referer" to "$baseUrl/")
+                    )
                 )
             )
         )

@@ -3,11 +3,8 @@ package com.flxProviders.sudoflix.api.ridomovies
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.model.tmdb.Film
+import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.tmdb.FilmDetails
-import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
 import com.flxProviders.sudoflix.api.ridomovies.RidoMoviesConstant.RIDO_MOVIES_BASE_URL
@@ -21,22 +18,19 @@ import org.jsoup.Jsoup
 class RidoMoviesApi(
     client: OkHttpClient
 ) : ProviderApi(client) {
-    override val name: String
-        get() = "RidoMovies"
-
-    override val baseUrl: String
-        get() = RIDO_MOVIES_BASE_URL
+    override val name = "RidoMovies"
+    override val baseUrl  = RIDO_MOVIES_BASE_URL
 
     private val closeLoad = CloseLoad(client)
     private val ridoo = Ridoo(client)
 
-    override suspend fun getSourceLinks(
+    override suspend fun getLinks(
         watchId: String,
         film: FilmDetails,
-        episode: Episode?,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit
-    ) {
+        episode: Episode?
+    ): List<MediaLink> {
+        val links = mutableListOf<MediaLink>()
+
         val fullSlug = getFullSlug(
             imdbId = film.imdbId ?: film.title,
             tmdbId = film.tmdbId
@@ -57,20 +51,17 @@ class RidoMoviesApi(
 
         when {
             embedUrl.contains("closeload") -> {
-                closeLoad.extract(
-                    url = embedUrl,
-                    onLinkLoaded = onLinkLoaded,
-                    onSubtitleLoaded = onSubtitleLoaded
-                )
+                val extractedLinks = closeLoad.extract(url = embedUrl)
+                links.addAll(extractedLinks)
             }
             embedUrl.contains("ridoo") -> {
-                ridoo.extract(
-                    url = embedUrl,
-                    onLinkLoaded = onLinkLoaded,
-                    onSubtitleLoaded = onSubtitleLoaded
-                )
+                val extractedLinks = ridoo.extract(url = embedUrl)
+                links.addAll(extractedLinks)
+                ridoo.extract(url = embedUrl)
             }
         }
+
+        return links
     }
 
     private fun getFullSlug(

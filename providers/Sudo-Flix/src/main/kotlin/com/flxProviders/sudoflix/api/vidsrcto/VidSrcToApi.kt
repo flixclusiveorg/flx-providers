@@ -4,7 +4,7 @@ import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.network.asJsoup
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.SourceLink
+import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.common.tv.Episode
@@ -21,23 +21,18 @@ internal const val VIDSRCTO_KEY = "WXrUARXb1aDLaZjI"
 internal class VidSrcToApi(
     client: OkHttpClient
 ) : ProviderApi(client) {
-    override val name: String
-        get() = "VidSrc.To"
-
-    override val baseUrl: String
-        get() = "https://vidsrc.to"
+    override val name = "VidSrc.To"
+    override val baseUrl = "https://vidsrc.to"
 
     private val extractors = mapOf(
         "filemoon" to Filemoon(client),
     )
 
-    override suspend fun getSourceLinks(
+    override suspend fun getLinks(
         watchId: String,
         film: FilmDetails,
-        episode: Episode?,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit
-    ) {
+        episode: Episode?
+    ): List<MediaLink> {
         val actualWatchId = film.imdbId ?: film.tmdbId ?: watchId
         val episodeSlug = if (episode != null) "/${episode.season}/${episode.number}" else ""
 
@@ -59,6 +54,7 @@ internal class VidSrcToApi(
             throw IllegalStateException("[$name]> Can't find sources")
         }
 
+        val links = mutableListOf<MediaLink>()
         asyncCalls(
             {
                 sources.result.forEach {
@@ -67,28 +63,23 @@ internal class VidSrcToApi(
                         val id = it["id"]
                             ?: throw IllegalStateException("[$name]> Can't find extractor id")
 
-                        extractor.extractFromSources(
-                            id = id,
-                            onLinkLoaded = onLinkLoaded,
-                            onSubtitleLoaded = onSubtitleLoaded
-                        )
+                        val extractedLinks = extractor.extractFromSources(id = id)
+                        links.addAll(extractedLinks)
                     }
                 }
             },
             {
                 getSubtitles(
                     url = "$baseFilmUrl/subtitles",
-                    onSubtitleLoaded = onSubtitleLoaded
+                    onSubtitleLoaded = links::add
                 )
             },
         )
+
+        return links
     }
 
-    private suspend fun Extractor.extractFromSources(
-        id: String,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit
-    ) {
+    private suspend fun Extractor.extractFromSources(id: String): List<MediaLink> {
         val response = client.request(
             url = "${this@VidSrcToApi.baseUrl}/ajax/embed/source/$id"
         ).execute()
@@ -103,11 +94,7 @@ internal class VidSrcToApi(
             ?: throw IllegalStateException("[$name]> Can't find encrypted url")
         val decryptedUrl = decodeUrl(encryptedUrl)
 
-        extract(
-            url = decryptedUrl,
-            onLinkLoaded = onLinkLoaded,
-            onSubtitleLoaded = onSubtitleLoaded
-        )
+        return extract(url = decryptedUrl)
     }
 
     private fun getSubtitles(

@@ -1,11 +1,9 @@
 package com.flxProviders.sudoflix.api.vidsrcto.extractor
 
-import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.network.CryptographyUtil.base64Encode
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.provider.extractor.Extractor
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
@@ -15,16 +13,13 @@ import javax.crypto.spec.SecretKeySpec
 internal class F2Cloud(
     client: OkHttpClient
 ) : Extractor(client) {
-    override val baseUrl: String
-        get() = "https://vid2v11.site"
-    override val name: String
-        get() = "F2Cloud"
+    override val baseUrl = "https://vid2v11.site"
+    override val name = "F2Cloud"
 
     override suspend fun extract(
         url: String,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit
-    ) {
+        customHeaders: Map<String, String>?
+    ): List<MediaLink> {
         val encodedId = getKey(url = url)
         val sourcesUrl = getSourcesUrl(id = encodedId, url = url)
 

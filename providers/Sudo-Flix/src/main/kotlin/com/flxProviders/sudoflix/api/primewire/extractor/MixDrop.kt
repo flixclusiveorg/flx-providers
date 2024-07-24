@@ -1,8 +1,8 @@
 package com.flxProviders.sudoflix.api.primewire.extractor
 
 import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.provider.MediaLink
+import com.flixclusive.model.provider.Stream
 import com.flixclusive.provider.extractor.Extractor
 import com.flxProviders.sudoflix.api.util.JsUnpacker
 import okhttp3.HttpUrl
@@ -13,19 +13,16 @@ import java.net.URL
 internal class MixDrop(
     client: OkHttpClient
 ) : Extractor(client) {
-    override val baseUrl: String
-        get() = "https://mixdrop.ag"
-    override val name: String
-        get() = "MixDrop"
+    override val baseUrl = "https://mixdrop.ag"
+    override val name = "MixDrop"
 
     private val packedRegex = Regex("""(eval\(function\(p,a,c,k,e,d\)\{.*\}\)\))""")
     private val linkRegex = Regex("""MDCore\.wurl="(.*?)";""")
 
     override suspend fun extract(
         url: String,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit
-    ) {
+        customHeaders: Map<String, String>?
+    ): List<MediaLink> {
         val cleanedUrl = getProperMixDropUrl(url)
         val probableHost = cleanedUrl.host
         val embedId = cleanedUrl.pathSegments
@@ -55,8 +52,8 @@ internal class MixDrop(
             "https:$link"
         }
 
-        onLinkLoaded(
-            SourceLink(
+        return listOf(
+            Stream(
                 url = link,
                 name = name
             )

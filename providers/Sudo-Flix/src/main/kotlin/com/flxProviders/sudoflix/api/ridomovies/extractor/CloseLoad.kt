@@ -4,7 +4,9 @@ import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.network.CryptographyUtil
 import com.flixclusive.core.util.network.asJsoup
 import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.SourceLink
+import com.flixclusive.model.provider.Flag
+import com.flixclusive.model.provider.MediaLink
+import com.flixclusive.model.provider.Stream
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
 import com.flixclusive.provider.extractor.Extractor
@@ -16,10 +18,8 @@ import okhttp3.OkHttpClient
 internal class CloseLoad(
     client: OkHttpClient
 ) : Extractor(client) {
-    override val baseUrl: String
-        get() = "https://closeload.top"
-    override val name: String
-        get() = "CloseLoad"
+    override val baseUrl = "https://closeload.top"
+    override val name = "CloseLoad"
 
     private val headers = mapOf(
         "Referer" to "$RIDO_MOVIES_BASE_URL/"
@@ -27,9 +27,10 @@ internal class CloseLoad(
 
     override suspend fun extract(
         url: String,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit
-    ) {
+        customHeaders: Map<String, String>?
+    ): List<MediaLink> {
+        val links = mutableListOf<MediaLink>()
+
         val response = client.request(
             url = url,
             headers = headers
@@ -44,7 +45,7 @@ internal class CloseLoad(
         val captions = htmlCode.select("track")
 
         captions.mapAsync {
-            onSubtitleLoaded(
+            links.add(
                 Subtitle(
                     language = it.attr("label"),
                     url = it.attr("src"),
@@ -67,12 +68,18 @@ internal class CloseLoad(
 
         val sourceUrl = CryptographyUtil.base64Decode(base64EncodedUrl)
 
-        onLinkLoaded(
-            SourceLink(
+        links.add(
+            Stream(
                 url = sourceUrl,
                 name = "[$name]> HLS",
-                customHeaders = mapOf("Referer" to "$baseUrl/")
+                flags = setOf(
+                    Flag.RequiresAuth(
+                        customHeaders = mapOf("Referer" to "$baseUrl/")
+                    )
+                )
             )
         )
+
+        return links
     }
 }

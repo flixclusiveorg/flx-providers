@@ -3,6 +3,7 @@ package com.flxProviders.flixhq.api
 import android.content.Context
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.film.FilmType
+import com.flixclusive.core.util.film.filter.FilterList
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.SourceLink
 import com.flixclusive.model.provider.Subtitle
@@ -53,7 +54,8 @@ class FlixHQApi(
         page: Int,
         id: String?,
         imdbId: String?,
-        tmdbId: Int?
+        tmdbId: Int?,
+        filters: FilterList,
     ): SearchResponseData<FilmSearchItem> {
         val query = title.removeAccents()
 

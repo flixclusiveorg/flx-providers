@@ -8,8 +8,7 @@ import com.flixclusive.core.util.network.CryptographyUtil
 import com.flixclusive.core.util.network.asJsoup
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
@@ -31,11 +30,8 @@ import org.jsoup.nodes.Document
 internal class PrimeWireApi(
     client: OkHttpClient
 ) : ProviderApi(client) {
-    override val name: String
-        get() = "PrimeWire"
-
-    override val baseUrl: String
-        get() = "https://www.primewire.tf"
+    override val name = "PrimeWire"
+    override val baseUrl = "https://www.primewire.tf"
 
     private val extractors = mapOf(
         "mixdrop" to MixDrop(client),
@@ -49,13 +45,11 @@ internal class PrimeWireApi(
         "streamwish" to StreamWish(client)
     )
 
-    override suspend fun getSourceLinks(
+    override suspend fun getLinks(
         watchId: String,
         film: FilmDetails,
-        episode: Episode?,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit
-    ) {
+        episode: Episode?
+    ): List<MediaLink> {
         val imdbId = film.imdbId
             ?: throw NullPointerException("[$name]> Could not get IMDB ID")
         val id = getMediaId(imdbId = imdbId)
@@ -66,13 +60,14 @@ internal class PrimeWireApi(
             filmType = film.filmType
         )
 
+        val links = mutableListOf<MediaLink>()
         asyncCalls(
             {
                 client.fetchSubtitles(
                     imdbId = imdbId,
                     season = episode?.season,
                     episode = episode?.number,
-                    onSubtitleLoaded = onSubtitleLoaded
+                    onSubtitleLoaded = links::add
                 )
             },
             {
@@ -81,15 +76,14 @@ internal class PrimeWireApi(
                         ?: return@mapAsync
 
                     safeCall {
-                        extractor.extract(
-                            url = url,
-                            onLinkLoaded = onLinkLoaded,
-                            onSubtitleLoaded = onSubtitleLoaded
-                        )
+                        val extractedLinks = extractor.extract(url = url)
+                        links.addAll(extractedLinks)
                     }
                 }
             },
         )
+
+        return links
     }
 
     private fun getMediaId(imdbId: String): Int {

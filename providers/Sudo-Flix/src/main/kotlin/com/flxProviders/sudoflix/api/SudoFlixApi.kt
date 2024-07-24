@@ -3,14 +3,13 @@ package com.flxProviders.sudoflix.api
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.core.util.film.filter.FilterList
+import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.ProviderApi
-import com.flxProviders.sudoflix.api.nsbx.AbstractNsbxApi
 import com.flxProviders.sudoflix.api.nsbx.NsbxApi
 import com.flxProviders.sudoflix.api.nsbx.VidBingeApi
 import com.flxProviders.sudoflix.api.primewire.PrimeWireApi
@@ -25,11 +24,7 @@ import okhttp3.OkHttpClient
 class SudoFlixApi(
     client: OkHttpClient
 ) : ProviderApi(client) {
-    override val baseUrl: String
-        get() = super.baseUrl
-
-    override val name: String
-        get() = "Sudo-Flix"
+    override val name = "Sudo-Flix"
 
     private val providersList = listOf(
         NsbxApi(client),
@@ -39,24 +34,25 @@ class SudoFlixApi(
         VidSrcToApi(client),
     )
 
-    override suspend fun getSourceLinks(
+    override suspend fun getLinks(
         watchId: String,
         film: FilmDetails,
-        episode: Episode?,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit
-    ) {
+        episode: Episode?
+    ): List<MediaLink> {
+        val links = mutableListOf<MediaLink>()
         providersList.mapAsync {
-            safeCall {
-                it.getSourceLinks(
+            val extractedLinks = safeCall {
+                it.getLinks(
                     watchId = watchId,
                     film = film,
-                    episode = episode,
-                    onLinkLoaded = onLinkLoaded,
-                    onSubtitleLoaded = onSubtitleLoaded
+                    episode = episode
                 )
-            }
+            } ?: return@mapAsync
+
+            links.addAll(extractedLinks)
         }
+
+        return links
     }
 
     override suspend fun search(
@@ -64,7 +60,8 @@ class SudoFlixApi(
         page: Int,
         id: String?,
         imdbId: String?,
-        tmdbId: Int?
+        tmdbId: Int?,
+        filters: FilterList,
     ): SearchResponseData<FilmSearchItem> {
         val identifier = id ?: tmdbId?.toString() ?: imdbId
         if (identifier == null) {

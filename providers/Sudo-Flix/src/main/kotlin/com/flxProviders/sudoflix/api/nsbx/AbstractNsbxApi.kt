@@ -7,7 +7,9 @@ import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.SourceLink
+import com.flixclusive.model.provider.Flag
+import com.flixclusive.model.provider.MediaLink
+import com.flixclusive.model.provider.Stream
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
 import com.flixclusive.model.tmdb.FilmDetails
@@ -25,18 +27,17 @@ internal abstract class AbstractNsbxApi(
     private val origin = "https://sudo-flix.lol"
     private val headers = mapOf("Origin" to origin).toHeaders()
 
-    override suspend fun getSourceLinks(
+    override suspend fun getLinks(
         watchId: String,
         film: FilmDetails,
-        episode: Episode?,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit
-    ) {
+        episode: Episode?
+    ): List<MediaLink> {
         val availableProviders = getAvailableProviders()
 
         if (availableProviders.isEmpty())
             throw IllegalStateException("No available providers for $name")
 
+        val links = mutableListOf<MediaLink>()
         for (i in availableProviders.indices) {
             try {
                 val provider = availableProviders[i]
@@ -72,39 +73,43 @@ internal abstract class AbstractNsbxApi(
                         fromJson<NsbxSource>(stringResponse)
                     }
 
+                val streamFlags = setOf(
+                    Flag.RequiresAuth(customHeaders = headers.toMap())
+                )
+
                 asyncCalls(
                     {
-                        source.stream.mapAsync {
+                        source.streamDto.mapAsync {
                             it.qualities?.entries?.mapAsync { (serverName, qualitySource) ->
-                                onLinkLoaded(
-                                    SourceLink(
+                                links.add(
+                                    Stream(
                                         name = serverName,
                                         url = qualitySource.url,
-                                        customHeaders = headers.toMap()
+                                        flags = streamFlags
                                     )
                                 )
                             }
                         }
                     },
                     {
-                        source.stream.mapAsync {
+                        source.streamDto.mapAsync {
                             if (it.playlist == null) {
                                 return@mapAsync
                             }
 
-                            onLinkLoaded(
-                                SourceLink(
+                            links.add(
+                                Stream(
                                     name = name,
                                     url = it.playlist,
-                                    customHeaders = headers.toMap()
+                                    flags = streamFlags
                                 )
                             )
                         }
                     },
                     {
-                        source.stream.mapAsync {
+                        source.streamDto.mapAsync {
                             it.captions.mapAsync { caption ->
-                                onSubtitleLoaded(
+                                links.add(
                                     Subtitle(
                                         url = caption.url,
                                         language = caption.language,
@@ -115,8 +120,8 @@ internal abstract class AbstractNsbxApi(
                         }
                     },
                 )
-                return
-            } catch (e: Exception) {
+            }
+            catch (e: Exception) {
                 if (i != availableProviders.indices.last) {
                     errorLog(e.stackTraceToString())
                     continue
@@ -126,7 +131,7 @@ internal abstract class AbstractNsbxApi(
             }
         }
 
-        throw IllegalStateException("[$name]> Could not get source link")
+        return links
     }
 
     private fun getAvailableProviders(): List<String> {

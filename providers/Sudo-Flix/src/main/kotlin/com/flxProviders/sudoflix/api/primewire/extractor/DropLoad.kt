@@ -1,8 +1,8 @@
 package com.flxProviders.sudoflix.api.primewire.extractor
 
 import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.provider.MediaLink
+import com.flixclusive.model.provider.Stream
 import com.flixclusive.provider.extractor.Extractor
 import com.flxProviders.sudoflix.api.util.JsUnpacker
 import okhttp3.OkHttpClient
@@ -10,19 +10,16 @@ import okhttp3.OkHttpClient
 internal class DropLoad(
     client: OkHttpClient
 ) : Extractor(client) {
-    override val baseUrl: String
-        get() = "https://dropload.io"
-    override val name: String
-        get() = "DropLoad"
+    override val baseUrl = "https://dropload.io"
+    override val name = "DropLoad"
 
     private val packedRegex = Regex("""eval\((function\(p,a,c,k,e,d\)\{.*)\)""")
     private val linkRegex = Regex("""file:"(.*?)"""")
 
     override suspend fun extract(
         url: String,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit
-    ) {
+        customHeaders: Map<String, String>?
+    ): List<MediaLink> {
         val streamPage = client.request(url = url)
             .execute().body?.string()
             ?: throw Exception("[$name]> Failed to load page")
@@ -38,8 +35,8 @@ internal class DropLoad(
             ?.groupValues?.get(1)
             ?: throw Exception("[$name]> Failed to find link from unpacked script")
 
-        onLinkLoaded(
-            SourceLink(
+        return listOf(
+            Stream(
                 url = link,
                 name = name
             )

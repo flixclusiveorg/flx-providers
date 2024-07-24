@@ -2,10 +2,10 @@ package com.flxProviders.sudoflix.api.nsbx.dto
 
 
 internal data class NsbxSource(
-    val stream: List<Stream>
+    val streamDto: List<StreamDto>
 )
 
-internal data class Stream(
+internal data class StreamDto(
     val qualities: Map<String, Quality>? = null, // for VidBinge
     val playlist: String? = null, // for NSBX
     val captions: List<Caption>,

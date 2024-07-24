@@ -3,26 +3,23 @@ package com.flxProviders.sudoflix.api.primewire.extractor
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.network.CryptographyUtil
 import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.provider.MediaLink
+import com.flixclusive.model.provider.Stream
 import com.flixclusive.provider.extractor.Extractor
 import okhttp3.OkHttpClient
 
 internal class Voe(
     client: OkHttpClient
 ) : Extractor(client) {
-    override val baseUrl: String
-        get() = "https://voe.sx"
-    override val name: String
-        get() = "Voe"
+    override val baseUrl = "https://voe.sx"
+    override val name = "Voe"
 
     private val linkRegex = Regex("""'hls': ?'(http.*?)',""")
 
     override suspend fun extract(
         url: String,
-        onLinkLoaded: (SourceLink) -> Unit,
-        onSubtitleLoaded: (Subtitle) -> Unit
-    ) {
+        customHeaders: Map<String, String>?
+    ): List<MediaLink> {
         val streamPage = client.request(url = url)
             .execute().body?.string()
             ?: throw Exception("[$name]> Failed to load page")
@@ -37,8 +34,8 @@ internal class Voe(
                 streamUrl = CryptographyUtil.base64Decode(streamUrl)
         }
 
-        onLinkLoaded(
-            SourceLink(
+        return listOf(
+            Stream(
                 url = streamUrl,
                 name = name
             )
