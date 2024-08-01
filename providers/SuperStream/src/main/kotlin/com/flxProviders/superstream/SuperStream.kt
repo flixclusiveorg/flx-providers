@@ -23,6 +23,7 @@ class SuperStream : Provider() {
     ): ProviderApi {
         return SuperStreamApi(
             client = client,
+            provider = this,
             settings = settings
         )
     }

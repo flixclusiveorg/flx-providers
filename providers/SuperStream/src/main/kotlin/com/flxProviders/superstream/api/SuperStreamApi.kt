@@ -14,6 +14,7 @@ import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.provider.Provider
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.settings.ProviderSettings
 import com.flxProviders.superstream.BuildConfig
@@ -40,13 +41,10 @@ import kotlin.random.Random
  * */
 class SuperStreamApi(
     client: OkHttpClient,
+    provider: Provider,
     private val settings: ProviderSettings
-) : ProviderApi(client) {
-    companion object {
-        internal const val DEFAULT_PROVIDER_NAME = "SuperStream"
-    }
-
-    override val name = DEFAULT_PROVIDER_NAME
+) : ProviderApi(client, provider) {
+    private val name = provider.name
 
     private val token: String?
         get() = settings.getString(TOKEN_KEY, null)
@@ -86,7 +84,7 @@ class SuperStreamApi(
         val response = client.request(apiQuery).execute()
             .fromJson<SearchData>("[$name]> Couldn't search for $tmdbId")
 
-        return response.toSearchResponseData()
+        return response.toSearchResponseData(provider = name)
     }
 
     override suspend fun getFilmDetails(film: Film): FilmDetails {

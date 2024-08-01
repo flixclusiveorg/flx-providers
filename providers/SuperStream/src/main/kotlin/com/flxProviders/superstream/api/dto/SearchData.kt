@@ -6,7 +6,6 @@ import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.flxProviders.superstream.BuildConfig.SUPERSTREAM_FIRST_API
 import com.flxProviders.superstream.BuildConfig.SUPERSTREAM_FOURTH_API
-import com.flxProviders.superstream.api.SuperStreamApi.Companion.DEFAULT_PROVIDER_NAME
 import com.google.gson.annotations.SerializedName
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -69,7 +68,7 @@ internal data class SearchData(
     }
 
     companion object {
-        fun SearchData.toSearchResponseData(): SearchResponseData<FilmSearchItem> {
+        fun SearchData.toSearchResponseData(provider: String): SearchResponseData<FilmSearchItem> {
             val itemsLoaded = data.start + ITEMS_PER_PAGE
             val currentPage = itemsLoaded / ITEMS_PER_PAGE
             val hasNextPage = itemsLoaded < data.numFound
@@ -77,15 +76,15 @@ internal data class SearchData(
             return SearchResponseData(
                 page = currentPage,
                 hasNextPage = hasNextPage,
-                results = data.results.map { it.toFilmSearchItem() },
+                results = data.results.map { it.toFilmSearchItem(provider) },
                 totalPages = data.numFound.toDouble().div(ITEMS_PER_PAGE).roundToInt()
             )
         }
 
-        private fun Item.toFilmSearchItem()
+        private fun Item.toFilmSearchItem(provider: String)
             = FilmSearchItem(
                 id = id,
-                providerName = DEFAULT_PROVIDER_NAME,
+                providerName = provider,
                 title = name,
                 imdbId = imdbId,
                 rating = rating,
