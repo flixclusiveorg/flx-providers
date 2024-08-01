@@ -17,7 +17,6 @@ class Stremio : Provider() {
     private var client: OkHttpClient
         = OkHttpClient() // For safety
 
-
     @Composable
     override fun SettingsScreen() {
         CompositionLocalProvider(
@@ -38,6 +37,7 @@ class Stremio : Provider() {
 
         return StremioApi(
             context = context!!,
+            provider = this,
             client = client,
             settings = settings
         )

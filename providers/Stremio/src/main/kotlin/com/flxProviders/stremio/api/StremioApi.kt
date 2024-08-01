@@ -23,6 +23,7 @@ import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.provider.Provider
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.settings.ProviderSettings
 import com.flxProviders.stremio.api.model.Addon
@@ -55,15 +56,15 @@ internal const val STREMIO = "Stremio"
 
 internal class StremioApi(
     context: Context,
+    provider: Provider,
     client: OkHttpClient,
     private val settings: ProviderSettings
-) : ProviderApi(client) {
+) : ProviderApi(client, provider) {
     init {
         context.migrateOldAddons()
     }
 
-    override val name: String
-        get() = STREMIO
+    private val name = STREMIO
 
     override val catalogs: List<ProviderCatalog>
         get() = safeCall {
