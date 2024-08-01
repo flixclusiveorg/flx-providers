@@ -14,6 +14,7 @@ import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.provider.Provider
 import com.flixclusive.provider.ProviderApi
 import com.flxProviders.sudoflix.api.nsbx.dto.NsbxProviders
 import com.flxProviders.sudoflix.api.nsbx.dto.NsbxSource
@@ -21,9 +22,11 @@ import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 
 internal abstract class AbstractNsbxApi(
-    client: OkHttpClient
-) : ProviderApi(client) {
+    client: OkHttpClient,
+    provider: Provider,
+) : ProviderApi(client, provider) {
     abstract val streamSourceUrl: String
+    abstract val name: String
     private val origin = "https://sudo-flix.lol"
     private val headers = mapOf("Origin" to origin).toHeaders()
 

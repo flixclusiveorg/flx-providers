@@ -8,6 +8,7 @@ import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.provider.Provider
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.extractor.Extractor
 import com.flxProviders.sudoflix.api.vidsrcto.dto.EmbedSourcesResponse
@@ -19,9 +20,10 @@ import okhttp3.OkHttpClient
 internal const val VIDSRCTO_KEY = "WXrUARXb1aDLaZjI"
 
 internal class VidSrcToApi(
-    client: OkHttpClient
-) : ProviderApi(client) {
-    override val name = "VidSrc.To"
+    client: OkHttpClient,
+    provider: Provider
+) : ProviderApi(client, provider) {
+    private val name = "VidSrc.To"
     override val baseUrl = "https://vidsrc.to"
 
     private val extractors = mapOf(

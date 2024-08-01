@@ -11,6 +11,7 @@ import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.provider.Provider
 import com.flixclusive.provider.ProviderApi
 import com.flxProviders.sudoflix.api.opensubs.SubtitleUtil.fetchSubtitles
 import com.flxProviders.sudoflix.api.primewire.extractor.DoodStream
@@ -28,9 +29,10 @@ import org.jsoup.nodes.Document
 
 @Suppress("SpellCheckingInspection")
 internal class PrimeWireApi(
-    client: OkHttpClient
-) : ProviderApi(client) {
-    override val name = "PrimeWire"
+    client: OkHttpClient,
+    provider: Provider
+) : ProviderApi(client, provider) {
+    private val name = "PrimeWire"
     override val baseUrl = "https://www.primewire.tf"
 
     private val extractors = mapOf(

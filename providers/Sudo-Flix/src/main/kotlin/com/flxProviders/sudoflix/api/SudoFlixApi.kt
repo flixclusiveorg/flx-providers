@@ -9,6 +9,7 @@ import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.provider.Provider
 import com.flixclusive.provider.ProviderApi
 import com.flxProviders.sudoflix.api.nsbx.NsbxApi
 import com.flxProviders.sudoflix.api.nsbx.VidBingeApi
@@ -22,16 +23,15 @@ import okhttp3.OkHttpClient
  * RIP m-w
  * */
 class SudoFlixApi(
-    client: OkHttpClient
-) : ProviderApi(client) {
-    override val name = "Sudo-Flix"
-
+    client: OkHttpClient,
+    provider: Provider
+) : ProviderApi(client, provider) {
     private val providersList = listOf(
-        NsbxApi(client),
-        VidBingeApi(client),
-        RidoMoviesApi(client),
-        PrimeWireApi(client),
-        VidSrcToApi(client),
+        NsbxApi(client, provider),
+        VidBingeApi(client, provider),
+        RidoMoviesApi(client, provider),
+        PrimeWireApi(client, provider),
+        VidSrcToApi(client, provider),
     )
 
     override suspend fun getLinks(
@@ -65,7 +65,7 @@ class SudoFlixApi(
     ): SearchResponseData<FilmSearchItem> {
         val identifier = id ?: tmdbId?.toString() ?: imdbId
         if (identifier == null) {
-            throw IllegalStateException("$name is not a searchable provider. It is a set of providers combined into one.")
+            throw IllegalStateException("${provider.name} is not a searchable provider. It is a set of providers combined into one.")
         }
 
         return SearchResponseData(
@@ -73,7 +73,7 @@ class SudoFlixApi(
                 FilmSearchItem(
                     id = identifier,
                     title = title,
-                    providerName = name,
+                    providerName = provider.name,
                     filmType = FilmType.MOVIE,
                     posterImage = null,
                     backdropImage = null,

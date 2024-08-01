@@ -6,6 +6,7 @@ import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.provider.Provider
 import com.flixclusive.provider.ProviderApi
 import com.flxProviders.sudoflix.api.ridomovies.RidoMoviesConstant.RIDO_MOVIES_BASE_URL
 import com.flxProviders.sudoflix.api.ridomovies.dto.RidoMoviesEmbedDto
@@ -16,9 +17,10 @@ import okhttp3.OkHttpClient
 import org.jsoup.Jsoup
 
 class RidoMoviesApi(
-    client: OkHttpClient
-) : ProviderApi(client) {
-    override val name = "RidoMovies"
+    client: OkHttpClient,
+    provider: Provider
+) : ProviderApi(client, provider) {
+    private val name = "RidoMovies"
     override val baseUrl  = RIDO_MOVIES_BASE_URL
 
     private val closeLoad = CloseLoad(client)

@@ -2,11 +2,13 @@ package com.flxProviders.sudoflix.api.nsbx
 
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.model.tmdb.FilmDetails
+import com.flixclusive.provider.Provider
 import okhttp3.OkHttpClient
 
 internal class VidBingeApi(
-    client: OkHttpClient
-) : AbstractNsbxApi(client) {
+    client: OkHttpClient,
+    provider: Provider
+) : AbstractNsbxApi(client, provider) {
     override val baseUrl = "https://api.whvx.net"
     override val name = "VidBinge"
     override val streamSourceUrl = "$baseUrl/source"
