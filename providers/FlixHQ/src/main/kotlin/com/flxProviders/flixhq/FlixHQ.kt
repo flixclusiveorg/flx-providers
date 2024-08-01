@@ -12,5 +12,8 @@ class FlixHQ : Provider() {
     override fun getApi(
         context: Context?,
         client: OkHttpClient
-    ) = FlixHQApi(client = client)
+    ) = FlixHQApi(
+        client = client,
+        provider = this
+    )
 }

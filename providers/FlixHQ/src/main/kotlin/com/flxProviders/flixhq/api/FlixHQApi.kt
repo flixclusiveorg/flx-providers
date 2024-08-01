@@ -11,6 +11,7 @@ import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.provider.Provider
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.webview.ProviderWebView
 import com.flixclusive.provider.webview.ProviderWebViewCallback
@@ -29,14 +30,10 @@ import okhttp3.OkHttpClient
 import org.jsoup.Jsoup
 
 class FlixHQApi(
-    client: OkHttpClient
-) : ProviderApi(client) {
-    companion object {
-        internal const val FLIXHQ_PROVIDER_NAME = "FlixHQ"
-    }
-
+    client: OkHttpClient,
+    provider: Provider
+) : ProviderApi(client, provider) {
     override val baseUrl: String = "https://flixhq.to"
-    override val name: String = FLIXHQ_PROVIDER_NAME
     override val useWebView = true
 
     private var tvCacheData: TvShowCacheData = TvShowCacheData()
@@ -78,7 +75,12 @@ class FlixHQApi(
             val results = mutableListOf<FilmSearchItem>()
 
             doc.select(".film_list-wrap > div.flw-item").forEach { element ->
-                results.add(element.toFilmSearchItem(baseUrl))
+                results.add(
+                    element.toFilmSearchItem(
+                        baseUrl = baseUrl,
+                        provider = provider.name
+                    )
+                )
             }
 
             return searchResult.copy(results = results)

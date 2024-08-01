@@ -2,7 +2,6 @@ package com.flxProviders.flixhq.api.util
 
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.model.tmdb.FilmSearchItem
-import com.flxProviders.flixhq.api.FlixHQApi.Companion.FLIXHQ_PROVIDER_NAME
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.util.Locale
@@ -48,7 +47,10 @@ internal fun String.replaceWhitespaces(toReplace: String) = replace(
     toReplace
 )
 
-internal fun Element.toFilmSearchItem(baseUrl: String): FilmSearchItem {
+internal fun Element.toFilmSearchItem(
+    baseUrl: String,
+    provider: String
+): FilmSearchItem {
     val filmType = when {
         select("div.film-detail > div.fd-infor > span.float-right").text() == "Movie" -> FilmType.MOVIE
         else -> FilmType.TV_SHOW
@@ -63,7 +65,7 @@ internal fun Element.toFilmSearchItem(baseUrl: String): FilmSearchItem {
 
     return FilmSearchItem(
         id = select("div.film-poster > a").attr("href").substring(1),
-        providerName = FLIXHQ_PROVIDER_NAME,
+        providerName = provider,
         title = select("div.film-detail > h2 > a").attr("title"),
         posterImage = select("div.film-poster > img").attr("data-src"),
         homePage = "${baseUrl}${select("div.film-poster > a").attr("href")}",
