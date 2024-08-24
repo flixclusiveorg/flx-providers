@@ -1,10 +1,13 @@
 package com.flxProviders.superstream.api
 
+import android.content.Context
+import com.flixclusive.core.network.okhttp.CloudfareWebViewInterceptor.Companion.addCloudfareVerificationInterceptor
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.film.filter.FilterList
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
+import com.flixclusive.core.network.okhttp.CloudfareWebViewManager
 import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.provider.Stream
 import com.flixclusive.model.provider.Subtitle
@@ -42,6 +45,7 @@ import kotlin.random.Random
 class SuperStreamApi(
     client: OkHttpClient,
     provider: Provider,
+    private val context: Context,
     private val settings: ProviderSettings
 ) : ProviderApi(client, provider) {
     private val name = provider.name
@@ -88,7 +92,7 @@ class SuperStreamApi(
     }
 
     override suspend fun getFilmDetails(film: Film): FilmDetails {
-        throw IllegalStateException("Not yet implemented. Please come back soon for future updates.")
+        throw NotImplementedError("Not yet implemented. Please come back soon for future updates.")
     }
 
     private suspend fun getSourceLinksFromFourthApi(
@@ -101,19 +105,21 @@ class SuperStreamApi(
         val secondAPI = BuildConfig.SUPERSTREAM_SECOND_API
 
         val (seasonSlug, episodeSlug) = getEpisodeSlug(season, episode)
-        val shareKey = client.request(
-            url = "$firstAPI/index/share_link?id=${watchId}&type=${filmType.value}"
-        ).execute().use {
-            val string = it.body?.string()
+        val shareKey = client
+            .addCloudfareVerificationInterceptor(context = context)
+            .request(
+                url = "$firstAPI/index/share_link?id=${watchId}&type=${filmType.value}"
+            ).execute().use {
+                val string = it.body?.string()
 
-            if (!it.isSuccessful || string == null) {
-                throw Exception("[$name]> Failed to fetch share key.")
+                if (!it.isSuccessful || string == null) {
+                    throw Exception("[$name]> Failed to fetch share key.")
+                }
+
+                fromJson<ExternalResponse>(string)
+                    .data?.link?.substringAfterLast("/")
+                    ?: throw Exception("[$name]> No share key found.")
             }
-
-            fromJson<ExternalResponse>(string)
-                .data?.link?.substringAfterLast("/")
-                ?: throw Exception("[$name]> No share key found.")
-        }
 
         val humanizedHeaders = mapOf("Accept-Language" to "en")
         val shareRes = client.request(

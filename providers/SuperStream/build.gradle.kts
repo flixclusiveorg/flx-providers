@@ -53,7 +53,7 @@ flxProvider {
     versionMajor = 1
     versionMinor = 3
     versionPatch = 0
-    versionBuild = 3
+    versionBuild = 4
 
     iconUrl.set("https://i.imgur.com/KgMakl9.png") // OPTIONAL
 
