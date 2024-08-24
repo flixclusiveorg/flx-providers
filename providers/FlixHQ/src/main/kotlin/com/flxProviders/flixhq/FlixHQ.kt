@@ -10,7 +10,7 @@ import okhttp3.OkHttpClient
 class FlixHQ : Provider() {
 
     override fun getApi(
-        context: Context?,
+        context: Context,
         client: OkHttpClient
     ) = FlixHQApi(
         client = client,
