@@ -15,6 +15,7 @@ import com.flixclusive.model.provider.SubtitleSource
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmSearchItem
+import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.Provider
@@ -56,13 +57,23 @@ class SuperStreamApi(
     private val tokenHeaders: Map<String, String>
         get() = mapOf("Cookie" to "ui=$token")
 
+    override val testFilm: FilmDetails
+        get() = Movie(
+            id = "47739",
+            imdbId = "tt15398776",
+            title = "Oppenheimer",
+            homePage = null,
+            posterImage = BuildConfig.SUPERSTREAM_FOURTH_API + "/uploadimg/movie/2023/07/20/2023072004020316316.jpg",
+            providerName = name
+        )
+
     override suspend fun getLinks(
         watchId: String,
         film: FilmDetails,
         episode: Episode?
     ): List<MediaLink> {
         if (token == null) {
-            throw Exception("[$name]> No token found. Have you configured the provider?")
+            throw Exception("No token found! Go to $name's settings and configure it.")
         }
 
         return getSourceLinksFromFourthApi(
@@ -86,7 +97,7 @@ class SuperStreamApi(
 
 
         val response = client.request(apiQuery).execute()
-            .fromJson<SearchData>("[$name]> Couldn't search for $tmdbId")
+            .fromJson<SearchData>("[$name]> Couldn't search for $query")
 
         return response.toSearchResponseData(provider = name)
     }

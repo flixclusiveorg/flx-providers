@@ -18,13 +18,14 @@ class SuperStream : Provider() {
     }
 
     override fun getApi(
-        context: Context?,
+        context: Context,
         client: OkHttpClient
     ): ProviderApi {
         return SuperStreamApi(
             client = client,
             provider = this,
-            settings = settings
+            settings = settings,
+            context = context
         )
     }
 }
