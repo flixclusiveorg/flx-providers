@@ -30,13 +30,13 @@ class Stremio : Provider() {
     }
 
     override fun getApi(
-        context: Context?,
+        context: Context,
         client: OkHttpClient
     ): ProviderApi {
         this.client = client
 
         return StremioApi(
-            context = context!!,
+            context = context,
             provider = this,
             client = client,
             settings = settings
