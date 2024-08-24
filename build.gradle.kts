@@ -11,7 +11,8 @@ buildscript {
         // Change this to `...(0, TimeUnit.SECONDS)`
         // to force update the providers-gradle dependency. Then, just return it
         // back to its default value `...(6, TimeUnit.HOURS)`
-        resolutionStrategy.cacheChangingModulesFor(6, TimeUnit.HOURS)
+
+        // resolutionStrategy.cacheChangingModulesFor(6, TimeUnit.HOURS)
     }
 
     repositories {
@@ -23,13 +24,15 @@ buildscript {
     }
 
     dependencies {
+        val kotlin = "1.9.10"
         classpath("com.android.tools.build:gradle:7.2.2")
         // Flixclusive gradle plugin which makes everything work and builds providers
-        classpath("com.github.Flixclusive.providers-gradle:providers-gradle:main-SNAPSHOT") {
+        classpath("com.github.Flixclusive.providers-gradle:providers-gradle:1.0.0") {
             isChanging = true
         }
         // Kotlin support. Remove if you want to use Java
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin")
+        classpath("org.jetbrains.kotlin:kotlin-serialization:$kotlin")
     }
 }
 
@@ -44,10 +47,6 @@ allprojects {
 fun Project.flxProvider(configuration: FlixclusiveProviderExtension.() -> Unit) = extensions.getByName<FlixclusiveProviderExtension>("flxProvider").configuration()
 
 fun Project.android(configuration: BaseExtension.() -> Unit) = extensions.getByName<BaseExtension>("android").configuration()
-
-plugins {
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10" apply false
-}
 
 subprojects {
     apply(plugin = "com.android.library")

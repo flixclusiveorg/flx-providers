@@ -21,6 +21,7 @@ import com.flixclusive.model.provider.Stream
 import com.flixclusive.model.tmdb.Film
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmSearchItem
+import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.Provider
@@ -65,6 +66,11 @@ internal class StremioApi(
     }
 
     private val name = STREMIO
+
+    override val testFilm: FilmDetails
+        get() = (super.testFilm as Movie).copy(
+            providerName = name,
+        )
 
     override val catalogs: List<ProviderCatalog>
         get() = safeCall {
