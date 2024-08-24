@@ -5,4 +5,4 @@
 | SuperStream | 🟡 MAINTENANCE |
 | Sudo-Flix | 🟢 OK |
 | Stremio | 🟢 OK |
-| FlixHQ | 🟡 MAINTENANCE |
+| FlixHQ | 🔵 BETA |
