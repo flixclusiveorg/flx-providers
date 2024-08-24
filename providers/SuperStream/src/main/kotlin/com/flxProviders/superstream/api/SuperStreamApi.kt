@@ -7,7 +7,6 @@ import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.film.filter.FilterList
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
-import com.flixclusive.core.network.okhttp.CloudfareWebViewManager
 import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.provider.Stream
 import com.flixclusive.model.provider.Subtitle

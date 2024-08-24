@@ -61,6 +61,6 @@ flxProvider {
 
     providerType.set(ProviderType.All)
 
-    status.set(Status.Working)
+    status.set(Status.Maintenance)
 }
 
