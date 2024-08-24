@@ -5,7 +5,7 @@
         "providerType": {
             "type": "Movies, TV Shows, etc."
         },
-        "status": "Maintenance",
+        "status": "Beta",
         "language": {
             "languageCode": "Multiple"
         },
@@ -15,11 +15,11 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 10006,
+        "versionCode": 10100,
         "description": "NOTICE: This provider uses WebView to scrape content. This might lag.\n\nStream seamlessly in adjustable HD resolution (1080p) with blazing-fast loading speeds. Offers HLS media.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/FlixHQ.flx",
         "changelog": "### FlixHQ is still broken. I'm too lazy to fix this provider now - their devs just wont give up :')",
-        "versionName": "1.0.0",
+        "versionName": "1.0.1",
         "name": "FlixHQ"
     },
     {
@@ -38,7 +38,7 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 12102,
+        "versionCode": 12103,
         "description": "A flixclusive adapter for Stremio addons. Torrent addons, such as Torrentio,  don't work without debrid accounts.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/Stremio.flx",
         "changelog": "### Fixes:\n- Fixed settings screen not working when Stremio is disabled.",
@@ -65,7 +65,7 @@
                 "name": "sussy-code"
             }
         ],
-        "versionCode": 13202,
+        "versionCode": 13203,
         "description": "A forked clone of the old movie-web.\n\nThis is a set of providers. All source code references belong to sudo-flix.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/Sudo-Flix.flx",
         "changelog": "# v1.3.2\n\n### \u2728 New:\n- Added VidBinge provider\n\n### \ud83d\udd27 Changes:\n- Fix NSBX (again)\n- Fix CloseLoad",
@@ -88,7 +88,7 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 13003,
+        "versionCode": 13004,
         "description": "REMINDER: This provider needs configuration to work!!\n\nA classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/SuperStream.flx",
         "changelog": "# v1.3.0\n\n### \ud83d\udd27 Changes:\n- Fix embed extractor by adding manual configuration on setting screen.",
