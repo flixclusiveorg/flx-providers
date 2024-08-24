@@ -10,7 +10,7 @@ import okhttp3.OkHttpClient
 @FlixclusiveProvider
 class SudoFlix : Provider() {
     override fun getApi(
-        context: Context?,
+        context: Context,
         client: OkHttpClient
     ): ProviderApi {
         return SudoFlixApi(client, this)
