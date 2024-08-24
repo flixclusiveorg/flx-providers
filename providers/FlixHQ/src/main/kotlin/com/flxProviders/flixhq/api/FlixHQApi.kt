@@ -10,11 +10,9 @@ import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.SearchResponseData
-import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.Provider
 import com.flixclusive.provider.ProviderApi
 import com.flixclusive.provider.webview.ProviderWebView
-import com.flixclusive.provider.webview.ProviderWebViewCallback
 import com.flxProviders.flixhq.api.util.TvShowCacheData
 import com.flxProviders.flixhq.api.util.getEpisodeId
 import com.flxProviders.flixhq.api.util.getSeasonId
@@ -141,17 +139,11 @@ class FlixHQApi(
 
     override fun getWebView(
         context: Context,
-        callback: ProviderWebViewCallback,
-        film: FilmDetails,
-        episode: Episode?,
     ): ProviderWebView {
         return FlixHQWebView(
             mClient = client,
             api = this,
-            context = context,
-            film = film,
-            episodeData = episode,
-            callback = callback
+            context = context
         )
     }
 

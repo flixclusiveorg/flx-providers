@@ -33,17 +33,17 @@ internal open class RabbitStream(
     override val name: String = "RabbitStream"
     override val baseUrl: String = "https://rabbitstream.net"
 
-    var key = VidCloudKey()
-
-    override suspend fun extract(
+    suspend fun extract(
         url: String,
-        customHeaders: Map<String, String>?
+        key: VidCloudKey
     ): List<MediaLink> {
         if (key.e4Key.isEmpty() || key.kId.isEmpty() || key.kVersion.isEmpty() || key.browserVersion.isEmpty()) {
             throw Exception("Key has not been set!")
         }
 
-        val id = URL(url).path.split('/').last().split('?').first()
+        val id = URL(url).path
+            .split('/').last()
+            .split('?').first()
         val options = Headers.Builder()
             .add("X-Requested-With", "XMLHttpRequest")
             .add("Referer", url)
@@ -121,5 +121,12 @@ internal open class RabbitStream(
         )
 
         return links
+    }
+
+    override suspend fun extract(
+        url: String,
+        customHeaders: Map<String, String>?
+    ): List<MediaLink> {
+        throw IllegalStateException("Called the wrong extract method for this extractor")
     }
 }

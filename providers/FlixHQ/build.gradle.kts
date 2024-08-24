@@ -3,10 +3,7 @@ import com.flixclusive.gradle.entities.ProviderType
 import com.flixclusive.gradle.entities.Status
 
 dependencies {
-    /**
-     * Custom dependencies for each provider should be implemented here.
-     * */
-    // implementation( ... )
+    implementation("androidx.core:core:1.13.1")
 
     // Comment if not implementing own SettingsScreen
     val composeBom = platform("androidx.compose:compose-bom:2024.04.00")
@@ -58,6 +55,6 @@ flxProvider {
 
     providerType.set(ProviderType.All)
 
-    status.set(Status.Maintenance)
+    status.set(Status.Beta)
 }
 
