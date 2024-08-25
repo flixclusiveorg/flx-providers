@@ -58,11 +58,11 @@ class SuperStreamApi(
 
     override val testFilm: FilmDetails
         get() = Movie(
-            id = "47739",
-            imdbId = "tt15398776",
-            title = "Oppenheimer",
+            id = "55137",
+            imdbId = "tt22022452",
+            title = "Inside Out 2",
             homePage = null,
-            posterImage = BuildConfig.SUPERSTREAM_FOURTH_API + "/uploadimg/movie/2023/07/20/2023072004020316316.jpg",
+            posterImage = BuildConfig.SUPERSTREAM_FOURTH_API + "/uploadimg/movie/2024/06/11/2024061123000673838.jpg",
             providerName = name
         )
 
@@ -132,17 +132,18 @@ class SuperStreamApi(
             }
 
         val humanizedHeaders = mapOf("Accept-Language" to "en")
-        val shareRes = client.request(
+        val sharedResources = client.request(
             url = "$secondAPI/file/file_share_list?share_key=$shareKey",
             headers = humanizedHeaders.toHeaders(),
         ).execute()
-            .fromJson<ExternalResponse>("[$name]> Failed to fetch share key.").data
+            .fromJson<ExternalResponse>("[$name]> Can't fetch file lists.").data
             ?: throw Exception("[$name]> No shared resources found (Stage 1).")
 
-        val fids = if (season == null) {
-            shareRes.fileList
+        val files = if (season == null) {
+            sharedResources.fileList
         } else {
-            val parentId = shareRes.fileList?.find { it.fileName.equals("season $season", true) }?.fid
+            val parentId = sharedResources.fileList
+                ?.find { it.fileName.equals("season $season", true) }?.fid
 
             val episodesShareRes = client.request(
                 url = "$secondAPI/file/file_share_list?share_key=$shareKey&parent_id=$parentId&page=1"
@@ -155,10 +156,28 @@ class SuperStreamApi(
             }
         } ?: throw Exception("[$name]> No FIDs found.")
 
+        val cleanedFiles = mutableListOf<ExternalResponse.Data.FileList>()
+        files.mapAsync {
+            if (it.isDirectory) {
+                val filesFromDirectory = client.request(
+                    url = "$secondAPI/file/file_share_list?share_key=$shareKey&parent_id=${it.fid}",
+                    headers = humanizedHeaders.toHeaders(),
+                ).execute()
+                    .fromJson<ExternalResponse>("[$name]> Failed to fetch directory files.").data?.fileList
+                    ?: throw Exception("[$name]> No files found on this directory.")
+
+                cleanedFiles.addAll(filesFromDirectory)
+                return@mapAsync
+            }
+
+            cleanedFiles.add(it)
+        }
+
         val links = mutableListOf<MediaLink>()
-        fids.mapAsync { fileList ->
+        cleanedFiles.mapAsync { fileList ->
+            val playerUrl = "$secondAPI/file/player?fid=${fileList.fid}&share_key=$shareKey"
             val player = client.request(
-                url = "$secondAPI/file/player?fid=${fileList.fid}&share_key=$shareKey",
+                url = playerUrl,
                 headers = (humanizedHeaders + tokenHeaders).toHeaders()
             ).execute()
                 .body?.string()

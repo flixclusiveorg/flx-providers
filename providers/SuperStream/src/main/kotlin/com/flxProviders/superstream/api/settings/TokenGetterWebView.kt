@@ -23,7 +23,6 @@ internal class TokenGetterWebView(
     init {
         this.settings.javaScriptEnabled = true
         this.settings.domStorageEnabled = true
-        this.settings.userAgentString = getRandomUserAgent()
 
         webViewClient = TokenGetterWebViewClient(
             settings = settings,

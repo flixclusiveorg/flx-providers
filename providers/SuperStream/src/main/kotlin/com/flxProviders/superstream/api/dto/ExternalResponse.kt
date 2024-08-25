@@ -12,7 +12,10 @@ data class ExternalResponse(
         data class FileList(
             @SerializedName("fid") val fid: Long? = null,
             @SerializedName("file_name") val fileName: String? = null,
-            @SerializedName("oss_fid") val oss_fid: Long? = null,
-        )
+            private val is_dir: Int = 0,
+        ) {
+            val isDirectory: Boolean
+                get() = is_dir == 1
+        }
     }
 }

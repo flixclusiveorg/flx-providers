@@ -51,9 +51,9 @@ flxProvider {
     """.trimIndent())
 
     versionMajor = 1
-    versionMinor = 3
+    versionMinor = 4
     versionPatch = 0
-    versionBuild = 4
+    versionBuild = 0
 
     iconUrl.set("https://i.imgur.com/KgMakl9.png") // OPTIONAL
 
@@ -61,6 +61,6 @@ flxProvider {
 
     providerType.set(ProviderType.All)
 
-    status.set(Status.Maintenance)
+    status.set(Status.Working)
 }
 
