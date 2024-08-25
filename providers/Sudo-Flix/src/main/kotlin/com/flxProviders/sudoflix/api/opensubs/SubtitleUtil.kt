@@ -41,9 +41,10 @@ internal object SubtitleUtil {
             }
 
         subtitles?.subtitles?.forEach { subtitle ->
+            val subLanguage = subtitle["lang"] ?: return@forEach
             val subtitleDto = Subtitle(
                 url = subtitle["url"] ?: return@forEach,
-                language = subtitle["lang"] ?: return@forEach,
+                language = "[OpenSubs] $subLanguage",
                 type = SubtitleSource.ONLINE
             )
 

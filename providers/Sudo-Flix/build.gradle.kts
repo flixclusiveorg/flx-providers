@@ -12,11 +12,12 @@ flxProvider {
     changelog.set("""
         # v1.4.0
         
-        Fixed some sub-providers:
+        Fixed some extractors:
         - StreamWish
         - FileLions
         - MixDrop
         - VTube (updated)
+        - CloseLoad (subtitles issue)
     """.trimIndent())
 
     versionMajor = 1

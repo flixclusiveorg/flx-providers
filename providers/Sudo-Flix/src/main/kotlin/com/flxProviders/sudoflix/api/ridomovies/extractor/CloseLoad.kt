@@ -47,8 +47,8 @@ internal class CloseLoad(
         captions.mapAsync {
             links.add(
                 Subtitle(
-                    language = it.attr("label"),
-                    url = it.attr("src"),
+                    language = "[$name] ${it.attr(" label ")}",
+                    url = baseUrl+it.attr("src"),
                     type = SubtitleSource.ONLINE
                 )
             )

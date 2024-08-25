@@ -115,7 +115,7 @@ internal abstract class AbstractNsbxApi(
                                 links.add(
                                     Subtitle(
                                         url = caption.url,
-                                        language = caption.language,
+                                        language = "[$name] ${caption.language}",
                                         type = SubtitleSource.ONLINE
                                     )
                                 )

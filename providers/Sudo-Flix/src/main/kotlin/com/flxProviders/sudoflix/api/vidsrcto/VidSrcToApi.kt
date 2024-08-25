@@ -114,7 +114,7 @@ internal class VidSrcToApi(
                 onSubtitleLoaded(
                     Subtitle(
                         url = file,
-                        language = label ?: "UNKNOWN LANG"
+                        language = "[$name] ${label ?: " UNKNOWN LANG"}"
                     )
                 )
             }
