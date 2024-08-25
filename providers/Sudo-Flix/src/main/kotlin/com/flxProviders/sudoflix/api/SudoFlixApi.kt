@@ -7,6 +7,7 @@ import com.flixclusive.core.util.film.filter.FilterList
 import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.model.tmdb.FilmSearchItem
+import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flixclusive.provider.Provider
@@ -33,6 +34,18 @@ class SudoFlixApi(
         PrimeWireApi(client, provider),
         VidSrcToApi(client, provider),
     )
+
+    override val testFilm: FilmDetails
+        get() = Movie(
+            tmdbId = 299534,
+            imdbId = "tt4154796",
+            title = "Avengers: Endgame",
+            posterImage = null,
+            backdropImage = "/orjiB3oUIsyz60hoEqkiGpy5CeO.jpg",
+            homePage = null,
+            id = null,
+            providerName = "TMDB"
+        )
 
     override suspend fun getLinks(
         watchId: String,
