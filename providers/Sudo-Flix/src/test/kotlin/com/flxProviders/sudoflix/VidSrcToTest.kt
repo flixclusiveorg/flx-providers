@@ -3,6 +3,7 @@ package com.flxProviders.sudoflix
 import android.util.Base64
 import com.flixclusive.core.util.log.LogRule
 import com.flixclusive.core.util.log.debugLog
+import com.flixclusive.model.tmdb.DEFAULT_FILM_SOURCE_NAME
 import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.TvShow
 import com.flixclusive.model.tmdb.common.tv.Episode
@@ -38,9 +39,10 @@ class VidSrcToTest {
         imdbId = "tt4154796",
         title = "Avengers: Endgame",
         posterImage = null,
+        backdropImage = "/orjiB3oUIsyz60hoEqkiGpy5CeO.jpg",
         homePage = null,
         id = null,
-        providerName = "TMDB"
+        providerName = DEFAULT_FILM_SOURCE_NAME
     )
 
     private val tvShow = TvShow(
@@ -55,19 +57,18 @@ class VidSrcToTest {
 
     @Test
     fun `VidSrcToApi test`() = runTest {
-        val api = VidSrcToApi(OkHttpClient())
-
-        var linksLoaded = 0
-        api.getSourceLinks(
-            watchId = tvShow.identifier,
-            film = tvShow,
-            episode = Episode(number = 1, season = 1),
-            onLinkLoaded = { linksLoaded++ },
-            onSubtitleLoaded = {}
+        val api = VidSrcToApi(
+            OkHttpClient(),
+            SudoFlix()
         )
 
-        debugLog("Links loaded: $linksLoaded")
-        assert(linksLoaded > 0)
+        val links = api.getLinks(
+            watchId = tvShow.identifier,
+            film = tvShow,
+            episode = Episode(number = 1, season = 1)
+        )
+
+        assert(links.isNotEmpty())
     }
 
     @Test
@@ -84,14 +85,9 @@ class VidSrcToTest {
         val filemoon = Filemoon(OkHttpClient())
         val url = "https://kerapoxy.cc/e/7dz1jxlhlige/?sub.info=https%3A%2F%2Fvidsrc.to%2Fajax%2Fembed%2Fepisode%2Fo_RkO8Ng%2Fsubtitles&t=4xjRAPYmB1QOzQ%3D%3D&ads=0&src=vidsrc"
 
-        var linksLoaded = 0
-        filemoon.extract(
-            url = url,
-            onLinkLoaded = { linksLoaded++ },
-            onSubtitleLoaded = {}
-        )
+        val links = filemoon.extract(url = url)
 
-        assert(linksLoaded > 0)
+        assert(links.isNotEmpty())
     }
 
     @Test
@@ -99,13 +95,8 @@ class VidSrcToTest {
         val f2cloud = F2Cloud(OkHttpClient())
         val url = "https://vid2v11.site/e/0DY8XN539JR4?sub.info=https%3A%2F%2Fvidsrc.to%2Fajax%2Fembed%2Fepisode%2Fo_RkO8Ng%2Fsubtitles&t=4xjRAPYmAlILyQ%3D%3D&ads=0&src=vidsrc"
 
-        var linksLoaded = 0
-        f2cloud.extract(
-            url = url,
-            onLinkLoaded = { linksLoaded++ },
-            onSubtitleLoaded = {}
-        )
+        val links = f2cloud.extract(url = url)
 
-        assert(linksLoaded > 0)
+        assert(links.isNotEmpty())
     }
 }

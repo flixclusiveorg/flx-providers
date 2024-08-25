@@ -54,6 +54,7 @@ internal class PrimeWireApi(
     ): List<MediaLink> {
         val imdbId = film.imdbId
             ?: throw NullPointerException("[$name]> Could not get IMDB ID")
+
         val id = getMediaId(imdbId = imdbId)
         val availableServers = getAvailableServers(
             id = id,

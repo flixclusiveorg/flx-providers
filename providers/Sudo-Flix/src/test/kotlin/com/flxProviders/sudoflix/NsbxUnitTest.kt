@@ -1,12 +1,9 @@
 package com.flxProviders.sudoflix
 
 import android.net.Uri
-import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.LogRule
 import com.flixclusive.core.util.network.ignoreAllSSLErrors
 import com.flixclusive.model.tmdb.Movie
-import com.flxProviders.sudoflix.api.nsbx.AbstractNsbxApi
-import com.flxProviders.sudoflix.api.nsbx.NsbxApi
 import com.flxProviders.sudoflix.api.nsbx.VidBingeApi
 import io.mockk.every
 import io.mockk.mockkStatic
@@ -15,14 +12,16 @@ import okhttp3.OkHttpClient
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import java.net.URI
 
 class NsbxUnitTest {
     @get:Rule
     val rule = LogRule()
 
     private lateinit var client: OkHttpClient
-    private val api = VidBingeApi(OkHttpClient())
+    private val api = VidBingeApi(
+        OkHttpClient(),
+        SudoFlix()
+    )
 
     private val movie = Movie(
         tmdbId = 299534,
@@ -49,17 +48,11 @@ class NsbxUnitTest {
 
     @Test
     fun `test NSBX Api`() = runTest {
-        safeCall {
-            api.getSourceLinks(
-                watchId = movie.identifier,
-                film = movie,
-                onLinkLoaded = {
-                   println("${it.name} - ${it.url}")
-                },
-                onSubtitleLoaded = {
-                    println(it.language)
-                }
-            )
-        }
+        val links = api.getLinks(
+            watchId = movie.identifier,
+            film = movie
+        )
+
+        assert(links.isNotEmpty())
     }
 }

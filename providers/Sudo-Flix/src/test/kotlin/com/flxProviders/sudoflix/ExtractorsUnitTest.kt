@@ -28,14 +28,11 @@ class ExtractorsUnitTest {
 
     @Test
     fun mixDropExtractorTest() = runTest {
-        val url = "https://www.primewire.tf/links/go/ZQoGg"
+        val url = "https://www.primewire.tf/links/go/eVG7I"
         val extractor = MixDrop(client)
 
-        extractor.extract(
-            url = url,
-            onLinkLoaded = {},
-            onSubtitleLoaded = {}
-        )
+        val links = extractor.extract(url = url)
+        assert(links.isNotEmpty())
     }
 
     @Test
@@ -43,23 +40,17 @@ class ExtractorsUnitTest {
         val url = "https://www.primewire.tf/links/go/nSf_-"
         val extractor = UpStream(client)
 
-        extractor.extract(
-            url = url,
-            onLinkLoaded = {},
-            onSubtitleLoaded = {}
-        )
+        val links = extractor.extract(url = url)
+        assert(links.isNotEmpty())
     }
 
     @Test
     fun fileLionsExtractorTest() = runTest {
-        val url = "https://www.primewire.tf/links/go/6bk4Y"
+        val url = "https://www.primewire.tf/links/go/eJIxn"
         val extractor = FileLions(client)
 
-        extractor.extract(
-            url = url,
-            onLinkLoaded = {},
-            onSubtitleLoaded = {}
-        )
+        val links = extractor.extract(url = url)
+        assert(links.isNotEmpty())
     }
 
     @Test
@@ -67,11 +58,8 @@ class ExtractorsUnitTest {
         val url = "https://www.primewire.tf/links/go/ie9Xp"
         val extractor = DoodStream(client)
 
-        extractor.extract(
-            url = url,
-            onLinkLoaded = {},
-            onSubtitleLoaded = {}
-        )
+        val links = extractor.extract(url = url)
+        assert(links.isNotEmpty())
     }
 
     @Test
@@ -79,11 +67,8 @@ class ExtractorsUnitTest {
         val url = "https://www.primewire.tf/links/go/O0DT7"
         val extractor = DropLoad(client)
 
-        extractor.extract(
-            url = url,
-            onLinkLoaded = {},
-            onSubtitleLoaded = {}
-        )
+        val links = extractor.extract(url = url)
+        assert(links.isNotEmpty())
     }
 
     @Test
@@ -91,34 +76,25 @@ class ExtractorsUnitTest {
         val url = "https://www.primewire.tf/links/go/zPf7r"
         val extractor = StreamVid(client)
 
-        extractor.extract(
-            url = url,
-            onLinkLoaded = {},
-            onSubtitleLoaded = {}
-        )
+        val links = extractor.extract(url = url)
+        assert(links.isNotEmpty())
     }
 
     @Test
     fun vTubeExtractorTest() = runTest {
-        val url = "https://www.primewire.tf/links/go/cDutw"
+        val url = "https://www.primewire.tf/links/go/H_KTs"
         val extractor = VTube(client)
 
-        extractor.extract(
-            url = url,
-            onLinkLoaded = {},
-            onSubtitleLoaded = {}
-        )
+        val links = extractor.extract(url = url)
+        assert(links.isNotEmpty())
     }
 
     @Test
     fun streamWishExtractorTest() = runTest {
-        val url = "https://www.primewire.tf/links/go/uUYs-"
+        val url = "https://www.primewire.tf/links/go/RTaQj"
         val extractor = StreamWish(client)
 
-        extractor.extract(
-            url = url,
-            onLinkLoaded = {},
-            onSubtitleLoaded = {}
-        )
+        val links = extractor.extract(url = url)
+        assert(links.isNotEmpty())
     }
 }

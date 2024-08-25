@@ -10,20 +10,19 @@ flxProvider {
     """.trimIndent())
 
     changelog.set("""
-        # v1.3.2
+        # v1.4.0
         
-        ### ✨ New:
-        - Added VidBinge provider
-        
-        ### 🔧 Changes:
-        - Fix NSBX (again)
-        - Fix CloseLoad
+        Fixed some sub-providers:
+        - StreamWish
+        - FileLions
+        - MixDrop
+        - VTube (updated)
     """.trimIndent())
 
     versionMajor = 1
-    versionMinor = 3
-    versionPatch = 2
-    versionBuild = 3
+    versionMinor = 4
+    versionPatch = 0
+    versionBuild = 0
 
     // Extra authors for specific provider
      author(

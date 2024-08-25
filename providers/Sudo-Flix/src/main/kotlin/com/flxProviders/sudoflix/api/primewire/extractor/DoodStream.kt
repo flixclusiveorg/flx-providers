@@ -5,7 +5,7 @@ import com.flixclusive.model.provider.Flag
 import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.provider.Stream
 import com.flixclusive.provider.extractor.Extractor
-import com.flxProviders.sudoflix.api.primewire.util.getRedirectedUrl
+import com.flxProviders.sudoflix.api.primewire.util.ExtractorHelper.getRedirectedUrl
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 import java.net.URL
@@ -77,7 +77,8 @@ internal class DoodStream(
             false -> {
                 val redirectedUrl = getRedirectedUrl(
                     client = client,
-                    url = url
+                    url = url,
+                    domainName = "dood"
                 )
                 getEmbedUrl(redirectedUrl)
             }
