@@ -217,7 +217,7 @@ class SuperStreamApi(
 
                             links.add(
                                 Subtitle(
-                                    language = "$language [$identifier]",
+                                    language = "$language #$identifier",
                                     url = link,
                                     type = SubtitleSource.ONLINE
                                 )
