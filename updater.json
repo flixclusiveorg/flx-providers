@@ -5,7 +5,7 @@
         "providerType": {
             "type": "Movies, TV Shows, etc."
         },
-        "status": "Beta",
+        "status": "Working",
         "language": {
             "languageCode": "Multiple"
         },
@@ -15,10 +15,10 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 10100,
+        "versionCode": 10101,
         "description": "NOTICE: This provider uses WebView to scrape content. This might lag.\n\nStream seamlessly in adjustable HD resolution (1080p) with blazing-fast loading speeds. Offers HLS media.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/FlixHQ.flx",
-        "changelog": "### FlixHQ is still broken. I'm too lazy to fix this provider now - their devs just wont give up :')",
+        "changelog": "# v1.0.1 - patch\nNew workaround applied!",
         "versionName": "1.0.1",
         "name": "FlixHQ"
     },
