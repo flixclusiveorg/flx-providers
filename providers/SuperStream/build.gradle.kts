@@ -38,22 +38,24 @@ android {
 
 flxProvider {
     description.set("""
-        REMINDER: This provider needs configuration to work!!
+        REMINDER: This provider needs configuration to work!! Go to its provider settings and configure it there.
+
+        REMINDER (again): This provider has cloudfare and will eventually prompt up WebView requests to solve CF challenges.
         
         A classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.
     """.trimIndent())
 
     changelog.set("""
-        # v1.3.0
+        # v1.4.0
         
         ### 🔧 Changes:
-        - Fix embed extractor by adding manual configuration on setting screen.
+        - Add cloudfare interceptor
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 4
     versionPatch = 0
-    versionBuild = 0
+    versionBuild = 1
 
     iconUrl.set("https://i.imgur.com/KgMakl9.png") // OPTIONAL
 
