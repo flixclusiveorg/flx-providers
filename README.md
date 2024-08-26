@@ -5,4 +5,4 @@
 | SuperStream | 🟢 OK |
 | Sudo-Flix | 🟢 OK |
 | Stremio | 🟢 OK |
-| FlixHQ | 🔵 BETA |
+| FlixHQ | 🟢 OK |
