@@ -88,10 +88,10 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 14000,
-        "description": "REMINDER: This provider needs configuration to work!!\n\nA classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.",
+        "versionCode": 14001,
+        "description": "REMINDER: This provider needs configuration to work!! Go to its provider settings and configure it there.\n\nREMINDER (again): This provider has cloudfare and will eventually prompt up WebView requests to solve CF challenges.\n\nA classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/SuperStream.flx",
-        "changelog": "# v1.3.0\n\n### \ud83d\udd27 Changes:\n- Fix embed extractor by adding manual configuration on setting screen.",
+        "changelog": "# v1.4.0\n\n### \ud83d\udd27 Changes:\n- Add cloudfare interceptor",
         "versionName": "1.4.0",
         "name": "SuperStream"
     }
