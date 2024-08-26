@@ -34,13 +34,14 @@ flxProvider {
     """.trimIndent())
 
     changelog.set("""
-        ### FlixHQ is still broken. I'm too lazy to fix this provider now - their devs just wont give up :')
+        # v1.0.1 - patch
+        New workaround applied!
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 0
     versionPatch = 1
-    versionBuild = 0
+    versionBuild = 1
 
     // Extra authors for specific provider
     // author(
@@ -55,6 +56,6 @@ flxProvider {
 
     providerType.set(ProviderType.All)
 
-    status.set(Status.Beta)
+    status.set(Status.Working)
 }
 
