@@ -64,5 +64,7 @@ flxProvider {
     providerType.set(ProviderType.All)
 
     status.set(Status.Working)
+
+    requiresResources.set(true)
 }
 

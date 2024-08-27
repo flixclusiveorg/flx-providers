@@ -2,8 +2,10 @@ package com.flxProviders.superstream.api.settings
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.webkit.CookieManager
 import android.webkit.WebView
 import com.flixclusive.core.util.network.CryptographyUtil
+import com.flixclusive.core.util.network.getRandomUserAgent
 import com.flixclusive.provider.settings.ProviderSettings
 
 private const val GET_TOKEN_URL_ENCODED
@@ -15,19 +17,34 @@ internal class TokenGetterWebView(
     settings: ProviderSettings,
     onTokenReceived: () -> Unit
 ) : WebView(context) {
+    private val cookieManager = CookieManager.getInstance()
     val verticalScrollRange: Int
         get() = computeVerticalScrollRange() - height
 
     init {
         this.settings.javaScriptEnabled = true
         this.settings.domStorageEnabled = true
-        this.settings.userAgentString = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
 
         webViewClient = TokenGetterWebViewClient(
             settings = settings,
             onTokenReceived = onTokenReceived
         )
 
+        loadTokenUrl()
+    }
+
+    fun loadTokenUrl() {
+        stopLoading()
+        loadUrl("about:blank")
+        clearCache(true)
+        clearHistory()
+        clearFormData()
+        cookieManager.removeAllCookies(null)
+        cookieManager.flush()
+
+        this.settings.userAgentString = getRandomUserAgent()
+
         loadUrl(CryptographyUtil.base64Decode(GET_TOKEN_URL_ENCODED))
+
     }
 }

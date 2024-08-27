@@ -1,5 +1,6 @@
 package com.flxProviders.superstream.api.settings
 
+import android.content.res.Resources
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -7,8 +8,11 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.rememberScrollableState
 import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,6 +44,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.provider.settings.ProviderSettings
+import com.flxProviders.superstream.api.settings.util.DrawableUtil.getBitmapFromImage
+import com.flxProviders.superstream.api.settings.util.DrawableUtil.getDrawable
 import kotlin.math.roundToInt
 
 private fun getTokenStatusLabel(
@@ -64,11 +71,11 @@ private fun getTokenStatusLabel(
 @Composable
 internal fun GetTokenScreen(
     settings: ProviderSettings,
+    resources: Resources,
 ) {
     val context = LocalContext.current
     var tokenStatus by remember {
         val index = settings.getInt(TOKEN_STATUS_KEY, 0)
-
         mutableStateOf(TokenStatus.entries[index])
     }
     val color = remember(tokenStatus) {
@@ -145,26 +152,55 @@ internal fun GetTokenScreen(
             }
         }
 
-        ElevatedButton(
-            onClick = {
-                if (tokenStatus == TokenStatus.Offline) {
-                    context.showToast("ERR: Token is already offline!")
-                    return@ElevatedButton
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            ElevatedButton(
+                onClick = {
+                    if (tokenStatus == TokenStatus.Offline) {
+                        context.showToast("ERR: Token is already offline!")
+                        return@ElevatedButton
+                    }
+
+                    tokenStatus = TokenStatus.Offline
+                    settings.remove(TOKEN_KEY)
+                    settings.setInt(TOKEN_STATUS_KEY, tokenStatus.ordinal)
+
+                    context.showToast("Token has been reset!")
+                },
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier
+                    .height(60.dp)
+                    .weight(
+                        weight = 1F,
+                        fill = true
+                    )
+            ) {
+                Text("Reset token")
+            }
+
+            ElevatedButton(
+                onClick = webView::loadTokenUrl,
+                shape = MaterialTheme.shapes.small,
+                contentPadding = PaddingValues(0.dp),
+                modifier = Modifier
+                    .height(60.dp)
+            ) {
+                val refreshIcon = remember {
+                    resources.getDrawable("refresh")
+                        ?.getBitmapFromImage()
                 }
 
-                tokenStatus = TokenStatus.Offline
-                settings.remove(TOKEN_KEY)
-                settings.setInt(TOKEN_STATUS_KEY, tokenStatus.ordinal)
-
-                context.showToast("Token has been reset!")
-            },
-            shape = MaterialTheme.shapes.small,
-            modifier = Modifier
-                .height(80.dp)
-                .fillMaxWidth()
-                .padding(10.dp)
-        ) {
-            Text("Reset token")
+                if (refreshIcon != null) {
+                    Icon(
+                        bitmap = refreshIcon,
+                        contentDescription = "Refresh"
+                    )
+                }
+            }
         }
     }
 }
