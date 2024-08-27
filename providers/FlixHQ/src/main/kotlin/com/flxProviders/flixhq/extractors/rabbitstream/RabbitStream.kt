@@ -9,7 +9,7 @@ import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.provider.Stream
-import com.flixclusive.provider.extractor.Extractor
+import com.flixclusive.provider.extractor.EmbedExtractor
 import com.flxProviders.flixhq.extractors.rabbitstream.dto.DecryptedSource
 import com.flxProviders.flixhq.extractors.rabbitstream.dto.VidCloudEmbedData
 import com.flxProviders.flixhq.extractors.rabbitstream.dto.VidCloudEmbedData.Companion.toSubtitle
@@ -29,14 +29,15 @@ internal class UpCloud(client: OkHttpClient): RabbitStream(client) {
 
 internal open class RabbitStream(
     client: OkHttpClient,
-) : Extractor(client) {
+) : EmbedExtractor(client) {
     override val name: String = "RabbitStream"
     override val baseUrl: String = "https://rabbitstream.net"
 
     suspend fun extract(
         url: String,
-        key: VidCloudKey
-    ): List<MediaLink> {
+        key: VidCloudKey,
+        onLinkFound: (MediaLink) -> Unit
+    ) {
         if (key.e4Key.isEmpty() || key.kId.isEmpty() || key.kVersion.isEmpty() || key.browserVersion.isEmpty()) {
             throw Exception("Key has not been set!")
         }
@@ -74,8 +75,7 @@ internal open class RabbitStream(
             throw Exception("Sources are empty!")
         }
 
-        val links = mutableListOf<MediaLink>()
-        links.add(
+        onLinkFound(
             Stream(
                 url = data.sources[0].url,
                 name = "$name: Auto"
@@ -103,7 +103,7 @@ internal open class RabbitStream(
                                 val qualityTag = "$name: ${s.split('x')[1]}p"
                                 val dataUrl = urls[i]
 
-                                links.add(
+                                onLinkFound(
                                     Stream(
                                         name = qualityTag,
                                         url = dataUrl
@@ -115,18 +115,17 @@ internal open class RabbitStream(
             },
             {
                 data.tracks.mapAsync {
-                    links.add(it.toSubtitle())
+                    onLinkFound(it.toSubtitle())
                 }
             }
         )
-
-        return links
     }
 
     override suspend fun extract(
         url: String,
-        customHeaders: Map<String, String>?
-    ): List<MediaLink> {
+        customHeaders: Map<String, String>?,
+        onLinkFound: (MediaLink) -> Unit
+    ) {
         throw IllegalStateException("Called the wrong extract method for this extractor")
     }
 }

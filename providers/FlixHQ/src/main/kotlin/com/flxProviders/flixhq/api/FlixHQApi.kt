@@ -29,8 +29,13 @@ import org.jsoup.Jsoup
 
 class FlixHQApi(
     client: OkHttpClient,
+    context: Context,
     provider: Provider
-) : ProviderApi(client, provider) {
+) : ProviderApi(
+    client = client,
+    context = context,
+    provider = provider
+) {
     override val baseUrl: String = "https://flixhq.to"
     override val useWebView = true
 
@@ -137,9 +142,7 @@ class FlixHQApi(
         throw NullPointerException("FilmInfo is null!")
     }
 
-    override fun getWebView(
-        context: Context,
-    ): ProviderWebView {
+    override fun getWebView(): ProviderWebView {
         return FlixHQWebView(
             mClient = client,
             api = this,

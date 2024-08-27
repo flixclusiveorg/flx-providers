@@ -14,6 +14,7 @@ class FlixHQ : Provider() {
         client: OkHttpClient
     ) = FlixHQApi(
         client = client,
+        context = context,
         provider = this
     )
 }

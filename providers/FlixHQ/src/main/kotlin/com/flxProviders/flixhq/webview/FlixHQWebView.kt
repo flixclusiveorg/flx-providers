@@ -7,6 +7,8 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import com.flixclusive.core.util.common.dispatcher.AppDispatchers.Companion.withIOContext
+import com.flixclusive.core.util.common.dispatcher.AppDispatchers.Companion.withMainContext
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.network.USER_AGENT
@@ -37,8 +39,10 @@ class FlixHQWebView(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     context: Context,
 ) : ProviderWebView(context) {
-    private var key: VidCloudKey? = null
+    override val isHeadless = true
+    override val name = "FlixHQ WebView"
 
+    private var key: VidCloudKey? = null
     private var injectorScript = INJECTOR_SCRIPT
 
     private val chromeClient = object: WebChromeClient() {
@@ -93,17 +97,19 @@ class FlixHQWebView(
     }
 
     override suspend fun getLinks(
+        watchId: String,
         film: FilmDetails,
         episode: Episode?,
-    ): List<MediaLink> {
+        onLinkFound: (MediaLink) -> Unit
+    ) {
         infoLog("[FHQWebView] Getting links for ${film.title}")
-        val watchId = withContext(ioDispatcher) {
+        val watchIdToUse = withContext(ioDispatcher) {
             api.getMediaId(film = film)
         } ?: throw Exception("Can't find watch id!")
 
         val servers = withContext(ioDispatcher) {
             api.getEpisodeIdAndServers(
-                watchId = watchId,
+                watchId = watchIdToUse,
                 episode = episode?.number,
                 season = episode?.season
             )
@@ -117,13 +123,12 @@ class FlixHQWebView(
         if (validServers.isEmpty())
             throw Exception("No valid servers found!")
 
-        val mediaLinks = mutableListOf<MediaLink>()
         validServers.forEach { (serverName, serverEmbedUrl) ->
-            val initialSourceData = withContext(ioDispatcher) {
+            val initialSourceData = withIOContext {
                 mClient.request(url = "${api.baseUrl}/ajax/episode/sources/${serverEmbedUrl.split('.').last()}").execute().body?.string()
             } ?: throw Exception("Can't find decryption key!")
 
-            val serverUrl = withContext(ioDispatcher) {
+            val serverUrl = withIOContext {
                 URLDecoder.decode(
                     fromJson<FlixHQInitialSourceData>(initialSourceData).link,
                     "UTF-8"
@@ -138,26 +143,21 @@ class FlixHQWebView(
 
             infoLog("[FHQWebView] XRAX: $xrax")
             setXrax(xrax)
-            withContext(Dispatchers.Main) {
+            withMainContext {
                 loadUrl(extractor.baseUrl)
             }
 
             waitForKeyToBeAttached()
 
             infoLog("[FHQWebView] Extracting links...")
-            withContext(ioDispatcher) {
-                val links = extractor.extract(
+            withIOContext {
+                extractor.extract(
                     url = serverUrl,
                     key = key!!,
+                    onLinkFound = onLinkFound
                 )
-
-                mediaLinks.addAll(links)
             }
         }
-
-        infoLog("[FHQWebView] Found ${mediaLinks.size} links!")
-
-        return mediaLinks
     }
 
     private suspend fun waitForKeyToBeAttached() {
