@@ -61,7 +61,7 @@ internal fun StreamioScreen(
     }
 
     var showAddDialog by rememberSaveable { mutableStateOf(false) }
-    var editAddon by rememberSaveable { mutableStateOf<Addon?>(null) }
+    var editAddon by remember { mutableStateOf<Addon?>(null) }
 
     val scope = rememberCoroutineScope()
     var updateJob by remember { mutableStateOf<Job?>(null) }
