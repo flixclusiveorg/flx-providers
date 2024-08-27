@@ -148,15 +148,12 @@ class FlixHQWebView(
             }
 
             waitForKeyToBeAttached()
-
             infoLog("[FHQWebView] Extracting links...")
-            withIOContext {
-                extractor.extract(
-                    url = serverUrl,
-                    key = key!!,
-                    onLinkFound = onLinkFound
-                )
-            }
+            extractor.extract(
+                url = serverUrl,
+                key = key!!,
+                onLinkFound = onLinkFound
+            )
         }
     }
 
