@@ -1,10 +1,10 @@
 package com.flxProviders.superstream.api
 
 import android.content.Context
-import com.flixclusive.core.network.okhttp.CloudfareWebViewInterceptor.Companion.addCloudfareVerificationInterceptor
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.film.filter.FilterList
+import com.flixclusive.core.util.network.WebViewInterceptor.Companion.addWebViewInterceptor
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.MediaLink
@@ -29,6 +29,7 @@ import com.flxProviders.superstream.api.dto.ITEMS_PER_PAGE
 import com.flxProviders.superstream.api.dto.SearchData
 import com.flxProviders.superstream.api.dto.SearchData.Companion.toSearchResponseData
 import com.flxProviders.superstream.api.settings.TOKEN_KEY
+import com.flxProviders.superstream.api.util.CloudflareWebViewInterceptor
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 import org.jsoup.Jsoup
@@ -45,10 +46,17 @@ import kotlin.random.Random
 class SuperStreamApi(
     client: OkHttpClient,
     provider: Provider,
-    private val context: Context,
+    context: Context,
     private val settings: ProviderSettings
-) : ProviderApi(client, provider) {
+) : ProviderApi(
+    client = client,
+    context = context,
+    provider = provider
+) {
     private val name = provider.name
+    private val cloudfareWebViewInterceptor by lazy {
+        CloudflareWebViewInterceptor(context)
+    }
 
     private val token: String?
         get() = settings.getString(TOKEN_KEY, null)
@@ -69,17 +77,19 @@ class SuperStreamApi(
     override suspend fun getLinks(
         watchId: String,
         film: FilmDetails,
-        episode: Episode?
-    ): List<MediaLink> {
+        episode: Episode?,
+        onLinkFound: (MediaLink) -> Unit
+    ) {
         if (token == null) {
             throw Exception("No token found! Go to $name's settings and configure it.")
         }
 
-        return getSourceLinksFromFourthApi(
+        getSourceLinksFromFourthApi(
             watchId = watchId,
             filmType = fromFilmType(filmType = film.filmType),
             season = episode?.season,
-            episode = episode?.number
+            episode = episode?.number,
+            onLinkFound = onLinkFound
         )
     }
 
@@ -109,14 +119,15 @@ class SuperStreamApi(
         watchId: String,
         filmType: BoxType,
         episode: Int?,
-        season: Int?
-    ): List<MediaLink> {
+        season: Int?,
+        onLinkFound: (MediaLink) -> Unit
+    ) {
         val firstAPI = BuildConfig.SUPERSTREAM_FIRST_API
         val secondAPI = BuildConfig.SUPERSTREAM_SECOND_API
 
         val (seasonSlug, episodeSlug) = getEpisodeSlug(season, episode)
         val shareKey = client
-            .addCloudfareVerificationInterceptor(context = context)
+            .addWebViewInterceptor(cloudfareWebViewInterceptor)
             .request(
                 url = "$firstAPI/index/share_link?id=${watchId}&type=${filmType.value}"
             ).execute().use {
@@ -173,7 +184,6 @@ class SuperStreamApi(
             cleanedFiles.add(it)
         }
 
-        val links = mutableListOf<MediaLink>()
         cleanedFiles.mapAsync { fileList ->
             val playerUrl = "$secondAPI/file/player?fid=${fileList.fid}&share_key=$shareKey"
             val player = client.request(
@@ -215,7 +225,7 @@ class SuperStreamApi(
 
                             val identifier = if (i == 0) "" else "$i"
 
-                            links.add(
+                            onLinkFound(
                                 Subtitle(
                                     language = "$language #$identifier",
                                     url = link,
@@ -243,7 +253,7 @@ class SuperStreamApi(
                                     ?.replace("\\/", "/")
                                     ?: return@org
 
-                                links.add(
+                                onLinkFound(
                                     Stream(
                                         name = "[$name]> ${source.label}",
                                         url = url
@@ -254,8 +264,6 @@ class SuperStreamApi(
                 },
             )
         }
-
-        return links
     }
 
     private fun getEpisodeSlug(
