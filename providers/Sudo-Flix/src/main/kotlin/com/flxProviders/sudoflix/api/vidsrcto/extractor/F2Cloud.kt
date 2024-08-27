@@ -4,7 +4,7 @@ import com.flixclusive.core.util.network.CryptographyUtil.base64Encode
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.MediaLink
-import com.flixclusive.provider.extractor.Extractor
+import com.flixclusive.provider.extractor.EmbedExtractor
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 import javax.crypto.Cipher
@@ -12,14 +12,15 @@ import javax.crypto.spec.SecretKeySpec
 
 internal class F2Cloud(
     client: OkHttpClient
-) : Extractor(client) {
+) : EmbedExtractor(client) {
     override val baseUrl = "https://vid2v11.site"
     override val name = "F2Cloud"
 
     override suspend fun extract(
         url: String,
-        customHeaders: Map<String, String>?
-    ): List<MediaLink> {
+        customHeaders: Map<String, String>?,
+        onLinkFound: (MediaLink) -> Unit
+    ) {
         val encodedId = getKey(url = url)
         val sourcesUrl = getSourcesUrl(id = encodedId, url = url)
 

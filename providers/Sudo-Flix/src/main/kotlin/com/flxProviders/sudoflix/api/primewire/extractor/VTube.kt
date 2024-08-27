@@ -1,22 +1,23 @@
 package com.flxProviders.sudoflix.api.primewire.extractor
 
 import com.flixclusive.model.provider.MediaLink
-import com.flixclusive.provider.extractor.Extractor
-import com.flxProviders.sudoflix.api.primewire.util.ExtractorHelper.getRedirectedUrl
-import com.flxProviders.sudoflix.api.primewire.util.ExtractorHelper.unpackLinks
+import com.flixclusive.provider.extractor.EmbedExtractor
+import com.flxProviders.sudoflix.api.util.ExtractorHelper.getRedirectedUrl
+import com.flxProviders.sudoflix.api.util.ExtractorHelper.unpackLink
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 
 internal class VTube(
     client: OkHttpClient
-) : Extractor(client) {
+) : EmbedExtractor(client) {
     override val baseUrl = "https://vtube.network"
     override val name = "VTube"
 
     override suspend fun extract(
         url: String,
-        customHeaders: Map<String, String>?
-    ): List<MediaLink> {
+        customHeaders: Map<String, String>?,
+        onLinkFound: (MediaLink) -> Unit
+    ) {
         val newUrl = baseUrl.toHttpUrl()
         val safeUrl = getRedirectedUrl(
             client = client,
@@ -29,9 +30,11 @@ internal class VTube(
             .build()
             .toString()
 
-        return unpackLinks(
+        val stream = unpackLink(
             client = client,
             url = safeUrl
         )
+
+        onLinkFound(stream)
     }
 }

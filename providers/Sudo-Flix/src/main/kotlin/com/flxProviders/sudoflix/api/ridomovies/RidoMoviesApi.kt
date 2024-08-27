@@ -1,5 +1,6 @@
 package com.flxProviders.sudoflix.api.ridomovies
 
+import android.content.Context
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
@@ -18,8 +19,13 @@ import org.jsoup.Jsoup
 
 class RidoMoviesApi(
     client: OkHttpClient,
+    context: Context,
     provider: Provider
-) : ProviderApi(client, provider) {
+) : ProviderApi(
+    client = client,
+    context = context,
+    provider = provider
+) {
     private val name = "RidoMovies"
     override val baseUrl  = RIDO_MOVIES_BASE_URL
 
@@ -29,10 +35,9 @@ class RidoMoviesApi(
     override suspend fun getLinks(
         watchId: String,
         film: FilmDetails,
-        episode: Episode?
-    ): List<MediaLink> {
-        val links = mutableListOf<MediaLink>()
-
+        episode: Episode?,
+        onLinkFound: (MediaLink) -> Unit
+    ) {
         val fullSlug = getFullSlug(
             imdbId = film.imdbId ?: film.title,
             tmdbId = film.tmdbId
@@ -53,17 +58,18 @@ class RidoMoviesApi(
 
         when {
             embedUrl.contains("closeload") -> {
-                val extractedLinks = closeLoad.extract(url = embedUrl)
-                links.addAll(extractedLinks)
+                closeLoad.extract(
+                    url = embedUrl,
+                    onLinkFound = onLinkFound
+                )
             }
             embedUrl.contains("ridoo") -> {
-                val extractedLinks = ridoo.extract(url = embedUrl)
-                links.addAll(extractedLinks)
-                ridoo.extract(url = embedUrl)
+                ridoo.extract(
+                    url = embedUrl,
+                    onLinkFound = onLinkFound
+                )
             }
         }
-
-        return links
     }
 
     private fun getFullSlug(

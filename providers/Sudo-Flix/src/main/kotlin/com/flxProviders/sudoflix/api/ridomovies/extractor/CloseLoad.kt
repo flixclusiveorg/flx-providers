@@ -9,7 +9,7 @@ import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.provider.Stream
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
-import com.flixclusive.provider.extractor.Extractor
+import com.flixclusive.provider.extractor.EmbedExtractor
 import com.flxProviders.sudoflix.api.ridomovies.RidoMoviesConstant.RIDO_MOVIES_BASE_URL
 import com.flxProviders.sudoflix.api.util.JsUnpacker
 import okhttp3.Headers.Companion.toHeaders
@@ -17,7 +17,7 @@ import okhttp3.OkHttpClient
 
 internal class CloseLoad(
     client: OkHttpClient
-) : Extractor(client) {
+) : EmbedExtractor(client) {
     override val baseUrl = "https://closeload.top"
     override val name = "CloseLoad"
 
@@ -27,8 +27,9 @@ internal class CloseLoad(
 
     override suspend fun extract(
         url: String,
-        customHeaders: Map<String, String>?
-    ): List<MediaLink> {
+        customHeaders: Map<String, String>?,
+        onLinkFound: (MediaLink) -> Unit
+    ) {
         val links = mutableListOf<MediaLink>()
 
         val response = client.request(
@@ -68,7 +69,7 @@ internal class CloseLoad(
 
         val sourceUrl = CryptographyUtil.base64Decode(base64EncodedUrl)
 
-        links.add(
+        onLinkFound(
             Stream(
                 url = sourceUrl,
                 name = "[$name]> HLS",
@@ -79,7 +80,5 @@ internal class CloseLoad(
                 )
             )
         )
-
-        return links
     }
 }

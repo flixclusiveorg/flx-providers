@@ -1,15 +1,14 @@
-package com.flxProviders.sudoflix.api.primewire.util
+package com.flxProviders.sudoflix.api.util
 
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.Stream
-import com.flixclusive.provider.extractor.Extractor
-import com.flxProviders.sudoflix.api.util.JsUnpacker
+import com.flixclusive.provider.extractor.EmbedExtractor
 import okhttp3.Headers
 import okhttp3.OkHttpClient
 
 object ExtractorHelper {
-    internal fun Extractor.getRedirectedUrl(
+    internal fun EmbedExtractor.getRedirectedUrl(
         client: OkHttpClient,
         url: String,
         domainName: String
@@ -30,16 +29,16 @@ object ExtractorHelper {
     private val defaultPackedRegex = Regex("""eval\((function\(p,a,c,k,e,d\)\{.*)\)""")
     private val defaultLinkRegex = Regex("""file:"(https://[^"]+)"""")
 
-    fun Extractor.unpackLinks(
+    fun EmbedExtractor.unpackLink(
         client: OkHttpClient,
         url: String,
-        headers: Headers = Headers.headersOf(),
+        headers: Headers? = null,
         packedRegex: Regex = defaultPackedRegex,
         linkRegex: Regex = defaultLinkRegex
-    ): List<Stream> {
+    ): Stream {
         val response = client.request(
             url = url,
-            headers = headers
+            headers = headers ?: Headers.headersOf()
         ).execute()
 
         val streamPage = response.body?.string()
@@ -56,11 +55,9 @@ object ExtractorHelper {
             ?.groupValues?.get(1)
             ?: throw Exception("[$name]> Failed to find link")
 
-        return listOf(
-            Stream(
-                url = link,
-                name = name
-            )
+        return Stream(
+            url = link,
+            name = name
         )
     }
 }

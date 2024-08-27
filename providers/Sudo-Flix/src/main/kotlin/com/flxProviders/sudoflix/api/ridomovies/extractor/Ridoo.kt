@@ -3,14 +3,14 @@ package com.flxProviders.sudoflix.api.ridomovies.extractor
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.provider.Stream
-import com.flixclusive.provider.extractor.Extractor
+import com.flixclusive.provider.extractor.EmbedExtractor
 import com.flxProviders.sudoflix.api.ridomovies.RidoMoviesConstant.RIDO_MOVIES_BASE_URL
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 
 internal class Ridoo(
     client: OkHttpClient
-) : Extractor(client) {
+) : EmbedExtractor(client) {
     override val baseUrl: String
         get() = "https://ridoo.net"
     override val name: String
@@ -18,8 +18,9 @@ internal class Ridoo(
 
     override suspend fun extract(
         url: String,
-        customHeaders: Map<String, String>?
-    ): List<MediaLink> {
+        customHeaders: Map<String, String>?,
+        onLinkFound: (MediaLink) -> Unit
+    ) {
         val response = client.request(
             url = url,
             headers = mapOf(
@@ -38,7 +39,7 @@ internal class Ridoo(
         val sourceUrl = matchResult?.groups?.get(1)?.value
             ?: throw Exception("[$name]> Unable to find source url")
 
-        return listOf(
+        onLinkFound(
             Stream(
                 url = sourceUrl,
                 name = "[$name]> HLS Auto"

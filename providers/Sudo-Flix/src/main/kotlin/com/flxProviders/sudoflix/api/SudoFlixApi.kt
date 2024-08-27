@@ -1,5 +1,6 @@
 package com.flxProviders.sudoflix.api
 
+import android.content.Context
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.film.FilmType
@@ -25,14 +26,39 @@ import okhttp3.OkHttpClient
  * */
 class SudoFlixApi(
     client: OkHttpClient,
+    context: Context,
     provider: Provider
-) : ProviderApi(client, provider) {
+) : ProviderApi(
+    client = client,
+    context = context,
+    provider = provider
+) {
     private val providersList = listOf(
-        NsbxApi(client, provider),
-        VidBingeApi(client, provider),
-        RidoMoviesApi(client, provider),
-        PrimeWireApi(client, provider),
-        VidSrcToApi(client, provider),
+        NsbxApi(
+            client = client,
+            context = context,
+            provider = provider
+        ),
+        VidBingeApi(
+            client = client,
+            context = context,
+            provider = provider
+        ),
+        RidoMoviesApi(
+            client = client,
+            context = context,
+            provider = provider
+        ),
+        PrimeWireApi(
+            client = client,
+            context = context,
+            provider = provider
+        ),
+        VidSrcToApi(
+            client = client,
+            context = context,
+            provider = provider
+        ),
     )
 
     override val testFilm: FilmDetails
@@ -50,22 +76,19 @@ class SudoFlixApi(
     override suspend fun getLinks(
         watchId: String,
         film: FilmDetails,
-        episode: Episode?
-    ): List<MediaLink> {
-        val links = mutableListOf<MediaLink>()
+        episode: Episode?,
+        onLinkFound: (MediaLink) -> Unit
+    ) {
         providersList.mapAsync {
-            val extractedLinks = safeCall {
+            safeCall {
                 it.getLinks(
                     watchId = watchId,
                     film = film,
-                    episode = episode
+                    episode = episode,
+                    onLinkFound = onLinkFound
                 )
-            } ?: return@mapAsync
-
-            links.addAll(extractedLinks)
+            }
         }
-
-        return links
     }
 
     override suspend fun search(

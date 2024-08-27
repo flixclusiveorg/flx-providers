@@ -13,6 +13,10 @@ class SudoFlix : Provider() {
         context: Context,
         client: OkHttpClient
     ): ProviderApi {
-        return SudoFlixApi(client, this)
+        return SudoFlixApi(
+            client = client,
+            context = context,
+            provider = this
+        )
     }
 }

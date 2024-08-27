@@ -1,5 +1,6 @@
 package com.flxProviders.sudoflix.api.primewire
 
+import android.content.Context
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.exception.safeCall
@@ -30,8 +31,13 @@ import org.jsoup.nodes.Document
 @Suppress("SpellCheckingInspection")
 internal class PrimeWireApi(
     client: OkHttpClient,
+    context: Context,
     provider: Provider
-) : ProviderApi(client, provider) {
+) : ProviderApi(
+    client = client,
+    context = context,
+    provider = provider
+) {
     private val name = "PrimeWire"
     override val baseUrl = "https://www.primewire.tf"
 
@@ -50,8 +56,9 @@ internal class PrimeWireApi(
     override suspend fun getLinks(
         watchId: String,
         film: FilmDetails,
-        episode: Episode?
-    ): List<MediaLink> {
+        episode: Episode?,
+        onLinkFound: (MediaLink) -> Unit
+    ) {
         val imdbId = film.imdbId
             ?: throw NullPointerException("[$name]> Could not get IMDB ID")
 
@@ -63,14 +70,13 @@ internal class PrimeWireApi(
             filmType = film.filmType
         )
 
-        val links = mutableListOf<MediaLink>()
         asyncCalls(
             {
                 client.fetchSubtitles(
                     imdbId = imdbId,
                     season = episode?.season,
                     episode = episode?.number,
-                    onSubtitleLoaded = links::add
+                    onSubtitleLoaded = onLinkFound
                 )
             },
             {
@@ -79,14 +85,14 @@ internal class PrimeWireApi(
                         ?: return@mapAsync
 
                     safeCall {
-                        val extractedLinks = extractor.extract(url = url)
-                        links.addAll(extractedLinks)
+                        extractor.extract(
+                            url = url,
+                            onLinkFound = onLinkFound
+                        )
                     }
                 }
             },
         )
-
-        return links
     }
 
     private fun getMediaId(imdbId: String): Int {

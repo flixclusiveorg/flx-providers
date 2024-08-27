@@ -5,12 +5,12 @@ import com.flixclusive.core.util.network.CryptographyUtil
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.provider.Stream
-import com.flixclusive.provider.extractor.Extractor
+import com.flixclusive.provider.extractor.EmbedExtractor
 import okhttp3.OkHttpClient
 
 internal class Voe(
     client: OkHttpClient
-) : Extractor(client) {
+) : EmbedExtractor(client) {
     override val baseUrl = "https://voe.sx"
     override val name = "Voe"
 
@@ -18,8 +18,9 @@ internal class Voe(
 
     override suspend fun extract(
         url: String,
-        customHeaders: Map<String, String>?
-    ): List<MediaLink> {
+        customHeaders: Map<String, String>?,
+        onLinkFound: (MediaLink) -> Unit
+    ) {
         val streamPage = client.request(url = url)
             .execute().body?.string()
             ?: throw Exception("[$name]> Failed to load page")
@@ -34,7 +35,7 @@ internal class Voe(
                 streamUrl = CryptographyUtil.base64Decode(streamUrl)
         }
 
-        return listOf(
+        return onLinkFound(
             Stream(
                 url = streamUrl,
                 name = name

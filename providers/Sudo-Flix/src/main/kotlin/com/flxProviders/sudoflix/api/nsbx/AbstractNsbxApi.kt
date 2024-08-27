@@ -1,5 +1,6 @@
 package com.flxProviders.sudoflix.api.nsbx
 
+import android.content.Context
 import android.net.Uri
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
@@ -23,8 +24,13 @@ import okhttp3.OkHttpClient
 
 internal abstract class AbstractNsbxApi(
     client: OkHttpClient,
+    context: Context,
     provider: Provider,
-) : ProviderApi(client, provider) {
+) : ProviderApi(
+    client = client,
+    context = context,
+    provider = provider
+) {
     abstract val streamSourceUrl: String
     abstract val name: String
     private val origin = "https://sudo-flix.lol"
@@ -33,14 +39,14 @@ internal abstract class AbstractNsbxApi(
     override suspend fun getLinks(
         watchId: String,
         film: FilmDetails,
-        episode: Episode?
-    ): List<MediaLink> {
+        episode: Episode?,
+        onLinkFound: (MediaLink) -> Unit
+    ) {
         val availableProviders = getAvailableProviders()
 
         if (availableProviders.isEmpty())
             throw IllegalStateException("No available providers for $name")
 
-        val links = mutableListOf<MediaLink>()
         for (i in availableProviders.indices) {
             try {
                 val provider = availableProviders[i]
@@ -84,7 +90,7 @@ internal abstract class AbstractNsbxApi(
                     {
                         source.stream.mapAsync {
                             it.qualities?.entries?.mapAsync { (serverName, qualitySource) ->
-                                links.add(
+                                onLinkFound(
                                     Stream(
                                         name = serverName,
                                         url = qualitySource.url,
@@ -100,7 +106,7 @@ internal abstract class AbstractNsbxApi(
                                 return@mapAsync
                             }
 
-                            links.add(
+                            onLinkFound(
                                 Stream(
                                     name = name,
                                     url = it.playlist,
@@ -112,7 +118,7 @@ internal abstract class AbstractNsbxApi(
                     {
                         source.stream.mapAsync {
                             it.captions.mapAsync { caption ->
-                                links.add(
+                                onLinkFound(
                                     Subtitle(
                                         url = caption.url,
                                         language = "[$name] ${caption.language}",
@@ -133,8 +139,6 @@ internal abstract class AbstractNsbxApi(
                 throw e
             }
         }
-
-        return links
     }
 
     private fun getAvailableProviders(): List<String> {

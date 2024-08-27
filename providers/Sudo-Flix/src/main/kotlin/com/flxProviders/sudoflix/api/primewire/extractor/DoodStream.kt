@@ -4,8 +4,8 @@ import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.Flag
 import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.provider.Stream
-import com.flixclusive.provider.extractor.Extractor
-import com.flxProviders.sudoflix.api.primewire.util.ExtractorHelper.getRedirectedUrl
+import com.flixclusive.provider.extractor.EmbedExtractor
+import com.flxProviders.sudoflix.api.util.ExtractorHelper.getRedirectedUrl
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 import java.net.URL
@@ -13,19 +13,18 @@ import kotlin.random.Random
 
 internal class DoodStream(
     client: OkHttpClient
-) : Extractor(client) {
-    override val baseUrl: String
-        get() = "https://dood.re"
-    override val name: String
-        get() = "DoodStream"
+) : EmbedExtractor(client) {
+    override val baseUrl = "https://dood.re"
+    override val name = "DoodStream"
 
     private val tokenRegex = Regex("""\?token=([^&]+)&expiry=""")
     private val pathRegex = Regex("""\$.get\('/pass_md5([^']+)""")
 
     override suspend fun extract(
         url: String,
-        customHeaders: Map<String, String>?
-    ): List<MediaLink> {
+        customHeaders: Map<String, String>?,
+        onLinkFound: (MediaLink) -> Unit
+    ) {
         val embedRawUrl = getEmbedUrl(url)
         val embedUrl = embedRawUrl.toString()
         val embedId = embedUrl.split("/d/").lastOrNull()
@@ -59,7 +58,7 @@ internal class DoodStream(
 
         val downloadUrl = "${nextPage}${generateRandomToken()}?token=${token}&expiry=${expiry}"
 
-        return listOf(
+        return onLinkFound(
             Stream(
                 url = downloadUrl,
                 name = name,
