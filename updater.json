@@ -15,7 +15,7 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 10101,
+        "versionCode": 10102,
         "description": "NOTICE: This provider uses WebView to scrape content. This might lag.\n\nStream seamlessly in adjustable HD resolution (1080p) with blazing-fast loading speeds. Offers HLS media.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/FlixHQ.flx",
         "changelog": "# v1.0.1 - patch\nNew workaround applied!",
@@ -38,11 +38,11 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 12103,
+        "versionCode": 12200,
         "description": "A flixclusive adapter for Stremio addons. Torrent addons, such as Torrentio,  don't work without debrid accounts.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/Stremio.flx",
         "changelog": "### Fixes:\n- Fixed settings screen not working when Stremio is disabled.",
-        "versionName": "1.2.1",
+        "versionName": "1.2.2",
         "name": "Stremio"
     },
     {
@@ -88,10 +88,10 @@
                 "name": "rhenwinch"
             }
         ],
-        "versionCode": 14001,
-        "description": "REMINDER: This provider needs configuration to work!! Go to its provider settings and configure it there.\n\nREMINDER (again): This provider has cloudfare and will eventually prompt up WebView requests to solve CF challenges.\n\nA classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.",
+        "versionCode": 14002,
+        "description": "REMINDER: This provider needs configuration to work!! Go to its provider settings and configure it there.\n\nREMINDER (again): This provider has cloudflare and will eventually prompt up WebView requests to solve CF challenges.\n\nA classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/SuperStream.flx",
-        "changelog": "# v1.4.0\n\n### \ud83d\udd27 Changes:\n- Add cloudfare interceptor",
+        "changelog": "# v1.4.0\n\n### \ud83d\udd27 Changes:\n- Add cloudflare interceptor",
         "versionName": "1.4.0",
         "name": "SuperStream"
     }
