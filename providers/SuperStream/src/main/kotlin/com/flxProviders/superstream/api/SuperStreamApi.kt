@@ -1,6 +1,7 @@
 package com.flxProviders.superstream.api
 
 import android.content.Context
+import com.flixclusive.core.util.common.dispatcher.AppDispatchers.Companion.runOnMain
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.film.filter.FilterList
@@ -55,7 +56,9 @@ class SuperStreamApi(
 ) {
     private val name = provider.name
     private val cloudfareWebViewInterceptor by lazy {
-        CloudflareWebViewInterceptor(context)
+        runOnMain {
+            CloudflareWebViewInterceptor(context)
+        }
     }
 
     private val token: String?

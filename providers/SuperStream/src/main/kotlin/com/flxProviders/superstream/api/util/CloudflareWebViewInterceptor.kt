@@ -14,7 +14,6 @@ import com.flixclusive.core.util.network.USER_AGENT
 import com.flixclusive.core.util.network.WebViewInterceptor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withTimeoutOrNull
-import okhttp3.HttpUrl
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
@@ -71,7 +70,9 @@ internal class CloudflareWebViewInterceptor(
         return lock.withLock {
             try {
                 response.close()
-                settings.userAgentString = request.header("user-agent") ?: USER_AGENT
+                runOnMain {
+                    settings.userAgentString = request.header("user-agent") ?: USER_AGENT
+                }
 
                 val cloudfareUrl = request.url.toString()
                 val oldClearance = cookieManager.getValue(
@@ -158,9 +159,5 @@ internal class CloudflareWebViewInterceptor(
         }
 
         return response
-    }
-
-    private fun HttpUrl.domainWithScheme(): String {
-        return "$scheme://$host"
     }
 }
