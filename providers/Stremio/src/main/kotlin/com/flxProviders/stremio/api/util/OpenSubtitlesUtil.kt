@@ -3,6 +3,7 @@ package com.flxProviders.stremio.api.util
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
+import com.flixclusive.model.provider.MediaLink
 import com.flixclusive.model.provider.Subtitle
 import com.flixclusive.model.provider.SubtitleSource
 import okhttp3.OkHttpClient
@@ -17,10 +18,11 @@ internal object OpenSubtitlesUtil {
     fun OkHttpClient.fetchSubtitles(
         imdbId: String,
         season: Int? = null,
-        episode: Int? = null
-    ): List<Subtitle> {
+        episode: Int? = null,
+        onLinkFound: (MediaLink) -> Unit
+    ) {
         if (!imdbId.startsWith("tt"))
-            return emptyList()
+            return
 
         val slug = if(season == null) {
             "movie/$imdbId"
@@ -31,9 +33,8 @@ internal object OpenSubtitlesUtil {
         val subtitles = safeCall {
             request("$OPEN_SUBS_STREMIO_ENDPOINT/subtitles/$slug.json")
                 .execute().fromJson<OpenSubtitleStremioDto>()
-        } ?: return emptyList()
+        } ?: return
 
-        val links = mutableListOf<Subtitle>()
         subtitles.subtitles.forEach { subtitle ->
             val subLanguage = subtitle["lang"] ?: return@forEach
             val subtitleDto = Subtitle(
@@ -42,9 +43,7 @@ internal object OpenSubtitlesUtil {
                 type = SubtitleSource.ONLINE
             )
 
-            links.add(subtitleDto)
+            onLinkFound(subtitleDto)
         }
-
-        return links
     }
 }
