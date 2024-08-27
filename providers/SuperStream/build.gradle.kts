@@ -40,7 +40,7 @@ flxProvider {
     description.set("""
         REMINDER: This provider needs configuration to work!! Go to its provider settings and configure it there.
 
-        REMINDER (again): This provider has cloudfare and will eventually prompt up WebView requests to solve CF challenges.
+        REMINDER (again): This provider has cloudflare and will eventually prompt up WebView requests to solve CF challenges.
         
         A classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.
     """.trimIndent())
@@ -49,7 +49,7 @@ flxProvider {
         # v1.4.0
         
         ### 🔧 Changes:
-        - Add cloudfare interceptor
+        - Add cloudflare interceptor
     """.trimIndent())
 
     versionMajor = 1

@@ -17,7 +17,6 @@ import com.flixclusive.core.util.network.WebViewInterceptor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
-import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
@@ -78,10 +77,10 @@ internal class CloudflareWebViewInterceptor(
                     settings.userAgentString = request.header("user-agent") ?: USER_AGENT
                 }
 
-                val cloudfareUrl = request.url.toString()
+                val cloudflareUrl = request.url.toString()
                 val oldClearance = cookieManager.getValue(
                     key = cfCookieKey,
-                    url = cloudfareUrl
+                    url = cloudflareUrl
                 )
 
                 if (oldClearance != null) {
@@ -106,7 +105,7 @@ internal class CloudflareWebViewInterceptor(
                 } catch (e: TimeoutCancellationException) {
                     runOnMain {
                         context.showToast(
-                            message = "Cloudfare resolver timed out!",
+                            message = "Cloudflare resolver timed out!",
                             duration = Toast.LENGTH_LONG
                         )
                     }
@@ -140,18 +139,18 @@ internal class CloudflareWebViewInterceptor(
         request: Request,
         cookieManager: CookieManager
     ) {
-        val cloudfareUrl = request.url.toString()
+        val cloudflareUrl = request.url.toString()
         val headers = request
             .headers
             .toMultimap()
             .mapValues { it.value.firstOrNull() ?: "" }
 
-        loadUrl(cloudfareUrl, headers)
+        loadUrl(cloudflareUrl, headers)
 
         while (true) {
             val clearance = cookieManager.getValue(
                 key = cfCookieKey,
-                url = cloudfareUrl
+                url = cloudflareUrl
             )
 
             if (clearance != null) {

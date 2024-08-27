@@ -55,7 +55,7 @@ class SuperStreamApi(
     provider = provider
 ) {
     private val name = provider.name
-    private val cloudfareWebViewInterceptor by lazy {
+    private val cloudflareWebViewInterceptor by lazy {
         runOnMain {
             CloudflareWebViewInterceptor(context)
         }
@@ -130,7 +130,7 @@ class SuperStreamApi(
 
         val (seasonSlug, episodeSlug) = getEpisodeSlug(season, episode)
         val shareKey = client
-            .addWebViewInterceptor(cloudfareWebViewInterceptor)
+            .addWebViewInterceptor(cloudflareWebViewInterceptor)
             .request(
                 url = "$firstAPI/index/share_link?id=${watchId}&type=${filmType.value}"
             ).execute().use {
