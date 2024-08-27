@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.webkit.CookieManager
 import android.webkit.WebSettings
+import android.widget.Toast
 import com.flixclusive.core.network.util.CookieHelper.getValue
+import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.util.common.dispatcher.AppDispatchers.Companion.runOnDefault
 import com.flixclusive.core.util.common.dispatcher.AppDispatchers.Companion.runOnMain
 import com.flixclusive.core.util.exception.safeCall
@@ -13,6 +15,8 @@ import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.network.USER_AGENT
 import com.flixclusive.core.util.network.WebViewInterceptor
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.Interceptor
 import okhttp3.Request
@@ -93,11 +97,23 @@ internal class CloudflareWebViewInterceptor(
                 }
 
                 infoLog("[CF] Resolving with WebView...")
-                runOnDefault {
-                    withTimeoutOrNull(60.seconds) {
-                        resolveWithWebView(request, cookieManager)
+                try {
+                    runOnDefault {
+                        withTimeout(60.seconds) {
+                            resolveWithWebView(request, cookieManager)
+                        }
                     }
-                } ?: throw Exception("[CF] WebView timed out after 60 seconds")
+                } catch (e: TimeoutCancellationException) {
+                    runOnMain {
+                        context.showToast(
+                            message = "Cloudfare resolver timed out!",
+                            duration = Toast.LENGTH_LONG
+                        )
+                    }
+
+                    throw Exception("[CF] WebView timed out after 60 seconds")
+                }
+
 
                 infoLog("[CF] Using new cf_clearance cookie...")
                 chain.bypassChallenge(cookieManager)
