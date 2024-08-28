@@ -11,8 +11,8 @@
         },
         "authors": [
             {
-                "githubLink": "https://github.com/rhenwinch",
-                "name": "rhenwinch"
+                "name": "rhenwinch",
+                "socialLink": "https://github.com/rhenwinch"
             }
         ],
         "versionCode": 10102,
@@ -34,8 +34,8 @@
         },
         "authors": [
             {
-                "githubLink": "https://github.com/rhenwinch",
-                "name": "rhenwinch"
+                "name": "rhenwinch",
+                "socialLink": "https://github.com/rhenwinch"
             }
         ],
         "versionCode": 12200,
@@ -57,12 +57,12 @@
         },
         "authors": [
             {
-                "githubLink": "https://github.com/rhenwinch",
-                "name": "rhenwinch"
+                "name": "rhenwinch",
+                "socialLink": "https://github.com/rhenwinch"
             },
             {
-                "githubLink": "https://github.com/sussy-code",
-                "name": "sussy-code"
+                "name": "sussy-code",
+                "socialLink": "https://github.com/sussy-code"
             }
         ],
         "versionCode": 14000,
@@ -84,8 +84,8 @@
         },
         "authors": [
             {
-                "githubLink": "https://github.com/rhenwinch",
-                "name": "rhenwinch"
+                "name": "rhenwinch",
+                "socialLink": "https://github.com/rhenwinch"
             }
         ],
         "versionCode": 14002,
