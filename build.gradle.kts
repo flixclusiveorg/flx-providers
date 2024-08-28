@@ -27,7 +27,7 @@ buildscript {
         val kotlin = "1.9.10"
         classpath("com.android.tools.build:gradle:7.2.2")
         // Flixclusive gradle plugin which makes everything work and builds providers
-        classpath("com.github.Flixclusive.providers-gradle:providers-gradle:1.0.0") {
+        classpath("com.github.Flixclusive.providers-gradle:providers-gradle:1.1.2") {
             isChanging = true
         }
         // Kotlin support. Remove if you want to use Java
@@ -67,7 +67,7 @@ subprojects {
          * */
         author(
             name = "rhenwinch",
-            githubLink = "https://github.com/rhenwinch",
+            socialLink = "https://github.com/rhenwinch",
         )
         // author( ... )
         // author( ... )
