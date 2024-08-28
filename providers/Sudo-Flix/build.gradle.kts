@@ -28,7 +28,7 @@ flxProvider {
     // Extra authors for specific provider
      author(
         name = "sussy-code",
-        githubLink = "https://github.com/sussy-code",
+        socialLink = "https://github.com/sussy-code",
      )
     // ===
 
