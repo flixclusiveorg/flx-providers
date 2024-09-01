@@ -34,21 +34,14 @@ flxProvider {
     """.trimIndent())
 
     changelog.set("""
-        # v1.0.1 - patch
-        New workaround applied!
+        # v1.0.2 - patch
+        Fix invalid user agents
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 0
-    versionPatch = 1
-    versionBuild = 2
-
-    // Extra authors for specific provider
-    // author(
-    //    name = "...",
-    //    githubLink = "https://github.com/...",
-    // )
-    // ===
+    versionPatch = 2
+    versionBuild = 0
 
     iconUrl.set("https://i.imgur.com/LNtqPTi.png")
 

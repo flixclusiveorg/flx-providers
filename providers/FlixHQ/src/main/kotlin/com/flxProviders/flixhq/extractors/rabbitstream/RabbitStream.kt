@@ -36,6 +36,7 @@ internal open class RabbitStream(
     suspend fun extract(
         url: String,
         key: VidCloudKey,
+        userAgent: String,
         onLinkFound: (MediaLink) -> Unit
     ) {
         if (key.e4Key.isEmpty() || key.kId.isEmpty() || key.kVersion.isEmpty() || key.browserVersion.isEmpty()) {
@@ -53,7 +54,8 @@ internal open class RabbitStream(
         val sourceEndpoint = "$baseUrl/ajax/v2/embed-4/getSources?id=$id&v=${key.kVersion}&h=${key.kId}&b=${key.browserVersion}"
         val response = client.request(
             url = sourceEndpoint,
-            headers = options,
+            userAgent = userAgent,
+            headers = options
         ).execute()
 
         val responseBody = response.body?.string()
@@ -87,7 +89,7 @@ internal open class RabbitStream(
                 data.sources.mapAsync { source ->
                     client.request(
                         url = source.url,
-                        headers = options
+                        headers = options,
                     ).execute().body
                         ?.string()
                         ?.let { data ->

@@ -5,16 +5,16 @@ import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import com.flixclusive.core.util.network.USER_AGENT
 
 @SuppressLint("SetJavaScriptEnabled", "ClickableViewAccessibility")
 internal fun WebView.setup(
     client: WebViewClient,
     chromeClient: WebChromeClient,
+    userAgent: String,
 ) {
     settings.javaScriptEnabled = true
     settings.domStorageEnabled = true
-    settings.userAgentString = USER_AGENT
+    settings.userAgentString = userAgent
 
     webViewClient = client
     webChromeClient = chromeClient

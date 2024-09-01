@@ -7,11 +7,11 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import com.flixclusive.core.network.util.okhttp.UserAgentManager
 import com.flixclusive.core.util.common.dispatcher.AppDispatchers.Companion.withIOContext
 import com.flixclusive.core.util.common.dispatcher.AppDispatchers.Companion.withMainContext
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.infoLog
-import com.flixclusive.core.util.network.USER_AGENT
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
 import com.flixclusive.model.provider.MediaLink
@@ -28,8 +28,10 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import okhttp3.OkHttpClient
 import java.net.URLDecoder
+import kotlin.time.Duration.Companion.seconds
 
 @SuppressLint("ViewConstructor")
 @Suppress("SpellCheckingInspection")
@@ -44,6 +46,7 @@ class FlixHQWebView(
 
     private var key: VidCloudKey? = null
     private var injectorScript = INJECTOR_SCRIPT
+    private var userAgent = UserAgentManager.getRandomUserAgent()
 
     private val chromeClient = object: WebChromeClient() {
         override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
@@ -86,14 +89,15 @@ class FlixHQWebView(
     init {
         setup(
             client = client,
-            chromeClient = chromeClient
+            chromeClient = chromeClient,
+            userAgent = userAgent
         )
     }
 
     private fun setXrax(xrax: String) {
         injectorScript = INJECTOR_SCRIPT
             .replace("__rabbit_id__", xrax)
-            .replace("__user_agent__", USER_AGENT)
+            .replace("__user_agent__", userAgent)
     }
 
     override suspend fun getLinks(
@@ -125,7 +129,10 @@ class FlixHQWebView(
 
         validServers.forEach { (serverName, serverEmbedUrl) ->
             val initialSourceData = withIOContext {
-                mClient.request(url = "${api.baseUrl}/ajax/episode/sources/${serverEmbedUrl.split('.').last()}").execute().body?.string()
+                mClient.request(
+                    url = "${api.baseUrl}/ajax/episode/sources/${serverEmbedUrl.split('.').last()}",
+                    userAgent = userAgent
+                ).execute().body?.string()
             } ?: throw Exception("Can't find decryption key!")
 
             val serverUrl = withIOContext {
@@ -147,11 +154,19 @@ class FlixHQWebView(
                 loadUrl(extractor.baseUrl)
             }
 
-            waitForKeyToBeAttached()
+            withTimeout(60.seconds) {
+                waitForKeyToBeAttached()
+            }
+
+            requireNotNull(key) {
+                "Can't find decryption key!"
+            }
+
             infoLog("[FHQWebView] Extracting links...")
             extractor.extract(
                 url = serverUrl,
                 key = key!!,
+                userAgent = userAgent,
                 onLinkFound = onLinkFound
             )
         }
@@ -160,14 +175,7 @@ class FlixHQWebView(
     private suspend fun waitForKeyToBeAttached() {
         infoLog("[FHQWebView] Waiting for key to be attached...")
         key = null
-        var retries = 0
-        val maxRetries = 40 // seconds
-        while(key == null && retries < maxRetries) {
-            delay(1000)
-            retries++
-        }
-
-        if (key == null)
-            throw Exception("Can't find decryption key!")
+        while(key == null)
+            delay(500)
     }
 }
