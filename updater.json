@@ -88,11 +88,11 @@
                 "socialLink": "https://github.com/rhenwinch"
             }
         ],
-        "versionCode": 14002,
+        "versionCode": 14100,
         "description": "REMINDER: This provider needs configuration to work!! Go to its provider settings and configure it there.\n\nREMINDER (again): This provider has cloudflare and will eventually prompt up WebView requests to solve CF challenges.\n\nA classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/SuperStream.flx",
-        "changelog": "# v1.4.0\n\n### \ud83d\udd27 Changes:\n- Add cloudflare interceptor",
-        "versionName": "1.4.0",
+        "changelog": "# v1.4.1\n\n### \ud83d\udd27 Changes:\n- Fix CookieHelper error",
+        "versionName": "1.4.1",
         "name": "SuperStream"
     }
 ]
