@@ -46,15 +46,16 @@ flxProvider {
     """.trimIndent())
 
     changelog.set("""
-        # v1.4.1
+        # v1.4.2
         
         ### 🔧 Changes:
         - Fix CookieHelper error
+        - Fix outdated webview user agents
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 4
-    versionPatch = 1
+    versionPatch = 2
     versionBuild = 0
 
     iconUrl.set("https://i.imgur.com/KgMakl9.png") // OPTIONAL

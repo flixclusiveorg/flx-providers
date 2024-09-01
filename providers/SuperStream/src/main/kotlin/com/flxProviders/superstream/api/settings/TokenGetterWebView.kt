@@ -4,8 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.webkit.CookieManager
 import android.webkit.WebView
+import com.flixclusive.core.network.util.okhttp.UserAgentManager
 import com.flixclusive.core.util.network.CryptographyUtil
-import com.flixclusive.core.util.network.getRandomUserAgent
 import com.flixclusive.provider.settings.ProviderSettings
 
 private const val GET_TOKEN_URL_ENCODED
@@ -42,7 +42,7 @@ internal class TokenGetterWebView(
         cookieManager.removeAllCookies(null)
         cookieManager.flush()
 
-        this.settings.userAgentString = getRandomUserAgent()
+        this.settings.userAgentString = UserAgentManager.getRandomUserAgent()
 
         loadUrl(CryptographyUtil.base64Decode(GET_TOKEN_URL_ENCODED))
 
