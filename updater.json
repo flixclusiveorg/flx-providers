@@ -15,11 +15,11 @@
                 "socialLink": "https://github.com/rhenwinch"
             }
         ],
-        "versionCode": 10102,
+        "versionCode": 10200,
         "description": "NOTICE: This provider uses WebView to scrape content. This might lag.\n\nStream seamlessly in adjustable HD resolution (1080p) with blazing-fast loading speeds. Offers HLS media.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/FlixHQ.flx",
-        "changelog": "# v1.0.1 - patch\nNew workaround applied!",
-        "versionName": "1.0.1",
+        "changelog": "# v1.0.2 - patch\nFix invalid user agents",
+        "versionName": "1.0.2",
         "name": "FlixHQ"
     },
     {
@@ -88,11 +88,11 @@
                 "socialLink": "https://github.com/rhenwinch"
             }
         ],
-        "versionCode": 14100,
+        "versionCode": 14200,
         "description": "REMINDER: This provider needs configuration to work!! Go to its provider settings and configure it there.\n\nREMINDER (again): This provider has cloudflare and will eventually prompt up WebView requests to solve CF challenges.\n\nA classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/SuperStream.flx",
-        "changelog": "# v1.4.1\n\n### \ud83d\udd27 Changes:\n- Fix CookieHelper error",
-        "versionName": "1.4.1",
+        "changelog": "# v1.4.2\n\n### \ud83d\udd27 Changes:\n- Fix CookieHelper error\n- Fix outdated webview user agents",
+        "versionName": "1.4.2",
         "name": "SuperStream"
     }
 ]
