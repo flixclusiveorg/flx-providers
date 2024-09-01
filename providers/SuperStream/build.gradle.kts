@@ -46,16 +46,16 @@ flxProvider {
     """.trimIndent())
 
     changelog.set("""
-        # v1.4.0
+        # v1.4.1
         
         ### 🔧 Changes:
-        - Add cloudflare interceptor
+        - Fix CookieHelper error
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 4
-    versionPatch = 0
-    versionBuild = 2
+    versionPatch = 1
+    versionBuild = 0
 
     iconUrl.set("https://i.imgur.com/KgMakl9.png") // OPTIONAL
 

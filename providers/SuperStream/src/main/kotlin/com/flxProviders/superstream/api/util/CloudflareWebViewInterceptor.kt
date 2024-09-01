@@ -5,7 +5,6 @@ import android.content.Context
 import android.webkit.CookieManager
 import android.webkit.WebSettings
 import android.widget.Toast
-import com.flixclusive.core.network.util.CookieHelper.getValue
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.core.util.common.dispatcher.AppDispatchers.Companion.runOnDefault
 import com.flixclusive.core.util.common.dispatcher.AppDispatchers.Companion.runOnMain
@@ -14,6 +13,7 @@ import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.network.USER_AGENT
 import com.flixclusive.core.util.network.WebViewInterceptor
+import com.flxProviders.superstream.api.util.CookieHelper.getValue
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
