@@ -1,6 +1,5 @@
 package com.flxProviders.sudoflix.api.vidsrcto
 
-import android.content.Context
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.network.asJsoup
 import com.flixclusive.core.util.network.fromJson
@@ -22,11 +21,9 @@ internal const val VIDSRCTO_KEY = "WXrUARXb1aDLaZjI"
 
 internal class VidSrcToApi(
     client: OkHttpClient,
-    context: Context,
     provider: Provider
 ) : ProviderApi(
     client = client,
-    context = context,
     provider = provider
 ) {
     private val name = "VidSrc.To"

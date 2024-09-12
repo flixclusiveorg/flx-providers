@@ -2,7 +2,6 @@
 
 package com.flxProviders.stremio.api
 
-import android.content.Context
 import androidx.compose.ui.util.fastDistinctBy
 import androidx.compose.ui.util.fastFlatMap
 import androidx.compose.ui.util.fastForEach
@@ -48,13 +47,11 @@ internal const val MEDIA_TYPE_KEY = "type"
 internal const val STREMIO = "Stremio"
 
 internal class StremioApi(
-    context: Context,
     provider: Provider,
     client: OkHttpClient,
     private val settings: ProviderSettings
 ) : ProviderApi(
     client = client,
-    context = context,
     provider = provider
 ) {
     private val name = STREMIO

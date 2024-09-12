@@ -1,6 +1,5 @@
 package com.flxProviders.sudoflix.api
 
-import android.content.Context
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.film.FilmType
@@ -26,37 +25,30 @@ import okhttp3.OkHttpClient
  * */
 class SudoFlixApi(
     client: OkHttpClient,
-    context: Context,
     provider: Provider
 ) : ProviderApi(
     client = client,
-    context = context,
     provider = provider
 ) {
     private val providersList = listOf(
         NsbxApi(
             client = client,
-            context = context,
             provider = provider
         ),
         VidBingeApi(
             client = client,
-            context = context,
             provider = provider
         ),
         RidoMoviesApi(
             client = client,
-            context = context,
             provider = provider
         ),
         PrimeWireApi(
             client = client,
-            context = context,
             provider = provider
         ),
         VidSrcToApi(
             client = client,
-            context = context,
             provider = provider
         ),
     )

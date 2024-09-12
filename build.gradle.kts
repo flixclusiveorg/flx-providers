@@ -1,5 +1,5 @@
-import com.flixclusive.gradle.FlixclusiveProviderExtension
 import com.android.build.gradle.BaseExtension
+import com.flixclusive.gradle.FlixclusiveProviderExtension
 
 
 buildscript {

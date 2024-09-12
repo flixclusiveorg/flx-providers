@@ -11,7 +11,7 @@ import com.flixclusive.model.tmdb.FilmSearchItem
 import com.flixclusive.model.tmdb.Movie
 import com.flixclusive.model.tmdb.SearchResponseData
 import com.flixclusive.provider.Provider
-import com.flixclusive.provider.ProviderApi
+import com.flixclusive.provider.ProviderWebViewApi
 import com.flixclusive.provider.webview.ProviderWebView
 import com.flxProviders.flixhq.api.util.TvShowCacheData
 import com.flxProviders.flixhq.api.util.getEpisodeId
@@ -31,14 +31,12 @@ class FlixHQApi(
     client: OkHttpClient,
     context: Context,
     provider: Provider
-) : ProviderApi(
+) : ProviderWebViewApi(
     client = client,
     context = context,
     provider = provider
 ) {
     override val baseUrl: String = "https://flixhq.to"
-    override val useWebView = true
-
     private var tvCacheData: TvShowCacheData = TvShowCacheData()
 
     @Suppress("SpellCheckingInspection")
@@ -145,8 +143,8 @@ class FlixHQApi(
     override fun getWebView(): ProviderWebView {
         return FlixHQWebView(
             mClient = client,
-            api = this,
-            context = context
+            context = context,
+            api = this
         )
     }
 

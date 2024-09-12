@@ -1,6 +1,5 @@
 package com.flxProviders.sudoflix.api.primewire
 
-import android.content.Context
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.exception.safeCall
@@ -31,11 +30,9 @@ import org.jsoup.nodes.Document
 @Suppress("SpellCheckingInspection")
 internal class PrimeWireApi(
     client: OkHttpClient,
-    context: Context,
     provider: Provider
 ) : ProviderApi(
     client = client,
-    context = context,
     provider = provider
 ) {
     private val name = "PrimeWire"

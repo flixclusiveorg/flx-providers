@@ -15,7 +15,6 @@ class SudoFlix : Provider() {
     ): ProviderApi {
         return SudoFlixApi(
             client = client,
-            context = context,
             provider = this
         )
     }

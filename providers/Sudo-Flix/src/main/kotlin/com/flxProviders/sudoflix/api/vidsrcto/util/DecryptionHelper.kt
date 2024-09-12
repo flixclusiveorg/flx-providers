@@ -1,12 +1,10 @@
 package com.flxProviders.sudoflix.api.vidsrcto.util
 
 import android.util.Base64
-import com.flixclusive.core.util.network.CryptographyUtil
 import com.flxProviders.sudoflix.api.vidsrcto.VIDSRCTO_KEY
 import java.net.URLDecoder
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
-import kotlin.experimental.xor
 
 internal object VidSrcToDecryptionUtil {
     fun decodeUrl(encryptedSourceUrl: String): String {

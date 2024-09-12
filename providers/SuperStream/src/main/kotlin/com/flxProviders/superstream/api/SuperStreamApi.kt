@@ -40,9 +40,9 @@ import kotlin.random.Random
 class SuperStreamApi(
     client: OkHttpClient,
     provider: Provider,
-    context: Context,
+    val context: Context,
     private val settings: ProviderSettings
-) : ProviderApi(client, context, provider) {
+) : ProviderApi(client, provider) {
     private val token: String?
         get() = settings.getString(TOKEN_KEY, null)
 

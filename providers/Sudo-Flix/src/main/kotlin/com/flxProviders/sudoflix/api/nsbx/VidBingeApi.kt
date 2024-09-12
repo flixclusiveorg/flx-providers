@@ -1,6 +1,5 @@
 package com.flxProviders.sudoflix.api.nsbx
 
-import android.content.Context
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.model.tmdb.FilmDetails
 import com.flixclusive.provider.Provider
@@ -8,11 +7,9 @@ import okhttp3.OkHttpClient
 
 internal class VidBingeApi(
     client: OkHttpClient,
-    context: Context,
     provider: Provider
 ) : AbstractNsbxApi(
     client = client,
-    context = context,
     provider = provider
 ) {
     override val baseUrl = "https://api.whvx.net"

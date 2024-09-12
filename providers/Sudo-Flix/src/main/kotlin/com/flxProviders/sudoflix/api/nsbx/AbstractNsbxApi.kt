@@ -1,6 +1,5 @@
 package com.flxProviders.sudoflix.api.nsbx
 
-import android.content.Context
 import android.net.Uri
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
@@ -24,11 +23,9 @@ import okhttp3.OkHttpClient
 
 internal abstract class AbstractNsbxApi(
     client: OkHttpClient,
-    context: Context,
     provider: Provider,
 ) : ProviderApi(
     client = client,
-    context = context,
     provider = provider
 ) {
     abstract val streamSourceUrl: String

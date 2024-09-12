@@ -2,7 +2,6 @@ package com.flxProviders.stremio.api.model
 
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
-import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMapNotNull
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.film.FilmType

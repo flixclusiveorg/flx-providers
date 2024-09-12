@@ -50,7 +50,6 @@ import com.flixclusive.core.ui.common.util.onMediumEmphasis
 import com.flixclusive.core.ui.common.util.showToast
 import com.flixclusive.provider.settings.ProviderSettings
 import com.flxProviders.stremio.api.model.Addon
-import com.flxProviders.stremio.settings.util.AddonAddResponse
 import com.flxProviders.stremio.settings.util.AddonUtil.addAddon
 import com.flxProviders.stremio.settings.util.AddonUtil.downloadAddon
 import com.flxProviders.stremio.settings.util.AddonUtil.parseStremioAddonUrl

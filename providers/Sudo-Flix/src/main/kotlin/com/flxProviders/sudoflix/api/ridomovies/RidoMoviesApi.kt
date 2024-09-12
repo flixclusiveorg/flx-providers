@@ -1,6 +1,5 @@
 package com.flxProviders.sudoflix.api.ridomovies
 
-import android.content.Context
 import com.flixclusive.core.util.film.FilmType
 import com.flixclusive.core.util.network.fromJson
 import com.flixclusive.core.util.network.request
@@ -19,11 +18,9 @@ import org.jsoup.Jsoup
 
 class RidoMoviesApi(
     client: OkHttpClient,
-    context: Context,
     provider: Provider
 ) : ProviderApi(
     client = client,
-    context = context,
     provider = provider
 ) {
     private val name = "RidoMovies"
