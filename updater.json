@@ -15,11 +15,11 @@
                 "socialLink": "https://github.com/rhenwinch"
             }
         ],
-        "versionCode": 10200,
+        "versionCode": 10300,
         "description": "NOTICE: This provider uses WebView to scrape content. This might lag.\n\nStream seamlessly in adjustable HD resolution (1080p) with blazing-fast loading speeds. Offers HLS media.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/FlixHQ.flx",
         "changelog": "# v1.0.2 - patch\nFix invalid user agents",
-        "versionName": "1.0.2",
+        "versionName": "1.0.3",
         "name": "FlixHQ"
     },
     {
@@ -38,11 +38,11 @@
                 "socialLink": "https://github.com/rhenwinch"
             }
         ],
-        "versionCode": 12200,
+        "versionCode": 12300,
         "description": "A flixclusive adapter for Stremio addons. Torrent addons, such as Torrentio,  don't work without debrid accounts.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/Stremio.flx",
         "changelog": "### Fixes:\n- Fixed settings screen not working when Stremio is disabled.",
-        "versionName": "1.2.2",
+        "versionName": "1.2.3",
         "name": "Stremio"
     },
     {
@@ -65,11 +65,11 @@
                 "socialLink": "https://github.com/sussy-code"
             }
         ],
-        "versionCode": 14000,
+        "versionCode": 14100,
         "description": "A forked clone of the old movie-web.\n\nThis is a set of providers. All source code references belong to sudo-flix.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/Sudo-Flix.flx",
         "changelog": "# v1.4.0\n\nFixed some extractors:\n- StreamWish\n- FileLions\n- MixDrop\n- VTube (updated)\n- CloseLoad (subtitles issue)",
-        "versionName": "1.4.0",
+        "versionName": "1.4.1",
         "name": "Sudo-Flix"
     },
     {
@@ -88,11 +88,11 @@
                 "socialLink": "https://github.com/rhenwinch"
             }
         ],
-        "versionCode": 14200,
+        "versionCode": 15000,
         "description": "REMINDER: This provider needs configuration to work!! Go to its provider settings and configure it there.\n\nREMINDER (again): This provider has cloudflare and will eventually prompt up WebView requests to solve CF challenges.\n\nA classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/SuperStream.flx",
         "changelog": "# v1.4.2\n\n### \ud83d\udd27 Changes:\n- Fix CookieHelper error\n- Fix outdated webview user agents",
-        "versionName": "1.4.2",
+        "versionName": "1.5.0",
         "name": "SuperStream"
     }
 ]
