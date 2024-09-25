@@ -3,14 +3,14 @@ package com.flxProviders.sudoflix.api.primewire
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.network.CryptographyUtil
-import com.flixclusive.core.util.network.asJsoup
-import com.flixclusive.core.util.network.fromJson
-import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.MediaLink
-import com.flixclusive.model.tmdb.FilmDetails
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.core.util.network.Crypto
+import com.flixclusive.core.util.network.jsoup.asJsoup
+import com.flixclusive.core.util.network.json.fromJson
+import com.flixclusive.core.util.network.okhttp.request
+import com.flixclusive.model.provider.link.MediaLink
+import com.flixclusive.model.film.FilmDetails
+import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.provider.Provider
 import com.flixclusive.provider.ProviderApi
 import com.flxProviders.sudoflix.api.opensubs.SubtitleUtil.fetchSubtitles
@@ -93,7 +93,7 @@ internal class PrimeWireApi(
     }
 
     private fun getMediaId(imdbId: String): Int {
-        val searchKey = CryptographyUtil.base64Decode("bHpRUHNYU0tjRw==")
+        val searchKey = Crypto.base64Decode("bHpRUHNYU0tjRw==")
 
         val response = client.request(
             url = "$baseUrl/api/v1/show?key=$searchKey&imdb_id=$imdbId"

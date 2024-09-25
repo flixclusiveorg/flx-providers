@@ -1,8 +1,8 @@
 package com.flxProviders.flixhq.webview.util
 
 import com.flixclusive.core.util.log.errorLog
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.TvShow
+import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.TvShow
 import com.flxProviders.flixhq.api.FlixHQApi
 import java.text.Normalizer
 

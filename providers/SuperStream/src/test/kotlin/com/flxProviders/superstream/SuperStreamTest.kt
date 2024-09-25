@@ -2,17 +2,17 @@ package com.flxProviders.superstream
 
 import com.flixclusive.core.util.log.LogRule
 import com.flixclusive.core.util.log.debugLog
-import com.flixclusive.model.provider.SourceLink
-import com.flixclusive.model.tmdb.FilmDetails
-import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.film.FilmDetails
+import com.flixclusive.model.film.Movie
+import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.provider.link.MediaLink
 import com.flxProviders.superstream.api.SuperStreamApi
+import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import okhttp3.OkHttpClient
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Rule
@@ -49,7 +49,9 @@ class SuperStreamTest {
 
     @Before
     fun setUp() {
-        api = SuperStreamApi(OkHttpClient())
+        api = mockk<SuperStreamApi> {
+
+        }
     }
 
     @Test
@@ -60,12 +62,11 @@ class SuperStreamTest {
         }
         debugLog("WatchId: $watchId")
 
-        val links = mutableListOf<SourceLink>()
-        api.getSourceLinks(
+        val links = mutableListOf<MediaLink>()
+        api.getLinks(
             watchId = watchId!!,
             film = movie,
-            onLinkLoaded = links::add,
-            onSubtitleLoaded = {}
+            onLinkFound = links::add
         )
 
         debugLog("Link: $links")
@@ -82,13 +83,12 @@ class SuperStreamTest {
         }
         debugLog("WatchId: $watchId")
 
-        val links = mutableListOf<SourceLink>()
-        api.getSourceLinks(
+        val links = mutableListOf<MediaLink>()
+        api.getLinks(
             watchId = watchId!!,
             film = tvShow,
             episode = Episode(season = 1, number = 1),
-            onLinkLoaded = links::add,
-            onSubtitleLoaded = {}
+            onLinkFound = links::add
         )
 
         debugLog("Link: $links")

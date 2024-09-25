@@ -22,15 +22,11 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.mobile.component.ImageWithSmallPlaceholder
+import com.flixclusive.provider.util.res.painterResource
+import com.flixclusive.provider.util.res.stringResource
+import com.flxProviders.stremio.BuildConfig
 import com.flxProviders.stremio.api.model.Addon
-import com.flxProviders.stremio.settings.util.LocalResources
-import com.flxProviders.stremio.settings.util.getBitmapFromImage
-import com.flxProviders.stremio.settings.util.getDrawable
 import java.net.URL
-import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
 
 @Composable
 internal fun AddonCard(
@@ -39,7 +35,6 @@ internal fun AddonCard(
     onEdit: () -> Unit,
     onRemove: () -> Unit,
 ) {
-    val resources = LocalResources.current
     val clipboardManager = LocalClipboardManager.current
 
     OutlinedCard(
@@ -72,8 +67,14 @@ internal fun AddonCard(
                     modifier = Modifier.size(60.dp),
                     placeholderModifier = Modifier.size(30.dp),
                     urlImage = addon.logo,
-                    placeholderId = UiCommonR.drawable.provider_logo,
-                    contentDescId = UtilR.string.provider_icon_content_desc,
+                    placeholder = painterResource(
+                        name = "provider_logo",
+                        packageName = BuildConfig.LIBRARY_PACKAGE_NAME
+                    ),
+                    contentDesc = stringResource(
+                        name = "addon_icon_content_desc",
+                        packageName = BuildConfig.LIBRARY_PACKAGE_NAME
+                    ),
                     shape = MaterialTheme.shapes.small
                 )
 
@@ -95,7 +96,7 @@ internal fun AddonCard(
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Normal,
-                            color = LocalContentColor.current.onMediumEmphasis()
+                            color = LocalContentColor.current.copy(0.6F)
                         )
                     )
                 }
@@ -107,43 +108,33 @@ internal fun AddonCard(
                 modifier = Modifier.padding(horizontal = 3.dp)
             ) {
                 IconButton(onClick = onUpdateManifest) {
-                    val refreshIcon = remember {
-                        resources.getDrawable("refresh")?.getBitmapFromImage()
-                    }
-
-                    if (refreshIcon != null) {
-                        Icon(
-                            bitmap = refreshIcon,
-                            contentDescription = null
-                        )
-                    }
+                    Icon(
+                        painter = painterResource(
+                            name = "refresh",
+                            packageName = BuildConfig.LIBRARY_PACKAGE_NAME
+                        ),
+                        contentDescription = "Update addon"
+                    )
                 }
 
                 IconButton(onClick = onEdit) {
-                    val modifyIcon = remember {
-                        resources.getDrawable("modify")?.getBitmapFromImage()
-                    }
-
-                    if (modifyIcon != null) {
-                        Icon(
-                            bitmap = modifyIcon,
-                            contentDescription = null
-                        )
-                    }
+                    Icon(
+                        painter = painterResource(
+                            name = "modify",
+                            packageName = BuildConfig.LIBRARY_PACKAGE_NAME
+                        ),
+                        contentDescription = "Edit addon"
+                    )
                 }
 
                 IconButton(onClick = onRemove) {
-                    val deleteIcon = remember {
-                        resources.getDrawable("delete")
-                            ?.getBitmapFromImage()
-                    }
-
-                    if (deleteIcon != null) {
-                        Icon(
-                            bitmap = deleteIcon,
-                            contentDescription = null
-                        )
-                    }
+                    Icon(
+                        painter = painterResource(
+                            name = "delete",
+                            packageName = BuildConfig.LIBRARY_PACKAGE_NAME
+                        ),
+                        contentDescription = "Delete addon"
+                    )
                 }
             }
         }

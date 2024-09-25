@@ -1,6 +1,6 @@
 package com.flxProviders.superstream.api.dto
 
-import com.flixclusive.core.util.film.FilmType
+import com.flixclusive.model.film.util.FilmType
 
 enum class BoxType(val value: Int) {
     Series(value = 2),

@@ -1,10 +1,10 @@
 package com.flxProviders.sudoflix.api.opensubs
 
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.network.fromJson
-import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.model.provider.SubtitleSource
+import com.flixclusive.core.util.network.json.fromJson
+import com.flixclusive.core.util.network.okhttp.request
+import com.flixclusive.model.provider.link.Subtitle
+import com.flixclusive.model.provider.link.SubtitleSource
 import okhttp3.OkHttpClient
 
 internal object SubtitleUtil {

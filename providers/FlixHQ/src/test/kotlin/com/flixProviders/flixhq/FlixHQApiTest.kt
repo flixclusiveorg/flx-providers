@@ -1,7 +1,7 @@
 package com.flixProviders.flixhq
 
 import com.flxProviders.flixhq.api.FlixHQApi
-import okhttp3.OkHttpClient
+import io.mockk.mockk
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
@@ -12,7 +12,9 @@ class FlixHQApiTest {
 
     @Before
     fun setUp() {
-        flixHQApi = FlixHQApi(OkHttpClient())
+        flixHQApi = mockk<FlixHQApi> {
+
+        }
     }
 
     @Test

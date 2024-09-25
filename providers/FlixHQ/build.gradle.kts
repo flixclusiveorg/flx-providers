@@ -1,6 +1,6 @@
-import com.flixclusive.gradle.entities.Language
-import com.flixclusive.gradle.entities.ProviderType
-import com.flixclusive.gradle.entities.Status
+import com.flixclusive.model.provider.Language
+import com.flixclusive.model.provider.ProviderType
+import com.flixclusive.model.provider.Status
 
 dependencies {
     implementation("androidx.core:core:1.13.1")
@@ -41,7 +41,7 @@ flxProvider {
     versionMajor = 1
     versionMinor = 0
     versionPatch = 3
-    versionBuild = 0
+    versionBuild = 1
 
     iconUrl.set("https://i.imgur.com/LNtqPTi.png")
 

@@ -3,10 +3,11 @@ package com.flxProviders.sudoflix
 import android.util.Base64
 import com.flixclusive.core.util.log.LogRule
 import com.flixclusive.core.util.log.debugLog
-import com.flixclusive.model.tmdb.DEFAULT_FILM_SOURCE_NAME
-import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.film.DEFAULT_FILM_SOURCE_NAME
+import com.flixclusive.model.film.Movie
+import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.provider.link.MediaLink
 import com.flxProviders.sudoflix.api.vidsrcto.VidSrcToApi
 import com.flxProviders.sudoflix.api.vidsrcto.extractor.F2Cloud
 import com.flxProviders.sudoflix.api.vidsrcto.extractor.Filemoon
@@ -62,10 +63,13 @@ class VidSrcToTest {
             SudoFlix()
         )
 
-        val links = api.getLinks(
+        val links = mutableListOf<MediaLink>()
+
+        api.getLinks(
             watchId = tvShow.identifier,
             film = tvShow,
-            episode = Episode(number = 1, season = 1)
+            episode = Episode(number = 1, season = 1),
+            onLinkFound = links::add
         )
 
         assert(links.isNotEmpty())
@@ -85,7 +89,11 @@ class VidSrcToTest {
         val filemoon = Filemoon(OkHttpClient())
         val url = "https://kerapoxy.cc/e/7dz1jxlhlige/?sub.info=https%3A%2F%2Fvidsrc.to%2Fajax%2Fembed%2Fepisode%2Fo_RkO8Ng%2Fsubtitles&t=4xjRAPYmB1QOzQ%3D%3D&ads=0&src=vidsrc"
 
-        val links = filemoon.extract(url = url)
+        val links = mutableListOf<MediaLink>()
+        filemoon.extract(
+            url = url,
+            onLinkFound = links::add
+        )
 
         assert(links.isNotEmpty())
     }
@@ -95,7 +103,11 @@ class VidSrcToTest {
         val f2cloud = F2Cloud(OkHttpClient())
         val url = "https://vid2v11.site/e/0DY8XN539JR4?sub.info=https%3A%2F%2Fvidsrc.to%2Fajax%2Fembed%2Fepisode%2Fo_RkO8Ng%2Fsubtitles&t=4xjRAPYmAlILyQ%3D%3D&ads=0&src=vidsrc"
 
-        val links = f2cloud.extract(url = url)
+        val links = mutableListOf<MediaLink>()
+        f2cloud.extract(
+            url = url,
+            onLinkFound = links::add
+        )
 
         assert(links.isNotEmpty())
     }

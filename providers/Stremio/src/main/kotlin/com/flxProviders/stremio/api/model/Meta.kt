@@ -1,14 +1,14 @@
 package com.flxProviders.stremio.api.model
 
-import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.film.extractYear
-import com.flixclusive.model.tmdb.FilmDetails
-import com.flixclusive.model.tmdb.FilmSearchItem
-import com.flixclusive.model.tmdb.Genre
-import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.TvShow
-import com.flixclusive.model.tmdb.common.tv.Episode
-import com.flixclusive.model.tmdb.common.tv.Season
+import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.film.util.extractYear
+import com.flixclusive.model.film.FilmDetails
+import com.flixclusive.model.film.FilmSearchItem
+import com.flixclusive.model.film.Genre
+import com.flixclusive.model.film.Movie
+import com.flixclusive.model.film.TvShow
+import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.film.common.tv.Season
 import com.flxProviders.stremio.api.ADDON_SOURCE_KEY
 import com.flxProviders.stremio.api.MEDIA_TYPE_KEY
 import com.flxProviders.stremio.api.STREMIO

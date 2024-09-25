@@ -3,8 +3,8 @@ package com.flxProviders.stremio.settings.util
 import com.flixclusive.core.util.exception.actualMessage
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
-import com.flixclusive.core.util.network.fromJson
-import com.flixclusive.core.util.network.request
+import com.flixclusive.core.util.network.json.fromJson
+import com.flixclusive.core.util.network.okhttp.request
 import com.flixclusive.model.provider.ProviderCatalog
 import com.flixclusive.provider.settings.ProviderSettings
 import com.flxProviders.stremio.api.STREAMIO_ADDONS_KEY

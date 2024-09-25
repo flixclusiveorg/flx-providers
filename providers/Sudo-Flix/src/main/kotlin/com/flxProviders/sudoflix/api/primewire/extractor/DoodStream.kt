@@ -1,9 +1,9 @@
 package com.flxProviders.sudoflix.api.primewire.extractor
 
-import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.Flag
-import com.flixclusive.model.provider.MediaLink
-import com.flixclusive.model.provider.Stream
+import com.flixclusive.core.util.network.okhttp.request
+import com.flixclusive.model.provider.link.Flag
+import com.flixclusive.model.provider.link.MediaLink
+import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.provider.extractor.EmbedExtractor
 import com.flxProviders.sudoflix.api.util.ExtractorHelper.getRedirectedUrl
 import okhttp3.Headers.Companion.toHeaders

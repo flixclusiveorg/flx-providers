@@ -2,8 +2,9 @@ package com.flxProviders.sudoflix
 
 import android.net.Uri
 import com.flixclusive.core.util.log.LogRule
-import com.flixclusive.core.util.network.ignoreAllSSLErrors
-import com.flixclusive.model.tmdb.Movie
+import com.flixclusive.core.util.network.okhttp.ignoreAllSSLErrors
+import com.flixclusive.model.film.Movie
+import com.flixclusive.model.provider.link.MediaLink
 import com.flxProviders.sudoflix.api.nsbx.VidBingeApi
 import io.mockk.every
 import io.mockk.mockkStatic
@@ -48,9 +49,11 @@ class NsbxUnitTest {
 
     @Test
     fun `test NSBX Api`() = runTest {
-        val links = api.getLinks(
+        val links = mutableListOf<MediaLink>()
+        api.getLinks(
             watchId = movie.identifier,
-            film = movie
+            film = movie,
+            onLinkFound = links::add
         )
 
         assert(links.isNotEmpty())

@@ -1,10 +1,10 @@
 package com.flxProviders.sudoflix.api.primewire.extractor
 
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.network.CryptographyUtil
-import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.MediaLink
-import com.flixclusive.model.provider.Stream
+import com.flixclusive.core.util.network.Crypto
+import com.flixclusive.core.util.network.okhttp.request
+import com.flixclusive.model.provider.link.MediaLink
+import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.provider.extractor.EmbedExtractor
 import okhttp3.OkHttpClient
 
@@ -32,7 +32,7 @@ internal class Voe(
 
         safeCall {
             if (!streamUrl.startsWith("http"))
-                streamUrl = CryptographyUtil.base64Decode(streamUrl)
+                streamUrl = Crypto.base64Decode(streamUrl)
         }
 
         return onLinkFound(

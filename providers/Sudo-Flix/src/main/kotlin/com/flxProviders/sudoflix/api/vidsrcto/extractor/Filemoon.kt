@@ -1,6 +1,6 @@
 package com.flxProviders.sudoflix.api.vidsrcto.extractor
 
-import com.flixclusive.model.provider.MediaLink
+import com.flixclusive.model.provider.link.MediaLink
 import com.flixclusive.provider.extractor.EmbedExtractor
 import com.flxProviders.sudoflix.api.util.ExtractorHelper.unpackLink
 import okhttp3.Headers.Companion.toHeaders

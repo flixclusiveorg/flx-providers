@@ -5,14 +5,14 @@ import android.content.Context
 import android.webkit.CookieManager
 import android.webkit.WebSettings
 import android.widget.Toast
-import com.flixclusive.core.ui.common.util.showToast
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers.Companion.runOnDefault
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers.Companion.runOnMain
+import com.flixclusive.core.util.android.showToast
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.runOnDefault
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.runOnMain
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
-import com.flixclusive.core.util.network.USER_AGENT
-import com.flixclusive.core.util.network.WebViewInterceptor
+import com.flixclusive.core.util.network.okhttp.UserAgentManager
+import com.flixclusive.core.util.network.okhttp.WebViewInterceptor
 import com.flxProviders.superstream.api.util.CookieHelper.getValue
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
@@ -74,7 +74,8 @@ internal class CloudflareWebViewInterceptor(
             try {
                 response.close()
                 runOnMain {
-                    settings.userAgentString = request.header("user-agent") ?: USER_AGENT
+                    settings.userAgentString = request.header("user-agent")
+                        ?: UserAgentManager.getRandomUserAgent()
                 }
 
                 val cloudflareUrl = request.url.toString()

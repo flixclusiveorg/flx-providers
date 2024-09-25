@@ -1,8 +1,8 @@
 package com.flxProviders.flixhq.extractors.rabbitstream.dto
 
-import com.flixclusive.core.util.network.fromJson
-import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.model.provider.SubtitleSource
+import com.flixclusive.core.util.network.json.fromJson
+import com.flixclusive.model.provider.link.Subtitle
+import com.flixclusive.model.provider.link.SubtitleSource
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement

@@ -1,6 +1,5 @@
 package com.flxProviders.superstream.api.settings
 
-import android.content.res.Resources
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -42,10 +41,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.flixclusive.core.ui.common.util.showToast
+import com.flixclusive.core.util.android.showToast
 import com.flixclusive.provider.settings.ProviderSettings
-import com.flxProviders.superstream.api.settings.util.DrawableUtil.getBitmapFromImage
-import com.flxProviders.superstream.api.settings.util.DrawableUtil.getDrawable
+import com.flixclusive.provider.util.res.painterResource
+import com.flxProviders.superstream.BuildConfig
 import kotlin.math.roundToInt
 
 private fun getTokenStatusLabel(
@@ -71,7 +70,6 @@ private fun getTokenStatusLabel(
 @Composable
 internal fun GetTokenScreen(
     settings: ProviderSettings,
-    resources: Resources,
 ) {
     val context = LocalContext.current
     var tokenStatus by remember {
@@ -189,17 +187,13 @@ internal fun GetTokenScreen(
                 modifier = Modifier
                     .height(60.dp)
             ) {
-                val refreshIcon = remember {
-                    resources.getDrawable("refresh")
-                        ?.getBitmapFromImage()
-                }
-
-                if (refreshIcon != null) {
-                    Icon(
-                        bitmap = refreshIcon,
-                        contentDescription = "Refresh"
-                    )
-                }
+                Icon(
+                    painter = painterResource(
+                        name = "refresh",
+                        packageName = BuildConfig.LIBRARY_PACKAGE_NAME
+                    ),
+                    contentDescription = "Refresh"
+                )
             }
         }
     }

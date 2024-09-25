@@ -1,14 +1,14 @@
 package com.flxProviders.sudoflix.api.ridomovies.extractor
 
 import com.flixclusive.core.util.coroutines.mapAsync
-import com.flixclusive.core.util.network.CryptographyUtil
-import com.flixclusive.core.util.network.asJsoup
-import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.Flag
-import com.flixclusive.model.provider.MediaLink
-import com.flixclusive.model.provider.Stream
-import com.flixclusive.model.provider.Subtitle
-import com.flixclusive.model.provider.SubtitleSource
+import com.flixclusive.core.util.network.Crypto
+import com.flixclusive.core.util.network.jsoup.asJsoup
+import com.flixclusive.core.util.network.okhttp.request
+import com.flixclusive.model.provider.link.Flag
+import com.flixclusive.model.provider.link.MediaLink
+import com.flixclusive.model.provider.link.Stream
+import com.flixclusive.model.provider.link.Subtitle
+import com.flixclusive.model.provider.link.SubtitleSource
 import com.flixclusive.provider.extractor.EmbedExtractor
 import com.flxProviders.sudoflix.api.ridomovies.RidoMoviesConstant.RIDO_MOVIES_BASE_URL
 import com.flxProviders.sudoflix.api.util.JsUnpacker
@@ -67,7 +67,7 @@ internal class CloseLoad(
         val base64EncodedUrl = matchResult?.groups?.get(2)?.value
             ?: throw NullPointerException("[$name]> Unable to find source url")
 
-        val sourceUrl = CryptographyUtil.base64Decode(base64EncodedUrl)
+        val sourceUrl = Crypto.base64Decode(base64EncodedUrl)
 
         onLinkFound(
             Stream(

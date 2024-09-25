@@ -1,8 +1,8 @@
 package com.flxProviders.stremio.api.model
 
-import com.flixclusive.model.provider.Flag
-import com.flixclusive.model.provider.Stream
-import com.flixclusive.model.provider.Subtitle
+import com.flixclusive.model.provider.link.Flag
+import com.flixclusive.model.provider.link.Stream
+import com.flixclusive.model.provider.link.Subtitle
 import com.flxProviders.stremio.api.util.isValidUrl
 import com.google.gson.annotations.SerializedName
 import java.net.URL

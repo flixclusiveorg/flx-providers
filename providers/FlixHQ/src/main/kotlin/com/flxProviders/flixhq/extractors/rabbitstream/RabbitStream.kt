@@ -4,11 +4,11 @@ import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.coroutines.mapIndexedAsync
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.network.CryptographyUtil.decryptAes
-import com.flixclusive.core.util.network.fromJson
-import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.MediaLink
-import com.flixclusive.model.provider.Stream
+import com.flixclusive.core.util.network.Crypto.decryptAes
+import com.flixclusive.core.util.network.json.fromJson
+import com.flixclusive.core.util.network.okhttp.request
+import com.flixclusive.model.provider.link.MediaLink
+import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.provider.extractor.EmbedExtractor
 import com.flxProviders.flixhq.extractors.rabbitstream.dto.DecryptedSource
 import com.flxProviders.flixhq.extractors.rabbitstream.dto.VidCloudEmbedData

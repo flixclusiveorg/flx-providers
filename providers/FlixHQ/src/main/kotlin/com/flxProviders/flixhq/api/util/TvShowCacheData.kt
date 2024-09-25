@@ -1,6 +1,6 @@
 package com.flxProviders.flixhq.api.util
 
-import com.flixclusive.model.tmdb.FilmDetails
+import com.flixclusive.model.film.FilmDetails
 import org.jsoup.select.Elements
 
 /**

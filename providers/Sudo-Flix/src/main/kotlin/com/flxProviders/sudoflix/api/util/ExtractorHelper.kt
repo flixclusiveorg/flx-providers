@@ -1,8 +1,8 @@
 package com.flxProviders.sudoflix.api.util
 
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.Stream
+import com.flixclusive.core.util.network.okhttp.request
+import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.provider.extractor.EmbedExtractor
 import okhttp3.Headers
 import okhttp3.OkHttpClient

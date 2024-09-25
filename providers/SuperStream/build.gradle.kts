@@ -1,6 +1,6 @@
-import com.flixclusive.gradle.entities.Language
-import com.flixclusive.gradle.entities.ProviderType
-import com.flixclusive.gradle.entities.Status
+import com.flixclusive.model.provider.Language
+import com.flixclusive.model.provider.ProviderType
+import com.flixclusive.model.provider.Status
 import org.jetbrains.kotlin.konan.properties.Properties
 
 dependencies {
@@ -56,7 +56,7 @@ flxProvider {
     versionMajor = 1
     versionMinor = 5
     versionPatch = 0
-    versionBuild = 0
+    versionBuild = 1
 
     iconUrl.set("https://i.imgur.com/KgMakl9.png") // OPTIONAL
 

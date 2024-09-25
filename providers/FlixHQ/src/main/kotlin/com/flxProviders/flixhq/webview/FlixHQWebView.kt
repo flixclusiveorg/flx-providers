@@ -7,16 +7,17 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import com.flixclusive.core.network.util.okhttp.UserAgentManager
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers.Companion.withIOContext
-import com.flixclusive.core.util.common.dispatcher.AppDispatchers.Companion.withMainContext
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withDefaultContext
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withMainContext
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.infoLog
-import com.flixclusive.core.util.network.fromJson
-import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.MediaLink
-import com.flixclusive.model.tmdb.FilmDetails
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.core.util.network.json.fromJson
+import com.flixclusive.core.util.network.okhttp.UserAgentManager
+import com.flixclusive.core.util.network.okhttp.request
+import com.flixclusive.model.film.FilmDetails
+import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.provider.link.MediaLink
 import com.flixclusive.provider.webview.ProviderWebView
 import com.flxProviders.flixhq.api.FlixHQApi
 import com.flxProviders.flixhq.api.dto.FlixHQInitialSourceData
@@ -24,10 +25,7 @@ import com.flxProviders.flixhq.extractors.rabbitstream.dto.VidCloudKey
 import com.flxProviders.flixhq.webview.util.INJECTOR_SCRIPT
 import com.flxProviders.flixhq.webview.util.getMediaId
 import com.flxProviders.flixhq.webview.util.setup
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import okhttp3.OkHttpClient
 import java.net.URLDecoder
@@ -38,7 +36,6 @@ import kotlin.time.Duration.Companion.seconds
 class FlixHQWebView(
     private val mClient: OkHttpClient,
     private val api: FlixHQApi,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     context: Context,
 ) : ProviderWebView(context) {
     override val isHeadless = true
@@ -107,11 +104,11 @@ class FlixHQWebView(
         onLinkFound: (MediaLink) -> Unit
     ) {
         infoLog("[FHQWebView] Getting links for ${film.title}")
-        val watchIdToUse = withContext(ioDispatcher) {
+        val watchIdToUse = withIOContext {
             api.getMediaId(film = film)
         } ?: throw Exception("Can't find watch id!")
 
-        val servers = withContext(ioDispatcher) {
+        val servers = withIOContext {
             api.getEpisodeIdAndServers(
                 watchId = watchIdToUse,
                 episode = episode?.number,
@@ -135,7 +132,7 @@ class FlixHQWebView(
                 ).execute().body?.string()
             } ?: throw Exception("Can't find decryption key!")
 
-            val serverUrl = withIOContext {
+            val serverUrl = withDefaultContext {
                 URLDecoder.decode(
                     fromJson<FlixHQInitialSourceData>(initialSourceData).link,
                     "UTF-8"

@@ -2,6 +2,7 @@
 
 package com.flxProviders.stremio.settings
 
+import android.util.TypedValue
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -27,14 +28,25 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.ResourceResolutionException
+import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.ui.common.util.showToast
+import com.flixclusive.core.util.android.showToast
 import com.flixclusive.provider.settings.ProviderSettings
+import com.flixclusive.provider.util.res.LocalResources
+import com.flixclusive.provider.util.res.ProviderNoResourceFoundException
+import com.flixclusive.provider.util.res.painterResource
+import com.flixclusive.provider.util.res.stringResource
+import com.flxProviders.stremio.BuildConfig
 import com.flxProviders.stremio.api.model.Addon
 import com.flxProviders.stremio.settings.util.AddonUtil.downloadAddon
 import com.flxProviders.stremio.settings.util.AddonUtil.getAddons
@@ -45,8 +57,6 @@ import com.flxProviders.stremio.settings.util.Success
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
-import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
 
 @Composable
 internal fun StreamioScreen(
@@ -175,8 +185,11 @@ internal fun StreamioScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        painter = painterResource(id = UiCommonR.drawable.round_add_24),
-                        contentDescription = stringResource(UtilR.string.add_provider)
+                        painter = painterResource("add", BuildConfig.LIBRARY_PACKAGE_NAME),
+                        contentDescription = stringResource(
+                            name = "add_addon_icon_content_desc",
+                            packageName = BuildConfig.LIBRARY_PACKAGE_NAME
+                        )
                     )
 
                     Text("Add stremio addon")
@@ -195,5 +208,42 @@ internal fun StreamioScreen(
                 editAddon = null
             }
         )
+    }
+}
+
+@Composable
+fun spainterResource(name: String, packageName: String): Painter {
+    val res = LocalResources.current
+    val context = LocalContext.current
+
+    val id = res.getIdentifier(name, "drawable", packageName)
+    if (id == 0) {
+        throw ProviderNoResourceFoundException(
+            name = name,
+            type = "drawable"
+        )
+    }
+
+    val value = remember { TypedValue() }
+    res.getValue(id, value, true)
+    val path = value.string
+
+    return if (path?.endsWith(".xml") == true) {
+        val imageVector = remember(id, res, res.configuration) {
+            ImageVector.vectorResource(null, res, id)
+        }
+
+        rememberVectorPainter(imageVector)
+    } else {
+        // Otherwise load the bitmap resource
+        val imageBitmap = remember(path, id, context.theme) {
+            try {
+                ImageBitmap.imageResource(res, id)
+            } catch (exception: Exception) {
+                throw ResourceResolutionException("Error attempting to load resource: $path", exception)
+            }
+        }
+
+        BitmapPainter(imageBitmap)
     }
 }

@@ -1,7 +1,7 @@
 package com.flxProviders.flixhq.api.util
 
-import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.model.tmdb.FilmSearchItem
+import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.film.FilmSearchItem
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.util.Locale

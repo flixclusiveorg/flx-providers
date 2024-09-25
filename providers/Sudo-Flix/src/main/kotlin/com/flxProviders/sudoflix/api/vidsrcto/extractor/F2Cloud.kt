@@ -1,9 +1,9 @@
 package com.flxProviders.sudoflix.api.vidsrcto.extractor
 
-import com.flixclusive.core.util.network.CryptographyUtil.base64Encode
-import com.flixclusive.core.util.network.fromJson
-import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.MediaLink
+import com.flixclusive.core.util.network.Crypto.base64Encode
+import com.flixclusive.core.util.network.json.fromJson
+import com.flixclusive.core.util.network.okhttp.request
+import com.flixclusive.model.provider.link.MediaLink
 import com.flixclusive.provider.extractor.EmbedExtractor
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient

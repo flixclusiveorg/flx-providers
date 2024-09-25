@@ -1,8 +1,8 @@
 package com.flxProviders.sudoflix.api.ridomovies.extractor
 
-import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.MediaLink
-import com.flixclusive.model.provider.Stream
+import com.flixclusive.core.util.network.okhttp.request
+import com.flixclusive.model.provider.link.MediaLink
+import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.provider.extractor.EmbedExtractor
 import com.flxProviders.sudoflix.api.ridomovies.RidoMoviesConstant.RIDO_MOVIES_BASE_URL
 import okhttp3.Headers.Companion.toHeaders

@@ -2,14 +2,14 @@ package com.flxProviders.sudoflix.api
 
 import com.flixclusive.core.util.coroutines.mapAsync
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.film.filter.FilterList
-import com.flixclusive.model.provider.MediaLink
-import com.flixclusive.model.tmdb.FilmDetails
-import com.flixclusive.model.tmdb.FilmSearchItem
-import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.SearchResponseData
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.provider.filter.FilterList
+import com.flixclusive.model.provider.link.MediaLink
+import com.flixclusive.model.film.FilmDetails
+import com.flixclusive.model.film.FilmSearchItem
+import com.flixclusive.model.film.Movie
+import com.flixclusive.model.film.SearchResponseData
+import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.provider.Provider
 import com.flixclusive.provider.ProviderApi
 import com.flxProviders.sudoflix.api.nsbx.NsbxApi

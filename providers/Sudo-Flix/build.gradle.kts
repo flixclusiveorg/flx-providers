@@ -1,6 +1,6 @@
-import com.flixclusive.gradle.entities.Language
-import com.flixclusive.gradle.entities.ProviderType
-import com.flixclusive.gradle.entities.Status
+import com.flixclusive.model.provider.Language
+import com.flixclusive.model.provider.ProviderType
+import com.flixclusive.model.provider.Status
 
 flxProvider {
     description.set("""
@@ -23,7 +23,7 @@ flxProvider {
     versionMajor = 1
     versionMinor = 4
     versionPatch = 1
-    versionBuild = 0
+    versionBuild = 1
 
     // Extra authors for specific provider
      author(

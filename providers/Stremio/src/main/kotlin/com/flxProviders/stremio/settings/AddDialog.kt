@@ -39,16 +39,15 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.flixclusive.core.ui.common.util.createTextFieldValue
-import com.flixclusive.core.ui.common.util.onMediumEmphasis
-import com.flixclusive.core.ui.common.util.showToast
+import com.flixclusive.core.util.android.showToast
 import com.flixclusive.provider.settings.ProviderSettings
+import com.flixclusive.provider.util.res.painterResource
+import com.flixclusive.provider.util.res.stringResource
+import com.flxProviders.stremio.BuildConfig
 import com.flxProviders.stremio.api.model.Addon
 import com.flxProviders.stremio.settings.util.AddonUtil.addAddon
 import com.flxProviders.stremio.settings.util.AddonUtil.downloadAddon
@@ -56,11 +55,10 @@ import com.flxProviders.stremio.settings.util.AddonUtil.parseStremioAddonUrl
 import com.flxProviders.stremio.settings.util.Duplicate
 import com.flxProviders.stremio.settings.util.Failed
 import com.flxProviders.stremio.settings.util.Success
+import com.flxProviders.stremio.settings.util.createTextFieldValue
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
-import com.flixclusive.core.ui.common.R as UiCommonR
-import com.flixclusive.core.util.R as UtilR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -215,7 +213,7 @@ internal fun AddDialog(
                             Text(
                                 text = "Paste addon url",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = LocalContentColor.current.onMediumEmphasis(),
+                                color = LocalContentColor.current.copy(alpha = 0.6F),
                                 overflow = TextOverflow.Ellipsis,
                                 maxLines = 1
                             )
@@ -232,8 +230,11 @@ internal fun AddDialog(
                                     }
                                 ) {
                                     Icon(
-                                        painter = painterResource(UiCommonR.drawable.round_close_24),
-                                        contentDescription = stringResource(UtilR.string.clear_text_button)
+                                        painter = painterResource(
+                                            name = "close",
+                                            packageName = BuildConfig.LIBRARY_PACKAGE_NAME
+                                        ),
+                                        contentDescription = stringResource("clear_text_button_content_desc", BuildConfig.LIBRARY_PACKAGE_NAME)
                                     )
                                 }
                             }
@@ -245,7 +246,7 @@ internal fun AddDialog(
                     Button(
                         onClick = onClickAdd,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary.onMediumEmphasis(),
+                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6F),
                             contentColor = Color.White
                         ),
                         shape = MaterialTheme.shapes.medium,
@@ -267,7 +268,7 @@ internal fun AddDialog(
                         onClick = onDismiss,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.onMediumEmphasis()
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.6F)
                         ),
                         shape = MaterialTheme.shapes.medium,
                         modifier = Modifier
@@ -276,7 +277,7 @@ internal fun AddDialog(
                             .padding(5.dp)
                     ) {
                         Text(
-                            text = stringResource(id = UtilR.string.cancel),
+                            text = stringResource("cancel", BuildConfig.LIBRARY_PACKAGE_NAME),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Light
                         )

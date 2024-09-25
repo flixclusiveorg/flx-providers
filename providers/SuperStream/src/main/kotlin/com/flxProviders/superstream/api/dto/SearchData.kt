@@ -1,9 +1,9 @@
 package com.flxProviders.superstream.api.dto
 
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.model.tmdb.FilmSearchItem
-import com.flixclusive.model.tmdb.SearchResponseData
+import com.flixclusive.model.film.FilmSearchItem
+import com.flixclusive.model.film.SearchResponseData
+import com.flixclusive.model.film.util.FilmType
 import com.flxProviders.superstream.BuildConfig.SUPERSTREAM_FIRST_API
 import com.flxProviders.superstream.BuildConfig.SUPERSTREAM_FOURTH_API
 import com.google.gson.annotations.SerializedName

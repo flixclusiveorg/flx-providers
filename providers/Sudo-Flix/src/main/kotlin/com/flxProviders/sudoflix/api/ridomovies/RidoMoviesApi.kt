@@ -1,11 +1,11 @@
 package com.flxProviders.sudoflix.api.ridomovies
 
-import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.network.fromJson
-import com.flixclusive.core.util.network.request
-import com.flixclusive.model.provider.MediaLink
-import com.flixclusive.model.tmdb.FilmDetails
-import com.flixclusive.model.tmdb.common.tv.Episode
+import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.core.util.network.json.fromJson
+import com.flixclusive.core.util.network.okhttp.request
+import com.flixclusive.model.provider.link.MediaLink
+import com.flixclusive.model.film.FilmDetails
+import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.provider.Provider
 import com.flixclusive.provider.ProviderApi
 import com.flxProviders.sudoflix.api.ridomovies.RidoMoviesConstant.RIDO_MOVIES_BASE_URL

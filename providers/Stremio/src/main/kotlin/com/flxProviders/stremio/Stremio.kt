@@ -2,13 +2,11 @@ package com.flxProviders.stremio
 
 import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import com.flixclusive.provider.FlixclusiveProvider
 import com.flixclusive.provider.Provider
 import com.flixclusive.provider.ProviderApi
 import com.flxProviders.stremio.api.StremioApi
 import com.flxProviders.stremio.settings.StreamioScreen
-import com.flxProviders.stremio.settings.util.LocalResources
 import okhttp3.OkHttpClient
 
 
@@ -19,14 +17,10 @@ class Stremio : Provider() {
 
     @Composable
     override fun SettingsScreen() {
-        CompositionLocalProvider(
-            value = LocalResources provides resources!!
-        ) {
-            StreamioScreen(
-                settings = settings,
-                client = client
-            )
-        }
+        StreamioScreen(
+            settings = settings,
+            client = client
+        )
     }
 
     override fun getApi(

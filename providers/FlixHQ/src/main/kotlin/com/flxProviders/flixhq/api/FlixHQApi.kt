@@ -2,14 +2,14 @@ package com.flxProviders.flixhq.api
 
 import android.content.Context
 import com.flixclusive.core.util.coroutines.mapAsync
-import com.flixclusive.core.util.film.FilmType
-import com.flixclusive.core.util.film.filter.FilterList
-import com.flixclusive.core.util.network.request
-import com.flixclusive.model.tmdb.Film
-import com.flixclusive.model.tmdb.FilmDetails
-import com.flixclusive.model.tmdb.FilmSearchItem
-import com.flixclusive.model.tmdb.Movie
-import com.flixclusive.model.tmdb.SearchResponseData
+import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.provider.filter.FilterList
+import com.flixclusive.core.util.network.okhttp.request
+import com.flixclusive.model.film.Film
+import com.flixclusive.model.film.FilmDetails
+import com.flixclusive.model.film.FilmSearchItem
+import com.flixclusive.model.film.Movie
+import com.flixclusive.model.film.SearchResponseData
 import com.flixclusive.provider.Provider
 import com.flixclusive.provider.ProviderWebViewApi
 import com.flixclusive.provider.webview.ProviderWebView

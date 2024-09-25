@@ -4,9 +4,9 @@ import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMapNotNull
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.core.util.film.FilmType
+import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.model.provider.ProviderCatalog
-import com.flixclusive.model.tmdb.common.tv.Episode
 import com.flxProviders.stremio.settings.util.AddonUtil.DEFAULT_META_PROVIDER
 import com.flxProviders.stremio.settings.util.AddonUtil.toProviderCatalog
 
