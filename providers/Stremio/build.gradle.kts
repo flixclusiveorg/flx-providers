@@ -10,8 +10,7 @@ dependencies {
     // implementation( ... )
 
     // Comment if not implementing own SettingsScreen
-    val composeBom = platform("androidx.compose:compose-bom:2024.04.00")
-    implementation(composeBom)
+    // No need to specify the compose version explicitly
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.ui:ui")
@@ -43,13 +42,13 @@ flxProvider {
 
     changelog.set("""
         ### Fixes:
-        - Fixed settings screen not working when Stremio is disabled.
+        - update compose BOM to 2024.09.02
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 2
     versionPatch = 3
-    versionBuild = 1
+    versionBuild = 2
 
     // Extra authors for specific provider
     // author(

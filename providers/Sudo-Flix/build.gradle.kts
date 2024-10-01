@@ -10,20 +10,15 @@ flxProvider {
     """.trimIndent())
 
     changelog.set("""
-        # v1.4.0
+        # 1.4.1
         
-        Fixed some extractors:
-        - StreamWish
-        - FileLions
-        - MixDrop
-        - VTube (updated)
-        - CloseLoad (subtitles issue)
+        - update compose BOM to 2024.09.02
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 4
     versionPatch = 1
-    versionBuild = 1
+    versionBuild = 2
 
     // Extra authors for specific provider
      author(

@@ -1,5 +1,6 @@
 package com.flxProviders.stremio.settings.util
 
+import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withIOContext
 import com.flixclusive.core.util.exception.actualMessage
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
@@ -12,8 +13,6 @@ import com.flxProviders.stremio.api.STREMIO
 import com.flxProviders.stremio.api.model.Addon
 import com.flxProviders.stremio.api.model.Catalog
 import com.google.gson.Gson
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 
 internal abstract class AddonAddResponse(
@@ -50,9 +49,10 @@ internal object AddonUtil {
     }
     
     suspend fun OkHttpClient.downloadAddon(url: String): Addon? {
-        val addon = withContext(Dispatchers.IO) {
+        val addon = withIOContext {
             getManifest(addonUrl = url)
         }
+
         if (addon == null) {
             return null
         }

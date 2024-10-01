@@ -5,9 +5,9 @@ import org.jetbrains.kotlin.konan.properties.Properties
 
 dependencies {
     implementation("androidx.core:core:1.13.1")
-    
-    val composeBom = platform("androidx.compose:compose-bom:2024.04.00")
-    implementation(composeBom)
+
+    // Comment if not implementing own SettingsScreen
+    // No need to specify the compose version explicitly
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.ui:ui")
@@ -46,17 +46,15 @@ flxProvider {
     """.trimIndent())
 
     changelog.set("""
-        # v1.4.2
+        # v1.5.0
         
-        ### 🔧 Changes:
-        - Fix CookieHelper error
-        - Fix outdated webview user agents
+        - update compose BOM to 2024.09.02
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 5
     versionPatch = 0
-    versionBuild = 1
+    versionBuild = 2
 
     iconUrl.set("https://i.imgur.com/KgMakl9.png") // OPTIONAL
 

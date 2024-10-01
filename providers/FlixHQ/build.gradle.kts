@@ -6,8 +6,7 @@ dependencies {
     implementation("androidx.core:core:1.13.1")
 
     // Comment if not implementing own SettingsScreen
-    val composeBom = platform("androidx.compose:compose-bom:2024.04.00")
-    implementation(composeBom)
+    // No need to specify the compose version explicitly
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.ui:ui")
@@ -34,14 +33,14 @@ flxProvider {
     """.trimIndent())
 
     changelog.set("""
-        # v1.0.2 - patch
-        Fix invalid user agents
+        # v1.0.3 - patch2
+        - update compose BOM to 2024.09.02
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 0
     versionPatch = 3
-    versionBuild = 1
+    versionBuild = 2
 
     iconUrl.set("https://i.imgur.com/LNtqPTi.png")
 

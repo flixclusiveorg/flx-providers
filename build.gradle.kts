@@ -75,7 +75,7 @@ subprojects {
         coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.2")
 
         val coreStubsModule = "com.github.flixclusiveorg.core-stubs:provider"
-        val coreStubsVersion = "1.1.1"
+        val coreStubsVersion = "1.2.0"
 
         // Stubs for all Flixclusive classes
         implementation("$coreStubsModule:$coreStubsVersion")
