@@ -1,4 +1,4 @@
-package com.flxProviders.superstream.api.settings
+package com.flxProviders.superstream.settings
 
 internal const val TOKEN_STATUS_KEY = "token_status"
 internal const val TOKEN_KEY = "token"

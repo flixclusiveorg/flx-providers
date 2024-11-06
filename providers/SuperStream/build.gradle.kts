@@ -14,6 +14,9 @@ dependencies {
     implementation("androidx.compose.runtime:runtime")
     // ================= END: COMPOSE UI =================
 
+    fatImplementation("org.bouncycastle:bcpkix-jdk15on:1.68")
+    testImplementation("org.bouncycastle:bcpkix-jdk15on:1.68")
+
 }
 
 android {
@@ -33,28 +36,30 @@ android {
         buildConfigField("String", "SUPERSTREAM_SECOND_API", "\"${properties.getProperty("SUPERSTREAM_SECOND_API")}\"")
         buildConfigField("String", "SUPERSTREAM_THIRD_API", "\"${properties.getProperty("SUPERSTREAM_THIRD_API")}\"")
         buildConfigField("String", "SUPERSTREAM_FOURTH_API", "\"${properties.getProperty("SUPERSTREAM_FOURTH_API")}\"")
+        buildConfigField("String", "SUPERSTREAM_FIFTH_API", "\"${properties.getProperty("SUPERSTREAM_FIFTH_API")}\"")
     }
 }
 
 flxProvider {
     description.set("""
         REMINDER: This provider needs configuration to work!! Go to its provider settings and configure it there.
-
-        REMINDER (again): This provider has cloudflare and will eventually prompt up WebView requests to solve CF challenges.
         
         A classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.
     """.trimIndent())
 
     changelog.set("""
-        # v1.5.0
+        # v1.6.0
         
-        - update compose BOM to 2024.09.02
+        - revert + update `getLinks` logic.
+        - no more WebView Cloudflare interaction.
+        
+        **this might be my last update :')**
     """.trimIndent())
 
     versionMajor = 1
-    versionMinor = 5
+    versionMinor = 6
     versionPatch = 0
-    versionBuild = 2
+    versionBuild = 0
 
     iconUrl.set("https://i.imgur.com/KgMakl9.png") // OPTIONAL
 

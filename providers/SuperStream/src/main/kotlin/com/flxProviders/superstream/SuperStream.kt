@@ -6,12 +6,11 @@ import com.flixclusive.provider.FlixclusiveProvider
 import com.flixclusive.provider.Provider
 import com.flixclusive.provider.ProviderApi
 import com.flxProviders.superstream.api.SuperStreamApi
-import com.flxProviders.superstream.api.settings.GetTokenScreen
+import com.flxProviders.superstream.settings.GetTokenScreen
 import okhttp3.OkHttpClient
 
 @FlixclusiveProvider
 class SuperStream : Provider() {
-
     @Composable
     override fun SettingsScreen() {
         GetTokenScreen(settings = settings)
@@ -24,6 +23,7 @@ class SuperStream : Provider() {
         return SuperStreamApi(
             client = client,
             provider = this,
+            resources = resources!!,
             settings = settings,
             context = context
         )

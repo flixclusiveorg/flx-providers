@@ -1,4 +1,4 @@
-package com.flxProviders.superstream.api.settings
+package com.flxProviders.superstream.settings
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn

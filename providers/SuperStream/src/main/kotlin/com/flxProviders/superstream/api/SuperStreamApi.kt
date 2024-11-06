@@ -1,12 +1,10 @@
 package com.flxProviders.superstream.api
 
 import android.content.Context
-import com.flixclusive.core.util.coroutines.AppDispatchers.Companion.withMainContext
+import android.content.res.Resources
 import com.flixclusive.core.util.coroutines.asyncCalls
 import com.flixclusive.core.util.coroutines.mapAsync
-import com.flixclusive.core.util.coroutines.mapIndexedAsync
 import com.flixclusive.core.util.network.json.fromJson
-import com.flixclusive.core.util.network.okhttp.WebViewInterceptor.Companion.addWebViewInterceptor
 import com.flixclusive.core.util.network.okhttp.request
 import com.flixclusive.model.film.Film
 import com.flixclusive.model.film.FilmDetails
@@ -14,6 +12,7 @@ import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.SearchResponseData
 import com.flixclusive.model.film.common.tv.Episode
+import com.flixclusive.model.film.util.FilmType
 import com.flixclusive.model.provider.link.MediaLink
 import com.flixclusive.model.provider.link.Stream
 import com.flixclusive.model.provider.link.Subtitle
@@ -26,20 +25,30 @@ import com.flxProviders.superstream.BuildConfig
 import com.flxProviders.superstream.api.dto.BoxType
 import com.flxProviders.superstream.api.dto.ExternalResponse
 import com.flxProviders.superstream.api.dto.ExternalSources
-import com.flxProviders.superstream.api.dto.ITEMS_PER_PAGE
 import com.flxProviders.superstream.api.dto.SearchData
-import com.flxProviders.superstream.api.dto.SearchData.Companion.toSearchResponseData
-import com.flxProviders.superstream.api.settings.TOKEN_KEY
-import com.flxProviders.superstream.api.util.CloudflareWebViewInterceptor
+import com.flxProviders.superstream.api.dto.old.CommonResponse
+import com.flxProviders.superstream.api.dto.old.MediaMetadata
+import com.flxProviders.superstream.api.dto.old.MediaMetadata.Companion.toFilmDetails
+import com.flxProviders.superstream.api.util.ResourceUtil.getRawFileInputStream
+import com.flxProviders.superstream.api.util.old.CLIENT_CA4_NAME
+import com.flxProviders.superstream.api.util.old.CLIENT_CA_NAME
+import com.flxProviders.superstream.api.util.old.CLIENT_CERT_NAME
+import com.flxProviders.superstream.api.util.old.CLIENT_KEY_NAME
+import com.flxProviders.superstream.api.util.old.Constants.APP_ID
+import com.flxProviders.superstream.api.util.old.Constants.APP_VERSION
+import com.flxProviders.superstream.api.util.old.CustomCertificateClient
+import com.flxProviders.superstream.api.util.old.SuperStreamUtil.getExpiryDate
+import com.flxProviders.superstream.api.util.old.SuperStreamUtil.raiseOnError
+import com.flxProviders.superstream.api.util.old.SuperStreamUtil.superStreamCall
+import com.flxProviders.superstream.settings.TOKEN_KEY
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.OkHttpClient
 import org.jsoup.Jsoup
-import java.util.Locale
-import kotlin.random.Random
 
 class SuperStreamApi(
     client: OkHttpClient,
     provider: Provider,
+    resources: Resources,
     val context: Context,
     private val settings: ProviderSettings
 ) : ProviderApi(client, provider) {
@@ -48,6 +57,24 @@ class SuperStreamApi(
 
     private val tokenHeaders: Map<String, String>
         get() = mapOf("Cookie" to "ui=$token")
+
+    private val specialClient: OkHttpClient
+
+    init {
+        val certStream = getRawFileInputStream(resources, CLIENT_CERT_NAME)
+        val keyStream = getRawFileInputStream(resources, CLIENT_KEY_NAME)
+        val caStream = getRawFileInputStream(resources, CLIENT_CA_NAME)
+        val ca4Stream = getRawFileInputStream(resources, CLIENT_CA4_NAME)
+
+        val certificateClient = CustomCertificateClient()
+
+        specialClient = certificateClient.createOkHttpClient(
+            clientCertStream = certStream,
+            caCertStreams = listOf(caStream, ca4Stream),
+            privateKeyInputStream = keyStream,
+            privateKeyPassword = null
+        )
+    }
 
     override val testFilm: FilmDetails
         get() = Movie(
@@ -84,24 +111,39 @@ class SuperStreamApi(
         tmdbId: Int?,
         filters: FilterList,
     ): SearchResponseData<FilmSearchItem> {
-        val query = imdbId ?: title
-        val apiQuery = String.format(
-            Locale.ROOT,
-            BuildConfig.SUPERSTREAM_THIRD_API,
-            query,
-            page,
-            ITEMS_PER_PAGE,
-            Random.nextInt(0, Int.MAX_VALUE)
+        val itemsPerPage = 20
+        val apiQuery =
+            // Originally 8 pagelimit
+            """{"childmode":"0","app_version":"$APP_VERSION","appid":"$APP_ID","module":"Search3","channel":"Website","page":"$page","lang":"en","type":"all","keyword":"${imdbId ?: title}","pagelimit":"$itemsPerPage","expired_date":"${getExpiryDate()}","platform":"android"}"""
+
+        val response = specialClient.superStreamCall<SearchData>(query = apiQuery)
+
+        val mappedItems = response?.results?.map {
+            it.toFilmSearchItem(
+                provider = provider.name,
+                imdbId = imdbId,
+                tmdbId = tmdbId
+            )
+        } ?: throw NullPointerException("Cannot search on SuperStream")
+
+        return SearchResponseData(
+            page = page,
+            results = mappedItems,
+            hasNextPage = (page * itemsPerPage) < response.total
         )
-
-        val response = client.request(apiQuery).execute()
-            .fromJson<SearchData>("[${provider.name}] Couldn't search for $query")
-
-        return response.toSearchResponseData(provider.name)
     }
 
     override suspend fun getFilmDetails(film: Film): FilmDetails {
-        throw NotImplementedError("Not yet implemented. Please come back soon for future updates.")
+        val apiQuery = if (film.filmType == FilmType.MOVIE) {
+            """{"childmode":"0","uid":"","app_version":"$APP_VERSION","appid":"$APP_ID","module":"Movie_detail","channel":"Website","mid":"${film.id}","lang":"en","expired_date":"${getExpiryDate()}","platform":"android","oss":"","group":""}"""
+        } else {
+            """{"childmode":"0","uid":"","app_version":"$APP_VERSION","appid":"$APP_ID","module":"TV_detail_1","display_all":"1","channel":"Website","lang":"en","expired_date":"${getExpiryDate()}","platform":"android","tid":"${film.id}"}"""
+        }
+
+        val response = specialClient.superStreamCall<CommonResponse<MediaMetadata>>(apiQuery)
+        response?.msg?.raiseOnError("Failed to fetch movie info.")
+
+        return response?.data!!.toFilmDetails()
     }
 
     private suspend fun getSourceLinksFromFourthApi(
@@ -111,32 +153,48 @@ class SuperStreamApi(
         season: Int?,
         onLinkFound: (MediaLink) -> Unit
     ) {
-        val shareKey = fetchShareKey(watchId, filmType)
+        val shareKey = fetchShareKey(
+            watchId = watchId, filmType = filmType
+        )
         val sharedResources = fetchSharedResources(shareKey)
-        val files = fetchFiles(sharedResources, season, episode, shareKey)
-        val cleanedFiles = cleanFiles(files, shareKey)
+        val files = fetchFiles(
+            sharedResources = sharedResources,
+            season = season,
+            episode = episode,
+            shareKey = shareKey
+        )
+        val cleanedFiles = cleanFiles(
+            files = files, shareKey = shareKey
+        )
 
-        processFiles(cleanedFiles, shareKey, onLinkFound)
+        processFiles(
+            cleanedFiles = cleanedFiles,
+            shareKey = shareKey,
+            onLinkFound = onLinkFound
+        )
     }
 
-    private suspend fun fetchShareKey(watchId: String, filmType: BoxType): String {
-        val interceptor = withMainContext {
-            CloudflareWebViewInterceptor(context)
-        }
+    private fun fetchShareKey(watchId: String, filmType: BoxType): String {
+//        val interceptor = withMainContext {
+//            CloudflareWebViewInterceptor(context)
+//        }
 
+//        val url =
+//            "${BuildConfig.SUPERSTREAM_FIRST_API}/index/share_link?id=$watchId&type=${filmType.value}"
         val url =
-            "${BuildConfig.SUPERSTREAM_FIRST_API}/index/share_link?id=$watchId&type=${filmType.value}"
-        return client
-            .addWebViewInterceptor(interceptor)
+            "${BuildConfig.SUPERSTREAM_SECOND_API}/mbp/to_share_page?box_type=${filmType.value}&mid=$watchId&json=1"
+
+        val response = client
+//            .addWebViewInterceptor(interceptor)
             .request(url)
             .execute()
-            .use { response ->
-                val string = response.body?.string()
-                requireNotNull(string) { "[${provider.name}] Failed to fetch share key." }
-                fromJson<ExternalResponse>(string)
-                    .data?.link?.substringAfterLast("/")
-                    ?: throw Exception("[${provider.name}] No share key found.")
-            }
+
+        val parsedResponse = response.fromJson<ExternalResponse>(
+            errorMessage = "[${provider.name}] Failed to fetch share key."
+        )
+
+        return parsedResponse.data?.link?.substringAfterLast("/")
+            ?: throw Exception("[${provider.name}] No share key found.")
     }
 
     private fun fetchSharedResources(shareKey: String): ExternalResponse.Data {
@@ -153,11 +211,16 @@ class SuperStreamApi(
         season: Int?,
         episode: Int?,
         shareKey: String
-    ): List<ExternalResponse.Data.FileList> {
+    ): List<ExternalResponse.Data.StreamFile> {
         return if (season == null) {
-            sharedResources.fileList
+            sharedResources.files
         } else {
-            fetchSeasonFiles(sharedResources, season, episode!!, shareKey)
+            fetchSeasonFiles(
+                sharedResources = sharedResources,
+                season = season,
+                episode = episode!!,
+                shareKey = shareKey
+            )
         } ?: throw Exception("[${provider.name}] No FIDs found.")
     }
 
@@ -166,7 +229,7 @@ class SuperStreamApi(
         season: Int,
         episode: Int,
         shareKey: String
-    ): List<ExternalResponse.Data.FileList>? {
+    ): List<ExternalResponse.Data.StreamFile>? {
         val parentId = findSeasonParentId(sharedResources, season, shareKey)
         val url =
             "${BuildConfig.SUPERSTREAM_SECOND_API}/file/file_share_list?share_key=$shareKey&parent_id=$parentId&page=1"
@@ -176,8 +239,8 @@ class SuperStreamApi(
             .data ?: throw Exception("[${provider.name}] No shared resources found (Stage 2).")
 
         val (seasonSlug, episodeSlug) = getEpisodeSlug(season, episode)
-        return episodesShareRes.fileList?.filter {
-            it.fileName?.contains("s${seasonSlug}e${episodeSlug}", true) == true
+        return episodesShareRes.files?.filter {
+            it.fileName.contains("s${seasonSlug}e${episodeSlug}", true)
         }
     }
 
@@ -186,11 +249,11 @@ class SuperStreamApi(
         season: Int,
         shareKey: String
     ): Long {
-        var parentId = sharedResources.fileList
+        var parentId = sharedResources.files
             ?.find { it.fileName.equals("season $season", true) }?.fid
 
-        if (parentId == null && sharedResources.fileList?.isNotEmpty() == true) {
-            val subDirectoryId = sharedResources.fileList.first().fid
+        if (parentId == null && sharedResources.files?.isNotEmpty() == true) {
+            val subDirectoryId = sharedResources.files.first().fid
             parentId = fetchSubDirectorySeasonId(subDirectoryId, season, shareKey)
         }
 
@@ -207,15 +270,15 @@ class SuperStreamApi(
         return client.request(url)
             .execute()
             .fromJson<ExternalResponse>("[${provider.name}] Failed to fetch share key.")
-            .data?.fileList
+            .data?.files
             ?.find { it.fileName.equals("season $season", true) }?.fid
     }
 
     private suspend fun cleanFiles(
-        files: List<ExternalResponse.Data.FileList>,
+        files: List<ExternalResponse.Data.StreamFile>,
         shareKey: String
-    ): List<ExternalResponse.Data.FileList> {
-        val cleanedFiles = mutableListOf<ExternalResponse.Data.FileList>()
+    ): List<ExternalResponse.Data.StreamFile> {
+        val cleanedFiles = mutableListOf<ExternalResponse.Data.StreamFile>()
         files.mapAsync {
             if (it.isDirectory) {
                 val filesFromDirectory = fetchFilesFromDirectory(it.fid, shareKey)
@@ -230,31 +293,43 @@ class SuperStreamApi(
     private fun fetchFilesFromDirectory(
         fid: Long?,
         shareKey: String
-    ): List<ExternalResponse.Data.FileList> {
+    ): List<ExternalResponse.Data.StreamFile> {
         val url =
             "${BuildConfig.SUPERSTREAM_SECOND_API}/file/file_share_list?share_key=$shareKey&parent_id=$fid"
         val humanizedHeaders = mapOf("Accept-Language" to "en")
         return client.request(url, headers = humanizedHeaders.toHeaders())
             .execute()
             .fromJson<ExternalResponse>("[${provider.name}] Failed to fetch directory files.")
-            .data?.fileList
+            .data?.files
             ?: throw Exception("[${provider.name}] No files found on this directory.")
     }
 
     private suspend fun processFiles(
-        cleanedFiles: List<ExternalResponse.Data.FileList>,
+        cleanedFiles: List<ExternalResponse.Data.StreamFile>,
         shareKey: String,
         onLinkFound: (MediaLink) -> Unit
     ) {
-        cleanedFiles.mapAsync { fileList ->
+        cleanedFiles.forEach { fileList ->
             val playerUrl =
                 "${BuildConfig.SUPERSTREAM_SECOND_API}/file/player?fid=${fileList.fid}&share_key=$shareKey"
             val player = fetchPlayerContent(playerUrl)
             val (subtitles, sources, qualities) = extractPlayerData(player)
 
             asyncCalls(
-                { processSubtitles(subtitles, onLinkFound) },
-                { processSources(sources, qualities, onLinkFound) }
+                {
+                    processSubtitles(
+                        subtitles = subtitles,
+                        onLinkFound = onLinkFound
+                    )
+                },
+                {
+                    processSources(
+                        sources = sources,
+                        qualities = qualities,
+                        file = fileList,
+                        onLinkFound = onLinkFound
+                    )
+                }
             )
         }
     }
@@ -276,26 +351,33 @@ class SuperStreamApi(
         return Triple(subtitles, sources, qualities)
     }
 
-    private suspend fun processSubtitles(subtitles: String?, onLinkFound: (MediaLink) -> Unit) {
+    private fun processSubtitles(
+        subtitles: String?,
+        onLinkFound: (MediaLink) -> Unit
+    ) {
         if (subtitles == null) return
 
         val jsoupObject = Jsoup.parse(subtitles)
         val div = jsoupObject.selectFirst("div.right2") ?: return
         val languages = div.select("ul")
 
-        languages.mapAsync { languageElement ->
-            val language = languageElement.id()
+        languages.forEach { languageElement ->
+            val languageId = languageElement.id() ?: "UNKNOWN"
             val subtitleLinks = languageElement.select("li")
 
-            subtitleLinks.mapIndexedAsync { _, subtitleLink ->
+            subtitleLinks.forEach { subtitleLink ->
                 val link = subtitleLink.attr("data-url")
-                onLinkFound(
-                    Subtitle(
-                        language = language,
-                        url = link,
-                        type = SubtitleSource.ONLINE
-                    )
+                val fileName = subtitleLink.selectFirst("p")?.text() ?: "UNKNOWN SUBTITLE"
+                val subtitle = Subtitle(
+                    language = """
+                        Subtitle 🗯️: $fileName
+                        Language 🌐: $languageId
+                    """.trimIndent(),
+                    url = link,
+                    type = SubtitleSource.ONLINE
                 )
+
+                onLinkFound(subtitle)
             }
         }
     }
@@ -303,10 +385,11 @@ class SuperStreamApi(
     private suspend fun processSources(
         sources: String?,
         qualities: String?,
+        file: ExternalResponse.Data.StreamFile,
         onLinkFound: (MediaLink) -> Unit
     ) {
-        listOf(sources, qualities).mapAsync { item ->
-            if (item == null) return@mapAsync
+        listOf(sources, qualities).forEach topForEach@ { item ->
+            if (item == null) return@topForEach
 
             fromJson<List<ExternalSources>>(item).forEach { source ->
                 if (!source.label.equals("AUTO", true) && !source.type.equals(
@@ -319,7 +402,14 @@ class SuperStreamApi(
 
                 onLinkFound(
                     Stream(
-                        name = "[${provider.name}]> ${source.label}",
+                        name = """
+                            =< SuperStream >=
+                            Quality 👁️: ${source.label}
+                            File 📹: ${file.fileName}
+                            Size 💾: ${file.fileSize}
+                            Date ⌚: ${file.addedOn}
+                            =================
+                        """.trimIndent(),
                         url = url
                     )
                 )

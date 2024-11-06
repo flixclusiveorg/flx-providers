@@ -1,4 +1,4 @@
-package com.flxProviders.superstream.api.settings
+package com.flxProviders.superstream.settings
 
 import android.webkit.CookieManager
 import android.webkit.WebView

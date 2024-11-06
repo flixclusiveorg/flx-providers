@@ -13,5 +13,12 @@ enum class BoxType(val value: Int) {
                 FilmType.MOVIE -> Movies
             }
         }
+        fun toFilmType(type: Int): FilmType {
+            return when (type) {
+                1 -> FilmType.MOVIE
+                2 -> FilmType.TV_SHOW
+                else -> throw IllegalArgumentException("Invalid box type: $type")
+            }
+        }
     }
 }
