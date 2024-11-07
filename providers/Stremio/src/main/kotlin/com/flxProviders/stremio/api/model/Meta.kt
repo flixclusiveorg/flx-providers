@@ -1,7 +1,5 @@
 package com.flxProviders.stremio.api.model
 
-import com.flixclusive.model.film.util.FilmType
-import com.flixclusive.model.film.util.extractYear
 import com.flixclusive.model.film.FilmDetails
 import com.flixclusive.model.film.FilmSearchItem
 import com.flixclusive.model.film.Genre
@@ -9,6 +7,8 @@ import com.flixclusive.model.film.Movie
 import com.flixclusive.model.film.TvShow
 import com.flixclusive.model.film.common.tv.Episode
 import com.flixclusive.model.film.common.tv.Season
+import com.flixclusive.model.film.util.FilmType
+import com.flixclusive.model.film.util.extractYear
 import com.flxProviders.stremio.api.ADDON_SOURCE_KEY
 import com.flxProviders.stremio.api.MEDIA_TYPE_KEY
 import com.flxProviders.stremio.api.STREMIO
@@ -100,7 +100,8 @@ internal data class Meta(
     val episodes: List<Episode>
         get() {
             var episodeCount = 1
-            return videos?.mapNotNull {
+
+            val unsortedEpisodes = videos?.mapNotNull {
                 if ((it.season == null || it.episode == null) && type != "other")
                     return@mapNotNull null
 
@@ -118,7 +119,12 @@ internal data class Meta(
                     overview = it.overview ?: "",
                     airDate = released?.extractDate(),
                 )
-            } ?: emptyList()
+            }
+
+            val comparator = compareBy<Episode> { it.season }
+                .thenBy { it.number }
+
+            return unsortedEpisodes?.sortedWith(comparator) ?: emptyList()
         }
 
     val filmType: FilmType
