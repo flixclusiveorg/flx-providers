@@ -22,17 +22,17 @@ internal data class SearchItem(
     val poster: String? = null,
     val year: Int? = null,
 ) {
-    val rating: Double
+    private val rating: Double
         get() = imdbRating?.toDoubleOrNull() ?: 0.0
 
-    val filmType: FilmType
+    private val filmType: FilmType
         get() = when (boxType) {
             BoxType.Series.value -> FilmType.TV_SHOW
             BoxType.Movies.value -> FilmType.MOVIE
             else -> throw IllegalArgumentException("[SuperStream]> Unknown film type: $boxType")
         }
 
-    val homePage: String
+    private val homePage: String
         get() = "$SUPERSTREAM_FIRST_API/${filmType.type}/$id"
 
     fun toFilmSearchItem(
