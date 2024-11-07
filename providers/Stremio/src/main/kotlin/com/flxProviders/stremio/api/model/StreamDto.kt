@@ -23,36 +23,34 @@ internal data class StreamDto(
     val subtitles: List<Subtitle>? = null,
     @SerializedName("behaviorHints") val extraOptions: ExtraOptions? = null
 ) {
-    companion object {
-        fun StreamDto.toStreamLink(): Stream? {
-            val isValidUrl = isValidUrl(url)
-            if (!isValidUrl) return null
+    fun toStreamLink(): Stream? {
+        val isValidUrl = isValidUrl(url)
+        if (!isValidUrl) return null
 
-            val headers = (extraOptions?.headers ?: emptyMap()).plus(extraOptions?.proxyHeaders?.request ?: emptyMap())
+        val headers = (extraOptions?.headers ?: emptyMap()).plus(extraOptions?.proxyHeaders?.request ?: emptyMap())
 
-            return Stream(
-                url = URL(url).toString(),
-                name = fixSourceName(
-                    name = name,
-                    description = description,
-                    title = title
-                ),
-                flags = setOf(
-                    Flag.RequiresAuth(customHeaders = headers),
-                )
+        return Stream(
+            url = URL(url).toString(),
+            name = fixSourceName(
+                name = name,
+                description = description,
+                title = title
+            ),
+            flags = setOf(
+                Flag.RequiresAuth(customHeaders = headers),
             )
-        }
+        )
+    }
 
-        private fun fixSourceName(
-            name: String?,
-            description: String?,
-            title: String?
-        ): String {
-            return when {
-                name?.contains("[RD+]", true) == true -> "[RD+] $title".trim()
-                name?.contains("[RD download]", true) == true -> "[RD download] $title".trim()
-                else -> "${name?.trimIndent() ?: ""}\n${title?.trimIndent() ?: ""}\n${description?.trimIndent() ?: ""}"
-            }
+    private fun fixSourceName(
+        name: String?,
+        description: String?,
+        title: String?
+    ): String {
+        return when {
+            name?.contains("[RD+]", true) == true -> "[RD+] $title".trim()
+            name?.contains("[RD download]", true) == true -> "[RD download] $title".trim()
+            else -> "${name?.trimIndent() ?: ""}\n${title?.trimIndent() ?: ""}\n${description?.trimIndent() ?: ""}"
         }
     }
 }

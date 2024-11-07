@@ -42,13 +42,14 @@ flxProvider {
 
     changelog.set("""
         ### Fixes:
-        - update compose BOM to 2024.09.02
+        - Remove built-in opensubs-v3 addon
+        - Allow subtitles addons
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 2
-    versionPatch = 3
-    versionBuild = 2
+    versionPatch = 4
+    versionBuild = 0
 
     // Extra authors for specific provider
     // author(

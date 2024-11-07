@@ -28,6 +28,9 @@ internal data class Addon(
     val hasStream: Boolean
         get() = resources.has("stream")
 
+    val hasSubtitle: Boolean
+        get() = resources.has("subtitles")
+
     val hasMeta: Boolean
         get() = resources.has("meta")
 
