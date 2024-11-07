@@ -48,17 +48,18 @@ flxProvider {
     """.trimIndent())
 
     changelog.set("""
-        # v1.6.0
+        # v1.6.1
         
         - revert + update `getLinks` logic.
         - no more WebView Cloudflare interaction.
+        - fix TV shows support
         
         **this might be my last update :')**
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 6
-    versionPatch = 0
+    versionPatch = 1
     versionBuild = 0
 
     iconUrl.set("https://i.imgur.com/KgMakl9.png") // OPTIONAL
