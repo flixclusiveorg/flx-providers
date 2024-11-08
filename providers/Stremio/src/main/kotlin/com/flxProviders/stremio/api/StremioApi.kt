@@ -253,7 +253,7 @@ internal class StremioApi(
         val id = if (isFromStremio) watchId else imdbId
             ?: throw IllegalArgumentException("[$id]> IMDB ID should not be null!")
 
-        if (addonSourceName != null) {
+        if (addonSourceName != null && addonSourceName != DEFAULT_META_PROVIDER) {
             val addonSource = getAddonByName(name = addonSourceName)
             if (addonSource.hasStream) {
                 addonSource.getStream(
