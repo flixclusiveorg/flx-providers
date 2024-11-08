@@ -44,11 +44,12 @@ flxProvider {
         ### Fixes:
         - Remove built-in opensubs-v3 addon
         - Allow subtitles addons
+        - Fix default metadata loading (Cinemata)
     """.trimIndent())
 
     versionMajor = 1
     versionMinor = 2
-    versionPatch = 4
+    versionPatch = 5
     versionBuild = 0
 
     // Extra authors for specific provider

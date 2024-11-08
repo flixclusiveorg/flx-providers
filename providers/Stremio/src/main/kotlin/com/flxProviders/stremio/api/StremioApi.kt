@@ -159,7 +159,7 @@ internal class StremioApi(
                         .execute()
                         .fromJson<FetchCatalogResponse>()
                         .items?.mapAsync {
-                            it.toFilmSearchItem(addonName = addon.name)
+                            it.toFilmSearchItem(addonName = catalog.addonSource)
                         }
                 } ?: emptyList()
 
@@ -176,21 +176,33 @@ internal class StremioApi(
 
     override suspend fun getFilmDetails(film: Film): FilmDetails {
         val nameKey = "${film.id}=${film.title}"
+        val actualId = film.imdbId ?: film.id
 
         val addonSource = film.customProperties[ADDON_SOURCE_KEY]
             ?: throw IllegalArgumentException("[$nameKey]> Addon source must not be null!")
         val type = film.customProperties[MEDIA_TYPE_KEY]
             ?: throw IllegalArgumentException("[$nameKey]> Media type must not be null!")
 
-        val addon = getAddonByName(name = addonSource)
-        if (!addon.hasMeta && film.hasImdbId) {
+        if (addonSource == DEFAULT_META_PROVIDER) {
             return getFilmDetailsFromDefaultMetaProvider(
-                id = film.imdbId!!,
+                id = actualId,
                 type = type,
                 nameKey = nameKey
             )
-        } else if (!addon.hasMeta)
-            throw IllegalArgumentException("[${addonSource}]> Addon has no metadata resource!")
+        }
+
+        val addon = getAddonByName(name = addonSource)
+        require(addon.hasMeta || film.hasImdbId) {
+            "[$nameKey]> Addon has no metadata resource!"
+        }
+
+        if (!addon.hasMeta && film.hasImdbId) {
+            return getFilmDetailsFromDefaultMetaProvider(
+                id = actualId,
+                type = type,
+                nameKey = nameKey
+            )
+        }
 
         val url = "${addon.baseUrl}/meta/$type/${film.identifier}.json"
         return getFilmDetails(
@@ -368,10 +380,14 @@ internal class StremioApi(
     }
 
     private suspend fun getFilmDetailsFromDefaultMetaProvider(
-        id: String,
+        id: String?,
         type: String,
         nameKey: String
     ): FilmDetails {
+        require(id != null) {
+            "[$nameKey]> IMDB ID must not be null!"
+        }
+
         val url = "$DEFAULT_META_PROVIDER_BASE_URL/meta/$type/$id.json"
 
         return getFilmDetails(
