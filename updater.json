@@ -16,7 +16,7 @@
                 "socialLink": "https://github.com/rhenwinch"
             }
         ],
-        "id": "819b0139a504ebc",
+        "id": "638c5853b43a813",
         "versionCode": 10302,
         "description": "NOTICE: This provider uses WebView to scrape content. This might lag.\n\nStream seamlessly in adjustable HD resolution (1080p) with blazing-fast loading speeds. Offers HLS media.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/FlixHQ.flx",
@@ -41,12 +41,12 @@
                 "socialLink": "https://github.com/rhenwinch"
             }
         ],
-        "id": "6698088d28730d3",
-        "versionCode": 12400,
+        "id": "198cb43d881fd69",
+        "versionCode": 12500,
         "description": "A flixclusive adapter for Stremio addons. Torrent addons, such as Torrentio, don't work without debrid accounts.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/Stremio.flx",
-        "changelog": "### Fixes:\n- Remove built-in opensubs-v3 addon\n- Allow subtitles addons",
-        "versionName": "1.2.4",
+        "changelog": "### Fixes:\n- Remove built-in opensubs-v3 addon\n- Allow subtitles addons\n- Fix default metadata loading (Cinemata)",
+        "versionName": "1.2.5",
         "name": "Stremio"
     },
     {
@@ -70,7 +70,7 @@
                 "socialLink": "https://github.com/sussy-code"
             }
         ],
-        "id": "b4d1a3bc73e98fd",
+        "id": "5ef6fc6c75462f4",
         "versionCode": 14102,
         "description": "A forked clone of the old movie-web.\n\nThis is a set of providers. All source code references belong to sudo-flix.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/Sudo-Flix.flx",
@@ -95,7 +95,7 @@
                 "socialLink": "https://github.com/rhenwinch"
             }
         ],
-        "id": "e3fb345fee43580",
+        "id": "3ff2ec09676ae86",
         "versionCode": 16100,
         "description": "REMINDER: This provider needs configuration to work!! Go to its provider settings and configure it there.\n\nA classic streaming service with a large library of movies and TV shows, some even in 4K. Majority of the content included on this provider offers non-HLS streaming.",
         "buildUrl": "https://raw.githubusercontent.com/Flixclusive/flx-providers/builds/SuperStream.flx",
