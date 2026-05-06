@@ -1,18 +1,23 @@
 package com.flxProviders.stremio.api.model
 
-import com.flixclusive.model.film.FilmDetails
-import com.flixclusive.model.film.FilmSearchItem
-import com.flixclusive.model.film.Genre
-import com.flixclusive.model.film.Movie
-import com.flixclusive.model.film.TvShow
-import com.flixclusive.model.film.common.tv.Episode
-import com.flixclusive.model.film.common.tv.Season
-import com.flixclusive.model.film.util.FilmType
-import com.flixclusive.model.film.util.extractYear
+import androidx.compose.ui.util.fastMap
+import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.Movie
+import com.flixclusive.model.media.PartialMedia
+import com.flixclusive.model.media.Show
+import com.flixclusive.model.media.common.Genre
+import com.flixclusive.model.media.common.MediaIdSource
+import com.flixclusive.model.media.common.MediaType
+import com.flixclusive.model.media.common.tv.Episode
+import com.flixclusive.model.media.common.tv.Season
 import com.flxProviders.stremio.api.ADDON_SOURCE_KEY
 import com.flxProviders.stremio.api.MEDIA_TYPE_KEY
-import com.flxProviders.stremio.api.STREMIO
-import com.google.gson.annotations.SerializedName
+import com.flxProviders.stremio.api.util.toMs
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonNames
+import kotlin.time.Clock
 
 /**
  * This key/property is for Debrid caches that has the type of _other_
@@ -20,6 +25,7 @@ import com.google.gson.annotations.SerializedName
 internal const val EMBEDDED_STREAM_KEY = "embedded_stream_key"
 internal const val EMBEDDED_IMDB_ID_KEY = "embedded_imdb_id_key"
 
+@Serializable
 internal data class Meta(
     val id: String,
     val type: String,
@@ -28,15 +34,15 @@ internal data class Meta(
     val poster: String? = null,
     val background: String? = null,
     val logo: String? = null,
-    val releaseInfo: String? = null,
     val released: String? = null,
     val language: String? = null,
     val runtime: String? = null,
     val website: String? = null,
     val genres: List<String>? = null,
     internal val videos: List<MetaVideo>? = null,
-    @SerializedName("imdb_id") val imdbId: String? = null,
-    @SerializedName("imdbRating") val rating: String? = null,
+    @SerialName("releaseInfo") val year: String? = null,
+    @SerialName("imdb_id") val imdbId: String? = null,
+    @SerialName("imdbRating") val rating: String? = null,
 ) {
     private val areVideosDebridTvShows: Boolean
         get() = videos?.firstOrNull()?.season != null
@@ -68,9 +74,11 @@ internal data class Meta(
             if (areVideosCachedDebrid) {
                 return listOf(
                     Season(
+                        id = videos?.firstOrNull()?.id ?: "cache_season",
                         number = 1,
-                        name = "Cache",
-                        episodes = episodes
+                        title = "Cache",
+                        episodes = episodes,
+                        isReleased = true
                     )
                 )
             }
@@ -87,9 +95,11 @@ internal data class Meta(
                 }
 
                 val season = Season(
+                    id = it.id,
                     number = it.season,
-                    name = "Season ${it.season}",
-                    episodes = episodesForThisSeason
+                    title = "Season ${it.season}",
+                    episodes = episodesForThisSeason,
+                    isReleased = true,
                 )
 
                 return@mapNotNull season
@@ -108,6 +118,9 @@ internal data class Meta(
                 val episodeId = it.streams?.firstOrNull()
                     ?.url ?: it.id
 
+                val releaseDate = released?.toMs()
+                val isReleased = releaseDate != null && releaseDate <= Clock.System.now().toEpochMilliseconds()
+
                 Episode(
                     id = episodeId,
                     title = it.title.replaceFirstChar { char ->
@@ -117,7 +130,8 @@ internal data class Meta(
                     number = it.episode ?: episodeCount++,
                     image = it.thumbnail,
                     overview = it.overview ?: "",
-                    airDate = released?.extractDate(),
+                    releaseDate = released?.toMs(),
+                    isReleased = isReleased,
                 )
             }
 
@@ -127,44 +141,39 @@ internal data class Meta(
             return unsortedEpisodes?.sortedWith(comparator) ?: emptyList()
         }
 
-    val filmType: FilmType
+    val mediaType: MediaType
         get() {
             return when {
-                type == "movie" || isIPTV -> FilmType.MOVIE
-                type == "tv" || type == "series" -> FilmType.TV_SHOW
-                areVideosDebridTvShows || areVideosCachedDebrid -> FilmType.TV_SHOW
-                else -> FilmType.MOVIE
+                type == "movie" || isIPTV -> MediaType.MOVIE
+                type == "tv" || type == "series" -> MediaType.SHOW
+                areVideosDebridTvShows || areVideosCachedDebrid -> MediaType.SHOW
+                else -> MediaType.MOVIE
             }
         }
-
-    private fun String.extractDate(): String {
-        val parts = split("T")
-        if (parts.size != 2) {
-            return this
-        }
-
-        val datePart = parts[0]
-        return datePart
-    }
 }
 
+@OptIn(ExperimentalSerializationApi::class)
+@Serializable
 internal data class MetaVideo(
     val id: String,
-    @SerializedName("title", alternate = ["name"]) val title: String,
+    @JsonNames("title", "name") val title: String,
     val releaseDate: String,
     val thumbnail: String? = null,
     val overview: String? = null,
     val streams: List<StreamDto>? = null,
-    @SerializedName("imdbSeason", alternate = ["season"]) val season: Int? = null,
-    @SerializedName("imdbEpisode", alternate = ["episode"]) val episode: Int? = null
+    @JsonNames("imdbSeason", "season") val season: Int? = null,
+    @JsonNames("imdbEpisode", "episode") val episode: Int? = null
 )
 
 internal data class FetchMetaResponse(
-    @SerializedName("meta") val film: Meta? = null,
+    @SerialName("meta") val film: Meta? = null,
     override val err: String?,
 ) : CommonErrorResponse()
 
-internal fun Meta.toFilmDetails(addonName: String): FilmDetails {
+internal fun Meta.toMedia(
+    addonName: String,
+    providerId: String,
+): MediaMetadata {
     val properties = mutableMapOf(
         MEDIA_TYPE_KEY to type,
         ADDON_SOURCE_KEY to addonName
@@ -175,8 +184,14 @@ internal fun Meta.toFilmDetails(addonName: String): FilmDetails {
         properties[EMBEDDED_IMDB_ID_KEY] = embeddedImdbId
     }
 
-    return when (filmType) {
-        FilmType.MOVIE -> {
+    val externalIds = buildMap {
+        if (imdbId != null) {
+            put(MediaIdSource.IMDB, imdbId)
+        }
+    }
+
+    return when (mediaType) {
+        MediaType.MOVIE -> {
             val debridCacheStreams = videos?.firstOrNull()?.streams
             val embeddedStreamUrl = if (
                 type == "other"
@@ -193,47 +208,38 @@ internal fun Meta.toFilmDetails(addonName: String): FilmDetails {
             Movie(
                 id = id,
                 title = name,
-                imdbId = imdbId,
+                externalIds = externalIds,
                 posterImage = poster,
                 backdropImage = background,
                 logoImage = logo,
-                releaseDate = releaseInfo,
+                releaseDate = released?.toMs(),
                 overview = description,
                 language = language,
                 rating = rating?.toDoubleOrNull(),
-                year = releaseInfo?.extractYear(),
-                providerName = STREMIO,
                 homePage = website,
+                customProperties = properties.toMap(),
+                providerId = providerId,
                 genres = genres?.map {
-                    Genre(
-                        id = -1,
-                        name = it
-                    )
-                } ?: emptyList(),
-                customProperties = properties.toMap()
+                    Genre(name = it)
+                } ?: emptyList()
             )
         }
-        FilmType.TV_SHOW -> {
-            TvShow(
+        MediaType.SHOW -> {
+            Show(
                 id = id,
+                externalIds = externalIds,
                 title = name,
-                imdbId = imdbId,
                 posterImage = poster,
                 backdropImage = background,
                 logoImage = logo,
-                releaseDate = releaseInfo,
-                parsedReleaseDate = releaseInfo,
+                releaseDate = released?.toMs(),
                 overview = description,
                 language = language,
                 rating = rating?.toDoubleOrNull(),
-                year = releaseInfo?.extractYear(),
-                providerName = STREMIO,
+                providerId = providerId,
                 homePage = website,
                 genres = genres?.map {
-                    Genre(
-                        id = -1,
-                        name = it
-                    )
+                    Genre(name = it)
                 } ?: emptyList(),
                 seasons = seasons,
                 totalSeasons = seasons.size,
@@ -244,27 +250,31 @@ internal fun Meta.toFilmDetails(addonName: String): FilmDetails {
     }
 }
 
-internal fun Meta.toFilmSearchItem(addonName: String): FilmSearchItem {
-    return FilmSearchItem(
+internal fun Meta.toPartialMedia(
+    addonName: String,
+    providerId: String
+): PartialMedia {
+    val externalIds = buildMap {
+        if (imdbId != null) {
+            put(MediaIdSource.IMDB, imdbId)
+        }
+    }
+
+    return PartialMedia(
         id = id,
+        externalIds = externalIds,
         title = name,
         posterImage = poster,
         backdropImage = background,
         logoImage = logo,
-        releaseDate = releaseInfo,
+        releaseDate = released?.toMs(),
         language = language,
         overview = description,
         rating = rating?.toDoubleOrNull(),
-        year = releaseInfo?.extractYear(),
-        providerName = STREMIO,
-        filmType = filmType,
+        type = mediaType,
         homePage = website,
-        genres = genres?.map {
-            Genre(
-                id = -1,
-                name = it
-            )
-        } ?: emptyList(),
+        genres = genres?.fastMap { Genre(name = it) } ?: emptyList(),
+        providerId = providerId,
         customProperties = mapOf(
             MEDIA_TYPE_KEY to type,
             ADDON_SOURCE_KEY to addonName,

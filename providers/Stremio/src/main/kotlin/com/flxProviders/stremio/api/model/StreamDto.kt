@@ -2,15 +2,16 @@ package com.flxProviders.stremio.api.model
 
 import com.flixclusive.model.provider.link.Flag
 import com.flixclusive.model.provider.link.Stream
-import com.flixclusive.model.provider.link.Subtitle
 import com.flxProviders.stremio.api.util.isValidUrl
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import java.net.URL
 
 /**
  *
  * Based from [Hexated's](https://github.com/hexated/cloudstream-extensions-hexated/blob/master/StremioX/src/main/kotlin/com/hexated/StremioX.kt#L243)
  * */
+@Serializable
 internal data class StreamDto(
     val url: String?,
     val name: String? = null,
@@ -20,8 +21,8 @@ internal data class StreamDto(
     val externalUrl: String? = null,
     val infoHash: String? = null,
     val sources: List<String>? = null,
-    val subtitles: List<Subtitle>? = null,
-    @SerializedName("behaviorHints") val extraOptions: ExtraOptions? = null
+    val subtitles: List<SubtitleDto>? = null,
+    @SerialName("behaviorHints") val extraOptions: ExtraOptions? = null
 ) {
     fun toStreamLink(): Stream? {
         val isValidUrl = isValidUrl(url)
@@ -55,15 +56,18 @@ internal data class StreamDto(
     }
 }
 
+@Serializable
 internal data class StreamResponse(
     val streams: List<StreamDto>,
     override val err: String?,
 ) : CommonErrorResponse()
 
+@Serializable
 internal data class ProxyHeaders(
     val request: Map<String, String>?,
 )
 
+@Serializable
 internal data class ExtraOptions(
     val proxyHeaders: ProxyHeaders?,
     val headers: Map<String, String>?,

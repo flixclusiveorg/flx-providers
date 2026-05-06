@@ -2,50 +2,55 @@ import com.flixclusive.model.provider.Language
 import com.flixclusive.model.provider.ProviderType
 import com.flixclusive.model.provider.Status
 
+plugins {
+    alias(libs.plugins.kotlinx.serialization)
+}
+
 dependencies {
-    implementation("androidx.core:core:1.13.1")
-    /**
-     * Custom dependencies for each provider should be implemented here.
-     * */
-    // implementation( ... )
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
+    implementation(libs.core.stubs.provider)
 
-    // Comment if not implementing own SettingsScreen
-    // No need to specify the compose version explicitly
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.foundation:foundation")
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.runtime:runtime")
+    compileOnly(platform(libs.compose.bom))
+    compileOnly(libs.compose.material3)
+    compileOnly(libs.compose.foundation)
+    compileOnly(libs.compose.ui)
+    compileOnly(libs.compose.runtime)
+    compileOnly(libs.compose.activity)
 
-    implementation("io.coil-kt:coil-compose:2.5.0")
-    // ================= END: COMPOSE UI =================
+    compileOnly(libs.datastore)
 
+    compileOnly(libs.coil.compose)
+
+    compileOnly(libs.okhttp)
+    compileOnly(libs.retrofit)
+    compileOnly(libs.retrofit.kotlinx.serialization)
+
+    compileOnly(libs.kotlinx.serialization.json)
+    compileOnly(libs.kotlinx.coroutines)
+
+    testCompileOnly(libs.okhttp)
+    testCompileOnly(libs.junit.jupiter)
+    testCompileOnly(libs.strikt)
 }
 
 android {
+    namespace = "com.flixclusive.provider.app.stremio"
     buildFeatures {
-        compose = true
-    }
-
-    defaultConfig {
-        vectorDrawables.useSupportLibrary = false
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.3"
+        buildConfig = true
     }
 }
 
 flxProvider {
-    description.set("""
+    description = """
         A flixclusive adapter for Stremio addons. Torrent addons, such as Torrentio, don't work without debrid accounts.
-    """.trimIndent())
+    """.trimIndent()
 
-    changelog.set("""
+    changelog = """
         ### Fixes:
         - Remove built-in opensubs-v3 addon
         - Allow subtitles addons
         - Fix default metadata loading (Cinemata)
-    """.trimIndent())
+    """.trimIndent()
 
     versionMajor = 1
     versionMinor = 2
@@ -59,14 +64,14 @@ flxProvider {
     // )
     // ===
 
-    iconUrl.set("https://i.imgur.com/Hoq93zL.png") // OPTIONAL
+    iconUrl = "https://i.imgur.com/Hoq93zL.png" // OPTIONAL
 
-    language.set(Language.Multiple)
+    language = Language.Multiple
 
-    providerType.set(ProviderType.All)
+    providerType = ProviderType.All
 
-    status.set(Status.Working)
+    status = Status.Working
 
-    requiresResources.set(true)
+    requiresResources = true
 }
 

@@ -4,11 +4,11 @@ import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMapNotNull
 import com.flixclusive.core.util.exception.safeCall
-import com.flixclusive.model.film.common.tv.Episode
-import com.flixclusive.model.film.util.FilmType
-import com.flixclusive.model.provider.ProviderCatalog
+import com.flixclusive.model.media.common.MediaType
+import com.flixclusive.model.media.common.tv.Episode
+import com.flixclusive.model.provider.Catalog
 import com.flxProviders.stremio.settings.util.AddonUtil.DEFAULT_META_PROVIDER
-import com.flxProviders.stremio.settings.util.AddonUtil.toProviderCatalog
+import com.flxProviders.stremio.settings.util.AddonUtil.toCatalog
 
 internal data class Addon(
     val id: String,
@@ -37,9 +37,9 @@ internal data class Addon(
     val needsConfiguration: Boolean
         get() = behaviorHints?.get("configurationRequired") ?: false
 
-    val homeCatalogs: List<ProviderCatalog>
+    val homeCatalogs: List<Catalog>
         get() {
-            val allCatalogs = mutableListOf<ProviderCatalog>()
+            val allCatalogs = mutableListOf<Catalog>()
 
             catalogs?.fastForEach forEachCatalog@ { catalog ->
                 val isNotValidHomeCatalog = catalog.extra?.fastAny {
@@ -50,7 +50,7 @@ internal data class Addon(
                     return@forEachCatalog
                 }
 
-                allCatalogs.add(catalog.toProviderCatalog(image = logo))
+                allCatalogs.add(catalog.toCatalog(image = logo))
             }
 
             return allCatalogs.toList()
@@ -73,13 +73,13 @@ internal data class Addon(
             } ?: emptyList()
 
             return listOf(
-                Catalog(
+                StremioCatalog(
                     id = "top",
                     type = "movie",
                     addonSource = DEFAULT_META_PROVIDER,
                     name = "Popular Movies",
                 ),
-                Catalog(
+                StremioCatalog(
                     id = "top",
                     type = "series",
                     addonSource = DEFAULT_META_PROVIDER,
@@ -90,18 +90,18 @@ internal data class Addon(
 
     fun getStreamQuery(
         id: String,
-        type: FilmType,
+        type: MediaType,
         isFromStremio: Boolean,
         episode: Episode?,
     ): String {
         return when (type) {
-            FilmType.TV_SHOW -> getStreamQuery(
+            MediaType.SHOW -> getStreamQuery(
                 type = "series",
                 id = id,
                 isFromStremio = isFromStremio,
                 episode = episode
             )
-            FilmType.MOVIE -> getStreamQuery(
+            MediaType.MOVIE -> getStreamQuery(
                 type = "movie",
                 id = id,
                 isFromStremio = isFromStremio,

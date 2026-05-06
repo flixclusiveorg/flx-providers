@@ -1,7 +1,9 @@
 package com.flxProviders.stremio.api.model
 
 import com.flixclusive.model.provider.link.Subtitle
+import kotlinx.serialization.Serializable
 
+@Serializable
 internal data class SubtitleDto(
     val id: String,
     val url: String,
@@ -10,9 +12,9 @@ internal data class SubtitleDto(
 ) {
     private fun formatSubtitleName(addonName: String): String {
         return """
-            Addon: $addonName
-            Subtitle: $lang
-            ID: $id
+            🧩 Addon: $addonName
+            💬 Subtitle: $lang
+            🪪 ID: $id
         """.trimIndent()
             .trim()
     }

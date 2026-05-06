@@ -1,8 +1,9 @@
 package com.flxProviders.stremio.api.model
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-internal data class Catalog(
+internal data class StremioCatalog(
     val id: String,
     val name: String,
     val type: String,
@@ -55,7 +56,8 @@ internal data class CatalogExtraOptions(
     val options: List<String?>? = null,
 )
 
+@Serializable
 internal data class FetchCatalogResponse(
-    @SerializedName("metas") val items: List<Meta>? = null,
+    @SerialName("metas") val items: List<Meta>? = null,
     override val err: String?,
 ) : CommonErrorResponse()
