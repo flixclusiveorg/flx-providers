@@ -36,6 +36,7 @@ rootProject.name = "flx-providers"
 * */
 include(
     "Trakt",
+    "Stremio",
     // "MySecondProvider",
 )
 
