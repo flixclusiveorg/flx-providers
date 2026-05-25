@@ -47,7 +47,6 @@ android {
         val properties = Properties()
         properties.load(project.rootProject.file("local.properties").inputStream())
 
-        buildConfigField("String", "TRAKT_TEST_AUTH_KEY", "\"${properties["TRAKT_TEST_AUTH_KEY"]}\"")
         buildConfigField("String", "TRAKT_CLIENT_SECRET", "\"${properties["TRAKT_CLIENT_SECRET"]}\"")
         buildConfigField("String", "TRAKT_CLIENT_ID", "\"${properties["TRAKT_CLIENT_ID"]}\"")
     }
