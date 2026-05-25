@@ -41,8 +41,8 @@ jobs:
           TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_SECRET }}
         run: |
           cd $GITHUB_WORKSPACE/src
-          echo TRAKT_CLIENT_SECRET=TRAKT_CLIENT_SECRET >> local.properties
-          echo TRAKT_CLIENT_ID=TRAKT_CLIENT_ID >> local.properties
+          echo TRAKT_CLIENT_SECRET=$TRAKT_CLIENT_SECRET >> local.properties
+          echo TRAKT_CLIENT_ID=$TRAKT_CLIENT_ID >> local.properties
 
       # Change `**/**/build/*.flx` if you've changed the providers file structure.
       - name: Build Plugins
