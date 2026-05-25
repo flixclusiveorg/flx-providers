@@ -50,7 +50,7 @@ import com.flixclusive.provider.capability.MediaLinkProviderApi
 import com.flixclusive.provider.capability.MediaMetadataProviderApi
 import com.flixclusive.provider.capability.SearchProviderApi
 import com.flixclusive.provider.capability.TrackerProviderApi
-import com.flixclusive.provider.extensions.getBool
+import com.flixclusive.provider.extensions.getObjectAsFlow
 import com.flixclusive.provider.extensions.remove
 import com.flixclusive.provider.extensions.setBool
 import com.flixclusive.provider.extensions.setString
@@ -58,6 +58,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 
@@ -156,16 +157,19 @@ class TraktPlugin : ProviderPlugin(), TypeSenseKeyProvider {
     }
 
     override suspend fun getCatalogApi(context: Context): CatalogProviderApi? {
-        val isCatalogsAllowed = settings.getBool(PrefsKey.PREFS_CATALOGS, true)
-        if (!isCatalogsAllowed) {
-            infoLog("Catalog API is disabled in settings, returning null")
+        val authToken = settings.getObject<AuthToken>(PrefsKey.PREFS_AUTH, null)
+        if (authToken == null) {
+            warnLog("No valid auth token found, Catalog API will not be available")
             return null
         }
 
-        val authToken = settings.getObject<AuthToken>(PrefsKey.PREFS_AUTH, null)
-        if (authToken == null || authToken.isExpired) {
-            infoLog("No valid auth token found, Catalog API will not be available")
-            return null
+        if (authToken.isExpired) {
+            warnLog("Auth token is expired, Catalog API will not be available until user re-authenticates")
+            exchangeCodeForToken(code = authToken.refreshToken, refresh = true)
+
+            settings.getObjectAsFlow<AuthToken?>(PrefsKey.PREFS_AUTH, null)
+                .filterNotNull()
+                .first { !it.isExpired }
         }
 
         return TraktCatalog(

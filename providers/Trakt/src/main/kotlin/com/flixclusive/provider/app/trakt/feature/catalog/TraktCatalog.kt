@@ -3,18 +3,23 @@ package com.flixclusive.provider.app.trakt.feature.catalog
 import android.content.Context
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
+import com.flixclusive.core.util.android.showToast
+import com.flixclusive.core.util.coroutines.FlxDispatchers
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.model.media.PartialMedia
 import com.flixclusive.model.media.common.PaginatedMedia
 import com.flixclusive.model.provider.Catalog
 import com.flixclusive.provider.app.trakt.BuildConfig
-import com.flixclusive.provider.capability.CatalogProviderApi
 import com.flixclusive.provider.app.trakt.TraktPlugin
+import com.flixclusive.provider.app.trakt.core.config.PrefsKey
 import com.flixclusive.provider.app.trakt.core.config.TraktApiConfig
 import com.flixclusive.provider.app.trakt.core.model.AuthToken
 import com.flixclusive.provider.app.trakt.core.model.TraktMedia.Companion.toPartialMedia
 import com.flixclusive.provider.app.trakt.core.network.TraktApiService
 import com.flixclusive.provider.app.trakt.core.network.util.OkHttpClientUtil
+import com.flixclusive.provider.capability.CatalogProviderApi
+import com.flixclusive.provider.extensions.getBool
+import com.flixclusive.provider.extensions.getString
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -29,6 +34,10 @@ class TraktCatalog internal constructor(
     private val plugin: TraktPlugin,
     private val authToken: AuthToken,
 ) : CatalogProviderApi {
+    companion object {
+        private const val ERROR_DISALLOWED_CATALOG_ACCESS = "Catalog loading is disallowed by user settings."
+    }
+
     private val apiService by lazy {
         TraktApiService.create(
             OkHttpClientUtil.createNonCachedClient(plugin.settings)
@@ -43,10 +52,27 @@ class TraktCatalog internal constructor(
         )
     }
 
+    private suspend fun canPerformAction() {
+        val userId = plugin.settings.getString(PrefsKey.PREFS_AUTH_USER_ID, null) ?: return
+
+        val key = PrefsKey.PREFS_CATALOGS
+        val userSpecificKey = PrefsKey.getPrefKeyForUser(userId, key)
+        val isAllowed = plugin.settings.getBool(userSpecificKey, true)
+        if (!isAllowed) {
+            FlxDispatchers.withMainContext {
+                context.showToast("Action not allowed: $key is disabled in settings.")
+            }
+
+            error(ERROR_DISALLOWED_CATALOG_ACCESS)
+        }
+    }
+
     override suspend fun getCatalogItems(
         catalog: Catalog,
         page: Int
     ): PaginatedMedia<PartialMedia> {
+        canPerformAction()
+
         val cachedApiService = TraktApiService.create(
             OkHttpClientUtil.createCachedClient(
                 context = context,
@@ -72,6 +98,8 @@ class TraktCatalog internal constructor(
     }
 
     override suspend fun getCatalogs(): List<Catalog> {
+        canPerformAction()
+
         val deferred = mutableListOf<Deferred<List<Catalog>>>()
         val catalogs = mutableListOf<Catalog>()
 
