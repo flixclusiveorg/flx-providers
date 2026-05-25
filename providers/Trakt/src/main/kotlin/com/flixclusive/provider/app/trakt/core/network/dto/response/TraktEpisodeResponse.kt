@@ -12,12 +12,12 @@ internal data class TraktEpisodeResponse(
     @SerialName("ids") private val ids: TraktGenericIdMap,
     @SerialName("season") val season: Int,
     @SerialName("number") val number: Int,
-    @SerialName("first_aired") val firstAired: String?,
-    @SerialName("images") private val images: Map<String, List<String>>?,
-    @SerialName("overview") val overview: String?,
-    @SerialName("rating") val rating: Double?,
-    @SerialName("runtime") val runtime: Int?,
-    @SerialName("title") val title: String?
+    @SerialName("first_aired") val firstAired: String? = null,
+    @SerialName("images") private val images: Map<String, List<String>>? = null,
+    @SerialName("overview") val overview: String? = null,
+    @SerialName("rating") val rating: Double? = null,
+    @SerialName("runtime") val runtime: Int? = null,
+    @SerialName("title") val title: String? = null
 ) {
     val id get() = ids.id
 

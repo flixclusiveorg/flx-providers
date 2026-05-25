@@ -12,6 +12,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.util.coroutines.FlxDispatchers
 import com.flixclusive.core.util.log.errorLog
@@ -46,15 +50,43 @@ import com.flixclusive.provider.capability.MediaLinkProviderApi
 import com.flixclusive.provider.capability.MediaMetadataProviderApi
 import com.flixclusive.provider.capability.SearchProviderApi
 import com.flixclusive.provider.capability.TrackerProviderApi
-import com.flixclusive.provider.settings.getBool
-import com.flixclusive.provider.settings.getObject
-import com.flixclusive.provider.settings.setBool
-import com.flixclusive.provider.settings.setObject
-import com.flixclusive.provider.settings.setString
+import com.flixclusive.provider.extensions.getBool
+import com.flixclusive.provider.extensions.remove
+import com.flixclusive.provider.extensions.setBool
+import com.flixclusive.provider.extensions.setString
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.serialization.json.Json
+
+private val traktJson by lazy {
+    Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        encodeDefaults = true
+    }
+}
+
+private suspend inline fun <reified T> DataStore<Preferences>.getObject(
+    key: String,
+    default: T?,
+): T? {
+    val raw = data.first()[stringPreferencesKey(key)] ?: return default
+    return runCatching { traktJson.decodeFromString<T>(raw) }.getOrNull() ?: default
+}
+
+private suspend inline fun <reified T> DataStore<Preferences>.setObject(
+    key: String,
+    value: T?,
+) {
+    val encoded = value?.let { traktJson.encodeToString(it) }
+    edit { prefs ->
+        if (encoded == null) prefs.remove(stringPreferencesKey(key))
+        else prefs[stringPreferencesKey(key)] = encoded
+    }
+}
 
 @FlixclusiveProvider
 class TraktPlugin : ProviderPlugin(), TypeSenseKeyProvider {
@@ -70,7 +102,7 @@ class TraktPlugin : ProviderPlugin(), TypeSenseKeyProvider {
         OkHttpClientUtil.deleteCache()
 
         settings.setObject<AuthToken?>(PrefsKey.PREFS_AUTH, null)
-        settings.setString(PrefsKey.PREFS_AUTH_USER_ID, null)
+        settings.remove(PrefsKey.PREFS_AUTH_USER_ID)
         userFlow.value = UserState.LoggingOut
     }
 
@@ -90,8 +122,10 @@ class TraktPlugin : ProviderPlugin(), TypeSenseKeyProvider {
         )
     }
 
-    override suspend fun getMediaLinkApi(context: Context): MediaLinkProviderApi {
-        TODO("Uncomment when `watchnow` endpoint is available. It currently returns 401 (unauthorized)")
+    override suspend fun getMediaLinkApi(context: Context): MediaLinkProviderApi? {
+        return null
+
+        // TODO("Uncomment when `watchnow` endpoint is available. It currently returns 401 (unauthorized)")
 //        return TraktWatchNowProvider(
 //            context = context,
 //            plugin = this,
@@ -128,7 +162,7 @@ class TraktPlugin : ProviderPlugin(), TypeSenseKeyProvider {
             return null
         }
 
-        val authToken = settings.getObject<AuthToken>(PrefsKey.PREFS_AUTH)
+        val authToken = settings.getObject<AuthToken>(PrefsKey.PREFS_AUTH, null)
         if (authToken == null || authToken.isExpired) {
             infoLog("No valid auth token found, Catalog API will not be available")
             return null
@@ -176,7 +210,7 @@ class TraktPlugin : ProviderPlugin(), TypeSenseKeyProvider {
                     modifier = Modifier.fillMaxSize()
                 ) {
                     AuthGuardScreen(
-                        state = authState,
+                        state = { authState },
                         modifier = Modifier.padding(it)
                     ) {
                         val userState by userFlow.collectAsStateWithLifecycle()
@@ -189,13 +223,15 @@ class TraktPlugin : ProviderPlugin(), TypeSenseKeyProvider {
                             toggles = { toggles },
                             onRetry = ::saveAndLoadUser,
                             onToggle = { key, value ->
-                                FlxDispatchers.launchOnIO { settings.setBool(key, value) }
+                                FlxDispatchers.launchOnIO {
+                                    settings.setBool(key, value)
+                                }
                             },
                             onLogout = {
                                 FlxDispatchers.launchOnIO {
                                     userFlow.value = UserState.LoggingOut
                                     settings.setObject<AuthToken?>(PrefsKey.PREFS_AUTH, null)
-                                    settings.setString(PrefsKey.PREFS_AUTH_USER_ID, null)
+                                    settings.remove(PrefsKey.PREFS_AUTH_USER_ID)
                                 }
                             }
                         )

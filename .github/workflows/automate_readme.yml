@@ -25,10 +25,10 @@ jobs:
           status=$(grep -oP 'status\.set\((Status\.)?\K[^\)]+' "$file")
           
           case $status in
-          Status.Working|Working) status_emoji="🟢 OK";;
-          Status.Beta|Beta) status_emoji="🔵 BETA";;
-          Status.Maintenance|Maintenance) status_emoji="🟡 MAINTENANCE";;
-          Status.Down|Down) status_emoji="🔴 DOWN";;
+          ProviderStatus.Working|Working) status_emoji="🟢 OK";;
+          ProviderStatus.Beta|Beta) status_emoji="🔵 BETA";;
+          ProviderStatus.Maintenance|Maintenance) status_emoji="🟡 MAINTENANCE";;
+          ProviderStatus.Down|Down) status_emoji="🔴 DOWN";;
           *) status_emoji="❓ UNKNOWN";;
           esac
           

@@ -7,19 +7,35 @@ plugins {
 }
 
 subprojects {
-    apply(plugin = "flx-provider")
+    if (this.name != "util") {
+        apply(plugin = "flx-provider")
+    }
 
-    android {
-        compileSdk = 36
+    plugins.withId("com.android.library") {
+        android {
+            compileSdk = 36
 
-        defaultConfig {
-            minSdk = 23
-            testOptions.targetSdk = 36
+            defaultConfig {
+                minSdk = 23
+                testOptions.targetSdk = 36
+            }
+
+            buildTypes {
+                release {
+                    isMinifyEnabled = true
+                    proguardFiles(
+                        getDefaultProguardFile("proguard-android-optimize.txt"),
+                        "../../core/proguard/proguard-rules.pro"
+                    )
+                }
+            }
         }
     }
 
-    flxProvider {
-        setRepository("https://github.com/flixclusiveorg/flx-providers")
+    plugins.withId("flx-provider") {
+        flxProvider {
+            setRepository("https://github.com/flixclusiveorg/flx-providers")
+        }
     }
 }
 

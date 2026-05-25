@@ -47,7 +47,7 @@ internal fun SettingToggle(
         ) {
             Column(
                 modifier = Modifier
-                    .weight(1f)
+                    .weight(1f, true)
                     .padding(end = 8.dp)
             ) {
                 Text(text = item.title, style = MaterialTheme.typography.labelLarge)

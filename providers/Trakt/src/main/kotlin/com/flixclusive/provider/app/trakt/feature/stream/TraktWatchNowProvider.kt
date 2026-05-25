@@ -24,8 +24,6 @@ import com.flixclusive.provider.app.trakt.core.network.TraktApiService
 import com.flixclusive.provider.app.trakt.core.network.dto.response.TraktMediaWatchNowSources
 import com.flixclusive.provider.app.trakt.core.network.util.OkHttpClientUtil
 import com.flixclusive.provider.app.trakt.feature.stream.ResourceUtil.getRawFileInputStream
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 
 class TraktWatchNowProvider internal constructor(
     private val context: Context,
@@ -61,10 +59,11 @@ class TraktWatchNowProvider internal constructor(
 
     override val supportedLinkTypes = setOf(MediaLinkType.STREAMS)
 
-    override fun getLinks(
+    override suspend fun getLinks(
         media: MediaMetadata,
-        episode: Episode?
-    ): Flow<MediaLink> = flow {
+        episode: Episode?,
+        onLinkFound: (MediaLink) -> Unit,
+    ) {
         // current API doesn't allow us to use /watchnow/sources endpoint, hence the comment
         // val countryCode = getCountry(context)
         // val sourceInfos = cachedApiServiceForWatchNowSources.getWatchNowSources(countryCode)
@@ -109,7 +108,7 @@ class TraktWatchNowProvider internal constructor(
                 )
             )
 
-            emit(stream)
+            onLinkFound(stream)
         }
     }
 

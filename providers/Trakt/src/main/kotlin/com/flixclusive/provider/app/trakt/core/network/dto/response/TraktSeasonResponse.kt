@@ -11,12 +11,12 @@ import kotlin.time.Instant
 internal data class TraktSeasonResponse(
     @SerialName("ids") private val ids: TraktGenericIdMap,
     @SerialName("number") val number: Int,
-    @SerialName("title") val title: String?,
-    @SerialName("rating") val rating: Double?,
-    @SerialName("episode_count") val episodeCount: Int?,
-    @SerialName("images") private val images: Map<String, List<String>>?,
-    @SerialName("first_aired") val firstAired: String?,
-    @SerialName("overview") val overview: String?,
+    @SerialName("title") val title: String? = null,
+    @SerialName("rating") val rating: Double? = null,
+    @SerialName("episode_count") val episodeCount: Int? = null,
+    @SerialName("images") private val images: Map<String, List<String>>? = null,
+    @SerialName("first_aired") val firstAired: String? = null,
+    @SerialName("overview") val overview: String? = null,
 ) {
     val id get() = ids.id
 

@@ -1,6 +1,6 @@
 import com.flixclusive.model.provider.Language
+import com.flixclusive.model.provider.ProviderStatus
 import com.flixclusive.model.provider.ProviderType
-import com.flixclusive.model.provider.Status
 
 plugins {
     alias(libs.plugins.kotlinx.serialization)
@@ -8,7 +8,7 @@ plugins {
 
 dependencies {
     coreLibraryDesugaring(libs.desugar.jdk.libs)
-    implementation(libs.core.stubs.provider)
+    compileOnly(libs.core.stubs.provider)
 
     compileOnly(platform(libs.compose.bom))
     compileOnly(libs.compose.material3)
@@ -22,10 +22,10 @@ dependencies {
     compileOnly(libs.coil.compose)
 
     compileOnly(libs.okhttp)
-    compileOnly(libs.retrofit)
-    compileOnly(libs.retrofit.kotlinx.serialization)
 
-    compileOnly(libs.kotlinx.serialization.json)
+    implementation(projects.util)
+
+    implementation(libs.kotlinx.serialization.json)
     compileOnly(libs.kotlinx.coroutines)
 
     testCompileOnly(libs.okhttp)
@@ -41,20 +41,20 @@ android {
 }
 
 flxProvider {
+    id = "flx-stremio-1778084225"
+    
     description = """
         A flixclusive adapter for Stremio addons. Torrent addons, such as Torrentio, don't work without debrid accounts.
     """.trimIndent()
 
     changelog = """
-        ### Fixes:
-        - Remove built-in opensubs-v3 addon
-        - Allow subtitles addons
-        - Fix default metadata loading (Cinemata)
+        - Updated to Core Stubs SDK v1.3.0
+        - Brought this back just for testing - might remove again if I don't have time to maintain it
     """.trimIndent()
 
     versionMajor = 1
-    versionMinor = 2
-    versionPatch = 6
+    versionMinor = 3
+    versionPatch = 0
     versionBuild = 0
 
     // Extra authors for specific provider
@@ -70,8 +70,7 @@ flxProvider {
 
     providerType = ProviderType.All
 
-    status = Status.Working
+    status = ProviderStatus.Working
 
     requiresResources = true
 }
-

@@ -2,8 +2,8 @@ package com.flixclusive.provider.app.trakt.core.model
 
 import com.flixclusive.model.provider.Catalog
 import com.flixclusive.provider.app.trakt.BuildConfig
-import com.flixclusive.provider.tracker.TrackerList
 import com.flixclusive.provider.app.trakt.core.config.TraktApiConfig
+import com.flixclusive.provider.tracker.TrackerList
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.time.Instant
@@ -11,7 +11,7 @@ import kotlin.time.Instant
 @Serializable
 internal data class TraktList(
     @SerialName("name") val name: String,
-    @SerialName("description") val description: String?,
+    @SerialName("description") val description: String? = null,
     @SerialName("privacy") val privacy: String,
     @SerialName("ids") private val ids: Ids,
     @SerialName("item_count") val itemCount: Int,

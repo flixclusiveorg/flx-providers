@@ -101,7 +101,7 @@ private fun UserScreenContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         contentPadding = PaddingValues(16.dp),
     ) {
-        item {
+        item(key = null, contentType = null) {
             AsyncImage(
                 model = remember {
                     ImageRequest.Builder(context)
@@ -118,14 +118,14 @@ private fun UserScreenContent(
             )
         }
 
-        item {
+        item(key = null, contentType = null) {
             Text(
                 text = user.name,
                 style = MaterialTheme.typography.headlineMedium
             )
         }
 
-        item {
+        item(key = null, contentType = null) {
             Text(
                 text = "@${user.username}",
                 style = MaterialTheme.typography.labelMedium,
@@ -133,7 +133,7 @@ private fun UserScreenContent(
             )
         }
 
-        item {
+        item(key = null, contentType = null) {
             OutlinedButton(
                 onClick = onLogout,
                 modifier = Modifier

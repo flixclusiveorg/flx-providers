@@ -35,19 +35,19 @@ private const val TRAKT_ICON_URL = "https://i.imgur.com/cwmhW7c.png"
 
 @Composable
 internal fun TraktPlugin.AuthGuardScreen(
-    state: AuthState,
+    state: () -> AuthState,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
     AnimatedContent(
-        targetState = state,
+        targetState = state(),
         transitionSpec = {
             slideInHorizontally { -it / 6 } + fadeIn() togetherWith
                     fadeOut() + slideOutHorizontally { -it / 6 }
         },
         modifier = modifier.fillMaxSize()
-    ) { state ->
-        when (state) {
+    ) { data ->
+        when (data) {
             is AuthState.Loading, is AuthState.Expired -> LoadingScreen(message = "Checking authentication status...")
             is AuthState.Authenticated -> content()
             else -> UnauthenticatedScreen()

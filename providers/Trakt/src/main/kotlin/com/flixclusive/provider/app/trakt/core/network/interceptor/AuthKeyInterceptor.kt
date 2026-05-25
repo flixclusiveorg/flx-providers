@@ -2,7 +2,9 @@ package com.flixclusive.provider.app.trakt.core.network.interceptor
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import com.flixclusive.provider.settings.getObject
+import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.core.util.network.json.fromJson
+import com.flixclusive.provider.extensions.getString
 import com.flixclusive.provider.app.trakt.core.config.PrefsKey
 import com.flixclusive.provider.app.trakt.core.model.AuthToken
 import kotlinx.coroutines.runBlocking
@@ -13,7 +15,8 @@ internal class AuthKeyInterceptor(
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
         val key = runBlocking {
-            prefs.getObject<AuthToken>(PrefsKey.PREFS_AUTH, null)
+            prefs.getString(PrefsKey.PREFS_AUTH, null)
+                ?.let { safeCall { fromJson<AuthToken?>(it) } }
                 ?: throw IllegalStateException("Auth key is not set in preferences")
         }
 

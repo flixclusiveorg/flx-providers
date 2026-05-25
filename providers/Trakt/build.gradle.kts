@@ -1,6 +1,6 @@
 import com.flixclusive.model.provider.Language
+import com.flixclusive.model.provider.ProviderStatus
 import com.flixclusive.model.provider.ProviderType
-import com.flixclusive.model.provider.Status
 import org.jetbrains.kotlin.konan.properties.Properties
 
 plugins {
@@ -9,7 +9,7 @@ plugins {
 
 dependencies {
     coreLibraryDesugaring(libs.desugar.jdk.libs)
-    implementation(libs.core.stubs.provider)
+    compileOnly(libs.core.stubs.provider)
 
     compileOnly(platform(libs.compose.bom))
     compileOnly(libs.compose.material3)
@@ -18,16 +18,18 @@ dependencies {
     compileOnly(libs.compose.runtime)
     compileOnly(libs.compose.activity)
 
-    compileOnly(libs.datastore)
-
     compileOnly(libs.coil.compose)
 
     compileOnly(libs.okhttp)
     compileOnly(libs.retrofit)
     compileOnly(libs.retrofit.kotlinx.serialization)
 
-    compileOnly(libs.kotlinx.serialization.json)
+    implementation(projects.util)
+
+    implementation(libs.kotlinx.serialization.json)
     compileOnly(libs.kotlinx.coroutines)
+
+    compileOnly(libs.datastore)
 
     testCompileOnly(libs.okhttp)
     testCompileOnly(libs.junit.jupiter)
@@ -56,7 +58,7 @@ flxProvider {
 
     adult = false
     providerName = "Trakt"
-    description = "Trakt tracker and discovery provider."
+    description = "A provider acting as an adapter for the Trakt API, providing metadata, tracking and discovery features."
 
     versionMajor = 0
     versionMinor = 0
@@ -67,7 +69,7 @@ flxProvider {
 
     language = Language.Multiple
     providerType = ProviderType("Metadata, Tracker, Discovery")
-    status = Status.Beta
+    status = ProviderStatus.Beta
 
     requiresResources = true
 }

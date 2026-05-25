@@ -28,6 +28,9 @@ dependencyResolutionManagement {
 
 rootProject.name = "flx-providers"
 
+// Allows `projects.util` instead of `project(":util")`
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 /**
 *
 * This file sets what projects are included.
@@ -35,8 +38,9 @@ rootProject.name = "flx-providers"
 * to the includes below.
 * */
 include(
+    "util",
     "Trakt",
-    "Stremio",
+    "Stremio"
     // "MySecondProvider",
 )
 
@@ -52,5 +56,10 @@ include(
  * then simply change the path to `file("providers/${it.name})`
  */
 rootProject.children.forEach {
+    if (it.name == "util") {
+        it.projectDir = file("core/util")
+        return@forEach
+    }
+
     it.projectDir = file("providers/${it.name}")
 }

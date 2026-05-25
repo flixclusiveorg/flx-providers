@@ -10,6 +10,8 @@ import androidx.datastore.preferences.core.Preferences
 import com.flixclusive.core.util.android.showToast
 import com.flixclusive.core.util.coroutines.FlxDispatchers
 import com.flixclusive.core.util.log.errorLog
+import com.flixclusive.provider.extensions.getBool
+import com.flixclusive.provider.extensions.getString
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.common.MediaIdSource
 import com.flixclusive.model.media.common.MediaType
@@ -18,8 +20,6 @@ import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.provider.ProviderPlugin
 import com.flixclusive.provider.capability.TrackerFeature
 import com.flixclusive.provider.capability.TrackerProviderApi
-import com.flixclusive.provider.settings.getBool
-import com.flixclusive.provider.settings.getString
 import com.flixclusive.provider.tracker.ScrobbleAction
 import com.flixclusive.provider.tracker.TrackerList
 import com.flixclusive.provider.app.trakt.core.config.PrefsKey
@@ -92,19 +92,19 @@ class TraktTracker internal constructor(
             )
 
         val isListManagementAllowed = settings.getBool(
-            key = PrefsKey.getPrefKeyForUser(
+            PrefsKey.getPrefKeyForUser(
                 userId = userId,
                 baseKey = PrefsKey.PREFS_LIST_MANAGEMENT
             ),
-            defValue = true
+            true
         )
 
         val isScrobblingAllowed = settings.getBool(
-            key = PrefsKey.getPrefKeyForUser(
+            PrefsKey.getPrefKeyForUser(
                 userId = userId,
                 baseKey = PrefsKey.PREFS_SCROBBLE
             ),
-            defValue = true
+            true
         )
 
         if (isListManagementAllowed) {
@@ -302,8 +302,7 @@ class TraktTracker internal constructor(
     }
 
     override suspend fun isAuthenticated(): Boolean {
-        val userId = settings.getString(PrefsKey.PREFS_AUTH_USER_ID, null)
-        return userId != null
+        return settings.getString(PrefsKey.PREFS_AUTH_USER_ID, null) != null
     }
 
     override suspend fun removeListItem(
