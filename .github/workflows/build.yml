@@ -38,7 +38,7 @@ jobs:
       - name: Initialize Secrets
         env:
           TRAKT_CLIENT_SECRET: ${{ secrets.TRAKT_CLIENT_SECRET }}
-          TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_SECRET }}
+          TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
         run: |
           cd $GITHUB_WORKSPACE/src
           echo TRAKT_CLIENT_SECRET=$TRAKT_CLIENT_SECRET >> local.properties
