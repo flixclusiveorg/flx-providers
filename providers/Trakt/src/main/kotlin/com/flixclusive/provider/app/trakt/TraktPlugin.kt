@@ -10,7 +10,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -182,7 +184,7 @@ class TraktPlugin : ProviderPlugin(), TypeSenseKeyProvider {
     @OptIn(ExperimentalCoroutinesApi::class)
     @Composable
     override fun SettingsScreen() {
-        val authState by settings.observeAuthToken().collectAsStateWithLifecycle(AuthState.Loading)
+        var authState by remember { mutableStateOf<AuthState>(AuthState.Loading) }
         val snackbarHostState = remember { SnackbarHostState() }
 
         LaunchedEffect(authState) {
@@ -195,6 +197,11 @@ class TraktPlugin : ProviderPlugin(), TypeSenseKeyProvider {
         }
 
         LaunchedEffect(true) {
+            settings.observeAuthToken()
+                .collect { authState = it }
+        }
+
+        LaunchedEffect(true) {
             authError.collect {
                 snackbarHostState.showSnackbar(it)
             }
@@ -204,6 +211,7 @@ class TraktPlugin : ProviderPlugin(), TypeSenseKeyProvider {
             infoLog("Received OAuth deep link: $it")
 
             val code = it.getQueryParameter("code") ?: return@ObserveOauthDeepLinkUri
+            authState = AuthState.Loading
             exchangeCodeForToken(code = code)
         }
 
