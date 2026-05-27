@@ -1,131 +1,82 @@
-# Provider Template
+# Flixclusive Providers
 
-<a href="https://discord.gg/7yPSPveReu"><img src="https://img.shields.io/discord/1255770492049162240?label=discord&labelColor=7289da&color=2c2f33&style=for-the-badge" alt="Discord"></a>
-<a href="https://flixclusiveorg.github.io/provider-docs/"><img src="https://img.shields.io/badge/docs-provider--docs-blue?style=for-the-badge" alt="Docs"></a>
-<a href="https://flixclusiveorg.github.io/core-stubs/"><img src="https://img.shields.io/badge/api-core--stubs-green?style=for-the-badge" alt="API Reference"></a>
+<a href="https://github.com/flixclusiveorg/flx-providers/actions/workflows/build.yml"><img src="https://github.com/flixclusiveorg/flx-providers/actions/workflows/build.yml/badge.svg" alt="Build"></a>
+<a href="https://discord.gg/7yPSPveReu"><img src="https://img.shields.io/discord/1255770492049162240?label=discord&labelColor=7289da&color=2c2f33&style=flat-square" alt="Discord"></a>
+<a href="https://flixclusiveorg.github.io/provider-docs/"><img src="https://img.shields.io/badge/docs-provider--docs-blue?style=flat-square" alt="Docs"></a>
+<a href="https://flixclusiveorg.github.io/core-stubs/"><img src="https://img.shields.io/badge/api-core--stubs-green?style=flat-square" alt="API Reference"></a>
+<a href="https://github.com/flixclusiveorg/flx-providers/tree/builds"><img src="https://img.shields.io/badge/releases-builds%20branch-orange?style=flat-square" alt="Releases"></a>
 
-This is the template repository for creating a custom provider for the [Flixclusive](https://github.com/flixclusiveorg/Flixclusive) application.
-
-> **Important:** When using this template, enable **"Include all branches"**. The `build` branch is required by the GitHub CI that automates provider packaging and publishing.
-
----
-
-## What is a Provider?
-
-A **provider** is an extension that allows Flixclusive users to customize where their content comes from. Think of it like a browser extension for a streaming app — providers run inside Flixclusive and fetch media data (titles, metadata, streams, subtitles) from external sources on behalf of the user.
-
-Each provider is composed of focused capability APIs. You implement only the capabilities your source supports:
-
-| Capability | Interface | What it does |
-|---|---|---|
-| Search | `SearchProviderApi` | Returns paginated search results for a query |
-| Catalog | `CatalogProviderApi` | Exposes home-screen browsable sections |
-| Metadata | `MediaMetadataProviderApi` | Fetches full movie/show details |
-| Media Links | `MediaLinkProviderApi` | Emits streams and/or subtitles for playback |
-| Cross-match | `CrossMatchProviderApi` | Resolves your IDs from another provider's IDs |
-| Tracker | `TrackerProviderApi` | Integrates with list management + scrobble services |
+The official collection of provider extensions for [Flixclusive](https://github.com/flixclusiveorg/Flixclusive). Each provider is a pluggable module that connects Flixclusive to an external media source — fetching titles, metadata, streams, subtitles, and watchlist data on the user's behalf.
 
 ---
 
-## Getting Started
+## Table of Contents
 
-### 1. Create your repository from this template
+- [About](#about)
+- [Providers](#providers)
+- [Roadmap](#roadmap)
+- [Build & Deploy](#build--deploy)
+- [Contributing](#contributing)
+- [Legal / DMCA Disclaimer](#legal--dmca-disclaimer)
+- [Resources](#resources)
 
-- Click **"Use this template"** → **"Create a new repository"**
-- Enable **"Include all branches"** (the `build` branch is required for CI)
+---
 
-### 2. Configure author and repository metadata
+## About
 
-Open the root `build.gradle.kts` and fill in the shared `flxProvider` block (usually inside `subprojects { ... }`):
+A **provider** is a pluggable extension that runs inside Flixclusive and adapts it to a specific third-party service or API. Providers are independently versioned, packaged as `.flx` artifacts, and loaded at runtime by the app.
 
-```kotlin
-subprojects {
-    flxProvider {
-        author(
-            name = "your-github-handle",
-            image = "https://github.com/your-github-handle.png",
-            socialLink = "https://github.com/your-github-handle",
-        )
-        setRepository("https://github.com/your-github-handle/your-providers-repo")
-    }
-}
-```
+Each provider exposes only the capabilities its source supports:
 
-### 3. Create or customize a provider module
+| Capability | What it does |
+|---|---|
+| Catalog | Exposes browsable home-screen sections |
+| Search | Returns paginated results for a query |
+| Metadata | Fetches full movie/show details |
+| Media Links | Emits streams and/or subtitles for playback |
+| Cross-match | Resolves IDs across providers |
+| Tracker | Integrates with watchlist management and scrobbling services |
 
-The `providers/` folder contains a working example provider (`Stremio`, `Trakt`) you can use as a reference. To create a new provider:
+---
 
-1. Copy the example module folder: `providers/BasicDummyProvider/` → `providers/MyProvider/`
-2. Register it in `settings.gradle.kts`:
+## Providers
 
-   ```kotlin
-   include(
-       "BasicDummyProvider",
-       "MyProvider",  // <- your new module
-   )
-   ```
+| Provider | Capabilities |
+|---|---|
+| [Stremio](providers/Stremio/) | Catalog, Search, Metadata, Media Links, Cross-match |
+| [Trakt](providers/Trakt/) | Catalog, Search, Metadata, Tracker, Cross-match |
 
-3. Update `providers/MyProvider/build.gradle.kts`:
+---
 
-   ```kotlin
-   import com.flixclusive.model.provider.Language
-   import com.flixclusive.model.provider.ProviderStatus
-   import com.flixclusive.model.provider.ProviderType
+## Roadmap
 
-   android {
-       namespace = "com.example.provider.my_provider"
-   }
+- [x] Stremio
+- [x] Trakt
+- [ ] TMDB
+- [ ] Simkl
+- [ ] Letterboxd
 
-   flxProvider {
-       id = "prov-my-provider"       // stable unique ID — never change after first release
-       providerName = "My Provider"
-       description  = "Short description of what this provider does."
+---
 
-       versionMajor = 1
-       versionMinor = 0
-       versionPatch = 0
-       versionBuild = 0
+## Build & Deploy
 
-       status       = ProviderStatus.Working
-       language     = Language.Multiple
-       providerType = ProviderType.All
-       adult        = false
-   }
-
-   dependencies {
-       implementation(libs.core.stubs.provider)
-   }
-   ```
-
-4. Create your entry class:
-
-   ```kotlin
-   import com.flixclusive.provider.FlixclusiveProvider
-   import com.flixclusive.provider.ProviderPlugin
-
-   @FlixclusiveProvider
-   class MyProvider : ProviderPlugin() {
-       // expose only the capabilities your source supports
-   }
-   ```
-
-### 4. Build and deploy
+> **Prerequisites:** Android SDK (API 23–36), JDK 17+, `adb` in your `PATH`.
 
 ```bash
-# Build and package the provider artifact (.flx)
-./gradlew :MyProvider:make
+# Build and package a provider artifact (.flx)
+./gradlew :ProviderName:make
 
-# Deploy to a connected emulator or device (builds first automatically)
-./gradlew :MyProvider:deployWithAdb
+# Deploy to a connected device or emulator
+./gradlew :ProviderName:deployWithAdb
 
 # Deploy using the debug build of Flixclusive
-./gradlew :MyProvider:deployWithAdb --debug-app
+./gradlew :ProviderName:deployWithAdb --debug-app
 
 # Deploy and wait for a debugger to attach
-./gradlew :MyProvider:deployWithAdb --wait-for-debugger
+./gradlew :ProviderName:deployWithAdb --wait-for-debugger
 ```
 
-After deployment, the provider appears in Flixclusive's provider list. Use the **"Test provider"** option in the app to run an automated capability check.
+After deployment the provider appears in Flixclusive's provider list. Use the **"Test provider"** option in the app to run an automated capability check.
 
 To attach Android Studio's debugger after `--wait-for-debugger`, click the **"Attach debugger to Android process"** button (bug icon with arrow) and select the Flixclusive process.
 
@@ -133,58 +84,24 @@ To attach Android Studio's debugger after `--wait-for-debugger`, click the **"At
 
 ---
 
-## Project Structure
+## Contributing
 
-```
-providers/
-└── MyProvider/
-    ├── build.gradle.kts           # Provider-specific Gradle config (id, version, type, etc.)
-    └── src/main/
-        ├── kotlin/                # Your provider's Kotlin source
-        └── res/                   # Resources (only if requiresResources = true)
-build.gradle.kts                   # Root build: applies flx-provider plugin, shared author/repo metadata
-settings.gradle.kts                # Lists all provider modules
-gradle/libs.versions.toml          # Manages SDK + plugin versions
-```
+Contributions are welcome — whether that's a new provider, a bug fix, or an improvement to an existing one. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, code conventions, and the pull request process.
 
 ---
 
-## Capability Quick Reference
+## Legal / DMCA Disclaimer
 
-Each capability is a focused interface. Implement only what your source supports and return `null` from the others.
+This repository **does not host, store, or distribute any pirated, copyrighted, or otherwise unlicensed media content**. The providers in this repository are software adapters that interface with publicly accessible third-party APIs and services. No media files, streams, or infringing content are embedded in or served by this codebase.
 
-```kotlin
-@FlixclusiveProvider
-class MyProvider : ProviderPlugin() {
+**Users are solely responsible** for ensuring that their use of these providers complies with the terms of service of the connected third-party platforms and with the applicable laws in their jurisdiction. The maintainers of this repository accept no liability for how end users choose to use the software.
 
-    private val client by lazy { OkHttpClient() }
-
-    private val searchApi by lazy { MySearchApi(client, id) }
-    private val catalogApi by lazy { MyCatalogApi(client, id) }
-    private val metadataApi by lazy { MyMetadataApi(client) }
-    private val mediaLinkApi by lazy { MyMediaLinkApi(client) }
-
-    override suspend fun getSearchApi(context: Context)    = searchApi
-    override suspend fun getCatalogApi(context: Context)   = catalogApi
-    override suspend fun getMetadataApi(context: Context)  = metadataApi
-    override suspend fun getMediaLinkApi(context: Context) = mediaLinkApi
-
-    // Return null for unsupported capabilities:
-    override suspend fun getCrossMatchApi(context: Context) = null
-    override suspend fun getTrackerApi(context: Context)    = null
-}
-```
+If you believe any content in this repository infringes your rights, please [open an issue](https://github.com/flixclusiveorg/flx-providers/issues) or contact the repository maintainers directly.
 
 ---
 
-## Additional Resources
+## Resources
 
-- [**Provider Documentation**](https://flixclusiveorg.github.io/provider-docs/)
-- [**Core Stubs API Reference**](https://flixclusiveorg.github.io/core-stubs/)
-- [**Discord Community**](https://discord.gg/7yPSPveReu)
-
-## Support
-
-Join the Discord community for questions, reviews, and developer support:
-
-<a href="https://discord.gg/7yPSPveReu"><img src="https://img.shields.io/discord/1255770492049162240?label=discord&labelColor=7289da&color=2c2f33&style=for-the-badge" alt="Discord"></a>
+- [Provider Documentation](https://flixclusiveorg.github.io/provider-docs/)
+- [Core Stubs API Reference](https://flixclusiveorg.github.io/core-stubs/)
+- [Discord Community](https://discord.gg/7yPSPveReu)
