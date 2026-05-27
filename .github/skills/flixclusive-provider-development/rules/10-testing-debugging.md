@@ -1,24 +1,44 @@
 # 10 — Testing & Debugging
 
-## What to test
+## What to unit test (SHOULD)
 
-- Prioritize unit tests for:
-  - parsing functions (HTML/JSON -> models)
-  - URL normalization
-  - pagination logic
-  - filter mapping
+Prioritize tests for:
 
-Keep extraction IO thin so logic is easy to test.
+- JSON/HTML parsing functions (input `String` → output model)
+- URL building/normalization
+- Pagination logic (`hasNextPage` derivation)
+- Filter state mapping
 
-## Unit testing guidance (important)
+Keep extraction IO thin so business logic is easy to test in isolation.
 
-- Avoid instantiating `ProviderPlugin` in unit tests.
-  - `manifest` and `settings` are `lateinit` and are assigned by the host app at runtime.
-- Prefer testing capability API classes directly (search/catalog/metadata/links implementations).
+## Do not instantiate `ProviderPlugin` in unit tests (MUST)
+
+`ProviderPlugin.manifest` and `ProviderPlugin.settings` are `lateinit` — they are assigned by the
+host app at runtime. Instantiating `ProviderPlugin` in a unit test will throw `UninitializedPropertyAccessException`.
+
+**MUST** test capability API classes directly instead:
+
+```kotlin
+// WRONG
+val plugin = MyProviderPlugin()
+plugin.getSearchApi(context) // manifest is not set — crashes ❌
+
+// CORRECT — test the capability class directly
+class MySearchApiTest {
+    private val api = MySearchApi(
+        client     = OkHttpClient(),
+        providerId = "prov-my-provider",
+    )
+
+    @Test
+    fun `search returns paginated results`() = runTest {
+        val result = api.search(query = "Inception", page = 1, filters = api.filters)
+        assertTrue(result.results.isNotEmpty())
+    }
+}
+```
 
 ## Test dependencies
-
-If you add tests to a provider module, prefer these (available in this template’s version catalog):
 
 ```kotlin
 dependencies {
@@ -28,39 +48,48 @@ dependencies {
 }
 ```
 
-## Running tests
+## Running unit tests
 
-For an Android library provider module, common tasks include:
-
-- `./gradlew :<ProviderModule>:testDebugUnitTest`
-
-(Confirm available tasks if the module’s build type differs.)
-
-## Manual debugging
-
-- It’s recommended to convert commonly used Gradle commands into Android Studio run configurations.
-
-- Build/package:
-  - `./gradlew :<ProviderModule>:make`
-- Deploy to a connected emulator/device:
-  - `./gradlew :<ProviderModule>:deployWithAdb`
-  - `--debug-app` for debug app builds
-  - `--wait-for-debugger` to attach a debugger
+```bash
+./gradlew :MyProvider:testDebugUnitTest
+```
 
 ## In-app testing flow
 
-- Build/package: `./gradlew :<ProviderModule>:make`
-- Deploy: `./gradlew :<ProviderModule>:deployWithAdb` (or add `--debug-app` / `--wait-for-debugger`)
+```bash
+# 1. Build and package
+./gradlew :MyProvider:make
 
-## Logging
+# 2. Deploy to a connected emulator or device
+./gradlew :MyProvider:deployWithAdb               # release/pre-release app
+./gradlew :MyProvider:deployWithAdb --debug-app   # debug app
 
-- Prefer Core Stubs logging helpers from `com.flixclusive.core.util.log`:
-  - `debugLog("...")`
-  - `warnLog("...")`
-  - `errorLog(e)`
+# 3. Attach debugger (optional)
+./gradlew :MyProvider:deployWithAdb --wait-for-debugger
+# Then click "Attach debugger to Android process" in Android Studio
+```
 
-## Debug mindset
+After deployment, use the **"Test provider"** option in Flixclusive to run the built-in capability check.
 
-- Reproduce with the smallest input.
-- Validate each stage (search -> metadata -> links) independently.
-- Prefer deterministic errors over silent empty results.
+## Logging (SHOULD)
+
+Use Core Stubs logging helpers from `com.flixclusive.core.util.log`:
+
+```kotlin
+debugLog("Loading search results for: $query")
+warnLog("Search returned no results for: $query")
+
+try {
+    // ...
+} catch (e: Exception) {
+    errorLog(e)
+    throw e  // re-throw; do not swallow
+}
+```
+
+## Debug mindset (SHOULD)
+
+- Reproduce with the smallest possible input first.
+- Validate each stage independently: search → metadata → links.
+- Prefer deterministic failures (throw clear exceptions) over silent empty results.
+- Convert frequently used Gradle commands into Android Studio run configurations for convenience.

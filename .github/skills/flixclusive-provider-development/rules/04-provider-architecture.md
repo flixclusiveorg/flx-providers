@@ -2,105 +2,101 @@
 
 ## Entry class (`ProviderPlugin`)
 
-- Every provider must have a single entry class that:
-  - Extends `ProviderPlugin`
-  - Is annotated with `@FlixclusiveProvider`
-  - Exposes capability APIs via `getCatalogApi(context)`, `getSearchApi(context)`, `getMetadataApi(context)`, `getMediaLinkApi(context)`, `getCrossMatchApi(context)`, `getTrackerApi(context)`
+Every provider MUST have a single entry class that:
 
-- `Provider` may still exist as a deprecated alias for `ProviderPlugin`. Prefer `ProviderPlugin` for new code.
+- Extends `ProviderPlugin`
+- Is annotated with `@FlixclusiveProvider`
+- Exposes capability APIs via `suspend` getters
 
-See the example implementation in `providers/BasicDummyProvider/.../BasicDummyProvider.kt`.
+```kotlin
+@FlixclusiveProvider
+class MyProviderPlugin : ProviderPlugin() {
 
-## Lateinit runtime state
+    private val client by lazy { OkHttpClient() }
 
-`ProviderPlugin.manifest` and `ProviderPlugin.settings` are initialized by the host app.
+    private val searchApi by lazy {
+        MySearchApi(client = client, providerId = id)
+    }
 
-- Do not read `manifest`/`settings` in property initializers or `init {}` blocks.
-- Prefer `by lazy { ... }` or compute values inside capability getters so the fields are available.
+    private val catalogApi by lazy {
+        MyCatalogApi(client = client, providerId = id)
+    }
+
+    private val metadataApi by lazy {
+        MyMetadataApi(client = client)
+    }
+
+    private val mediaLinkApi by lazy {
+        MyMediaLinkApi(client = client)
+    }
+
+    // All getters are suspend and return nullable types.
+    // Overriding with a non-null return is fine for supported capabilities.
+    override suspend fun getSearchApi(context: Context): SearchProviderApi    = searchApi
+    override suspend fun getCatalogApi(context: Context): CatalogProviderApi  = catalogApi
+    override suspend fun getMetadataApi(context: Context): MediaMetadataProviderApi = metadataApi
+    override suspend fun getMediaLinkApi(context: Context): MediaLinkProviderApi    = mediaLinkApi
+
+    // Return null for unsupported capabilities
+    override suspend fun getCrossMatchApi(context: Context): CrossMatchProviderApi? = null
+    override suspend fun getTrackerApi(context: Context): TrackerProviderApi?       = null
+}
+```
+
+## Lateinit runtime fields
+
+`ProviderPlugin.manifest` and `ProviderPlugin.settings` are initialized by the host app **after** the
+class is instantiated.
+
+**MUST NOT** read `manifest` or `settings` in:
+- `init {}` blocks
+- property initializers (e.g., `val foo = manifest.id`) — this will crash
+
+**MUST** read them inside:
+- `by lazy { ... }` blocks (evaluated on first access, after initialization)
+- Inside capability getters or methods
+- Inside `SettingsScreen()` composable
+
+```kotlin
+// WRONG — crashes because manifest is not yet set
+val myId = manifest.id  // ❌
+
+// CORRECT — lazy evaluates after host has set manifest
+private val searchApi by lazy {
+    MySearchApi(providerId = id)  // id = manifest.id, safe here ✅
+}
+```
 
 ## Capability APIs
 
 - Implement each capability as a focused class (e.g., `MyProviderSearchProviderApi : SearchProviderApi`).
-- Keep capability implementations stable:
-  - Create them once (commonly via `by lazy`) and reuse.
-  - Avoid creating a new API instance per call.
-- Capability getters return nullable types (`...Api?`).
-  - Return `null` when the provider does not support that capability.
+- **Create once via `by lazy` and reuse** — do not create a new instance per getter call.
+- Capability getters return nullable types. Return `null` when a capability is not supported.
 
 ## Settings and state
 
-- Persist user configuration and auth state using `provider.settings` (`ProviderSettings`).
-- Keep keys centralized (constants) and use typed getters/setters.
+- Persist user configuration and auth state using `provider.settings` (a `DataStore<Preferences>`).
+- Keep preference keys as `private const val` constants in one place.
+- Use typed DataStore extension helpers (from `core-stubs` DataStore extensions).
 
 ## Context usage
 
 - `get*Api(context)` provides an Android `Context`.
-- Prefer not to store `Context` long-term; pass it where needed.
+- Do not store `Context` in a long-lived property; pass it where needed.
 
 ## Settings UI (optional)
 
-- Override `SettingsScreen()` only if you provide custom UI.
-- Prefer extracting composables into separate functions/files for readability.
-
-## Legacy `getApi(...)`
-
-- `ProviderPlugin.getApi(context, client)` returns the deprecated `ProviderApi`.
-- Only override this when you specifically need legacy integration.
-- Prefer capability getters for new code.
-
-## Concrete reference (copy/paste skeleton)
-
-Use this as a starting point when wiring capability APIs.
+- Override `SettingsScreen()` only if the provider requires custom settings or auth.
+- Extract composables into separate files/functions for readability.
 
 ```kotlin
-@FlixclusiveProvider
-class ExampleProviderPlugin : ProviderPlugin() {
-  private val client by lazy { OkHttpClient() }
-
-  // Create once; reuse for all calls.
-  private val catalogApi by lazy {
-    ExampleCatalogApi(
-      client = client,
-      providerId = id,
-    )
-  }
-
-  private val searchApi by lazy {
-    ExampleSearchApi(
-      client = client,
-      providerId = id,
-    )
-  }
-
-  private val metadataApi by lazy {
-    ExampleMetadataApi(
-      client = client,
-      providerId = id,
-    )
-  }
-
-  private val mediaLinkApi by lazy {
-    ExampleMediaLinkApi(
-      client = client,
-    )
-  }
-
-  override fun getCatalogApi(context: Context): CatalogProviderApi = catalogApi
-  override fun getSearchApi(context: Context): SearchProviderApi = searchApi
-  override fun getMetadataApi(context: Context): MetadataProviderApi = metadataApi
-  override fun getMediaLinkApi(context: Context): MediaLinkProviderApi = mediaLinkApi
-
-  // Optional capabilities: return null when unsupported.
-  override fun getCrossMatchApi(context: Context): CrossMatchProviderApi? = null
-  override fun getTrackerApi(context: Context): TrackerProviderApi? = null
-
-  // Optional settings UI.
-  // @Composable
-  // override fun SettingsScreen() { ... }
+@Composable
+override fun SettingsScreen() {
+    MyProviderSettingsScreen(settings = settings)
 }
 ```
 
-Notes:
+## Real-world reference
 
-- Capability getters in `ProviderPlugin` are nullable (`...Api?`). Overriding with a non-null return type is OK for supported capabilities.
-- Put `manifest`/`settings` reads inside `by lazy { ... }` blocks (or inside getters) to avoid touching lateinit runtime fields too early.
+- `providers/Stremio/src/main/kotlin/.../StremioPlugin.kt` — capability-driven entry class
+- `providers/Trakt/src/main/kotlin/.../TraktPlugin.kt` — tracker + auth entry class

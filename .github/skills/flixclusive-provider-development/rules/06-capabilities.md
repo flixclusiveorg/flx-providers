@@ -1,583 +1,258 @@
 # 06 — Capability Implementation Rules
 
-A provider exposes functionality by implementing capability interfaces and returning them from `ProviderPlugin` getters.
+A provider exposes functionality by implementing capability interfaces and returning them from the
+`ProviderPlugin` `suspend` getters.
 
-When implementing a capability, use the matching Provider Docs guide as your baseline (see the Provider Docs index in `SKILL.md`).
+When implementing a capability, use the matching Provider Docs guide as your baseline (see the
+Provider Docs index in `SKILL.md`). For real working implementations, read the corresponding
+class in `providers/Stremio/` or `providers/Trakt/`.
 
-## Capability exposure (in `ProviderPlugin`)
+## Capability exposure in `ProviderPlugin` (MUST)
 
-- Override only what you support.
+- Override only the capabilities you support.
 - Return `null` for unsupported capabilities.
-- Return stable instances (cache via `by lazy`).
-
-### Concrete example (stable instances + nullable getters)
-
-This pattern is used throughout the Provider Docs implementation guides.
+- Return **stable instances** — cache via `by lazy`.
+- All getters are `suspend` and return nullable types.
 
 ```kotlin
-private const val KEY_TMDB_API_KEY = "tmdb_api_key"
-
 @FlixclusiveProvider
-class TestProviderPlugin : ProviderPlugin() {
-  private val client by lazy { OkHttpClient() }
+class MyProviderPlugin : ProviderPlugin() {
+    private val client by lazy { OkHttpClient() }
 
-  private val searchApi by lazy {
-    TestSearchApi(
-      client = client,
-      providerId = id,
-      tmdbApiKey = settings.getString(KEY_TMDB_API_KEY, null) ?: "",
-    )
-  }
+    private val searchApi by lazy {
+        MySearchApi(client = client, providerId = id)
+    }
 
-  // ProviderPlugin getters are nullable (`SearchProviderApi?`). Returning non-null is OK.
-  override fun getSearchApi(context: Context): SearchProviderApi = searchApi
-
-  // Unsupported capability: return null.
-  override fun getTrackerApi(context: Context): TrackerProviderApi? = null
+    override suspend fun getSearchApi(context: Context): SearchProviderApi = searchApi
+    override suspend fun getTrackerApi(context: Context): TrackerProviderApi? = null  // unsupported
 }
 ```
+
+---
 
 ## Catalog (`CatalogProviderApi`)
 
-- Implement `getCatalogs()` as the canonical async loader.
-- Return a `List<Catalog>` from `getCatalogs()`.
-- Implement pagination in `getCatalogItems(catalog, page)` using `PaginatedResponse`.
-  - Pages are 1-based.
-  - Set `hasNextPage` correctly.
-
-### Catalog shape expectations
-
-- Catalogs are curated home-page sections.
-- `Catalog` should have:
-  - `name` (display name)
-  - `url` (resolvable endpoint/URL used by `getCatalogItems`)
-  - `canPaginate` (whether the host can show “Load more”)
-  - `providerId` (use the provider’s manifest id)
-  - Optional: `image`, `description`, `headers`
-
-### Concrete example (catalogs + paging)
-
-This is adapted from the Provider Docs “Loading catalogs” guide. It intentionally shows:
-
-- `Catalog(...)` construction
-- `OkHttpClient.request(...)` + `Response.fromJson<T>()`
-- `PaginatedResponse(...)` assembly
-
 ```kotlin
-class TestCatalogApi(
-  private val client: OkHttpClient,
-  private val providerId: String,
-  private val tmdbApiKey: String,
-) : CatalogProviderApi {
-  private val trendingMovies = Catalog(
-    name = "Trending Movies",
-    url = "https://api.themoviedb.org/3/discover/movie",
-    canPaginate = true,
-    providerId = providerId,
-    description = "Popular movies right now",
-  )
-
-  private val popularTvShows = Catalog(
-    name = "Popular TV Shows",
-    url = "https://api.themoviedb.org/3/discover/tv",
-    canPaginate = true,
-    image = "https://api.themoviedb.org/sample_icon.png",
-    providerId = providerId,
-  )
-
-  override suspend fun getCatalogs(): List<Catalog> = listOf(
-    trendingMovies,
-    popularTvShows,
-  )
-
-  private fun buildCatalogUrl(
-    baseUrl: String,
-    page: Int,
-    apiKey: String,
-  ): String = "$baseUrl?api_key=$apiKey&page=$page"
-
-  override suspend fun getCatalogItems(
-    catalog: Catalog,
-    page: Int,
-  ): PaginatedResponse<FilmSearchItem> {
-    // DTOs/mappers are intentionally reused from the Search example below.
-    val dto = client
-      .request(url = buildCatalogUrl(catalog.url, page, tmdbApiKey))
-      .execute()
-      .fromJson<TmdbSearchResponseDto>()
-
-    // Catalog endpoints often don't return `media_type`, so force it based on which catalog is being loaded.
-    val forcedType = when (catalog.url) {
-      trendingMovies.url -> FilmType.MOVIE
-      popularTvShows.url -> FilmType.TV_SHOW
-      else -> null
-    }
-
-    val results = dto.results
-      .mapNotNull { it.toFilmSearchItemOrNull(providerId = providerId, forcedType = forcedType) }
-
-    val hasNext = if (dto.totalPages != 0) dto.page < dto.totalPages else results.isNotEmpty()
-
-    return PaginatedResponse(
-      page = dto.page,
-      results = results,
-      hasNextPage = hasNext,
-      totalPages = dto.totalPages,
-    )
-  }
+interface CatalogProviderApi {
+    suspend fun getCatalogs(): List<Catalog>
+    suspend fun getCatalogItems(catalog: Catalog, page: Int = 1): PaginatedMedia<PartialMedia>
 }
 ```
+
+### Rules
+
+- `getCatalogs()` returns the static list of home-page browsable sections.
+- `getCatalogItems(catalog, page)` is paginated; pages are **1-based**.
+- Set `hasNextPage` correctly on `PaginatedMedia`.
+- `Catalog.providerId` MUST equal `manifest.id` (use `id` from `ProviderPlugin`).
+
+### Concrete example (adapted from `providers/Stremio/StremioCatalogProvider.kt`)
+
+```kotlin
+class MyCatalogApi(
+    private val client: OkHttpClient,
+    private val providerId: String,
+) : CatalogProviderApi {
+
+    private val trending = Catalog(
+        name        = "Trending",
+        url         = "https://example.com/api/trending",
+        providerId  = providerId,
+        canPaginate = true,
+        description = "Most popular right now",
+    )
+
+    override suspend fun getCatalogs(): List<Catalog> = listOf(trending)
+
+    override suspend fun getCatalogItems(catalog: Catalog, page: Int): PaginatedMedia<PartialMedia> {
+        val dto = client
+            .request(url = "${catalog.url}?page=$page")
+            .execute()
+            .fromJson<MySearchResponseDto>()
+
+        val items = dto.results.mapNotNull { it.toPartialMediaOrNull(providerId) }
+
+        return PaginatedMedia(
+            page        = page,
+            results     = items,
+            hasNextPage = page < dto.totalPages,
+            totalPages  = dto.totalPages,
+        )
+    }
+}
+```
+
+---
 
 ## Search (`SearchProviderApi`)
 
-- Provide `filters: FilterList` (can be empty).
-- Implement `search(title, page, filters)`.
-- Normalize input (trim) and treat blank search sanely.
-- Return `PaginatedResponse<FilmSearchItem>`.
+```kotlin
+interface SearchProviderApi {
+    val filters: FilterList
+    suspend fun search(query: String, page: Int = 1, filters: FilterList = this.filters): PaginatedMedia<PartialMedia>
+}
+```
 
-### PaginatedResponse contract
+### Rules
 
-- `page` is 1-based.
-- `totalPages` can be `0` if unknown.
-- `hasNextPage` should be derived from:
-  - `page < totalPages` when `totalPages` is known, or
-  - a deterministic heuristic when unknown (for example, `results.isNotEmpty()` for fixed page sizes).
+- Provide `filters: FilterList` (can be empty `FilterList()`).
+- Normalize input: trim `query`; return empty `PaginatedMedia` for blank queries.
+- Pages are **1-based**.
+- Set `totalPages = 0` when unknown; set `hasNextPage` based on whether the result set is non-empty.
 
-### Filters (when applicable)
-
-- Filters belong to the API via `override val filters: FilterList`.
-- The host UI renders those filters and passes the current state back into `search(..., filters)`.
-- Use the SDK filter types:
-  - `Filter.Select`, `Filter.CheckBox`, `Filter.TriState`, `Filter.Sort`
-  - Group them with `FilterGroup` and expose via `FilterList`.
-
-### Concrete example (filters + OkHttp + JSON parsing)
-
-This is adapted from the Provider Docs “Searching media” + “Search filters” guides.
+### Concrete example (adapted from `providers/Stremio/StremioSearchProvider.kt`)
 
 ```kotlin
-private const val FILTER_ALL = 0
-private const val FILTER_MOVIE = 1
-private const val FILTER_TV_SHOW = 2
-
-class TmdbMediaTypeFilters(
-  name: String = "Media type",
-) : FilterGroup(
-  name = name,
-  Filter.Select(
-    name = "",
-    options = listOf("All", "Movies", "TV Shows"),
-    state = FILTER_ALL,
-  ),
-) {
-  private val select: Filter.Select<String>
-    get() = first() as Filter.Select<String>
-
-  val selectedIndex: Int
-    get() = select.state
-}
-
-@Serializable
-data class TmdbSearchResponseDto(
-  val page: Int,
-  @SerialName("total_pages") val totalPages: Int = 0,
-  val results: List<TmdbSearchItemDto> = emptyList(),
-)
-
-@Serializable
-data class TmdbSearchItemDto(
-  val id: Int,
-  @SerialName("media_type") val mediaType: String? = null,
-  val title: String? = null,
-  val name: String? = null,
-  @SerialName("poster_path") val posterPath: String? = null,
-  val overview: String? = null,
-  @SerialName("vote_average") val voteAverage: Double? = null,
-  val adult: Boolean? = null,
-)
-
-private fun TmdbSearchItemDto.toFilmSearchItemOrNull(
-  providerId: String,
-  forcedType: FilmType? = null,
-): FilmSearchItem? {
-  val resolvedType = forcedType ?: when (mediaType) {
-    "movie" -> FilmType.MOVIE
-    "tv" -> FilmType.TV_SHOW
-    else -> null
-  }
-
-  if (resolvedType == null) return null
-
-  val resolvedTitle = title ?: name.orEmpty()
-  val poster = posterPath?.let { "https://image.tmdb.org/t/p/w500$it" }
-
-  return FilmSearchItem(
-    id = id.toString(),
-    providerId = providerId,
-    filmType = resolvedType,
-    homePage = "https://www.themoviedb.org/${resolvedType.type}/$id",
-    title = resolvedTitle,
-    posterImage = poster,
-    adult = adult == true,
-    externalIds = mapOf(FilmIdSource.TMDB to id.toString()),
-    releaseDate = null,
-    rating = voteAverage,
-    overview = overview,
-  )
-}
-
-class TestSearchApi(
-  private val client: OkHttpClient,
-  private val providerId: String,
-  private val tmdbApiKey: String,
+class MySearchApi(
+    private val client: OkHttpClient,
+    private val providerId: String,
 ) : SearchProviderApi {
-  override val filters: FilterList = FilterList(
-    TmdbMediaTypeFilters(),
-  )
+    override val filters: FilterList = FilterList() // no filters
 
-  private fun buildTmdbRequestUrl(
-    endpoint: String,
-    query: String,
-    page: Int,
-    apiKey: String,
-  ): String {
-    val encodedQuery = URLEncoder.encode(query, Charsets.UTF_8.name())
-    return "$endpoint?api_key=$apiKey&query=$encodedQuery&page=$page"
-  }
+    override suspend fun search(query: String, page: Int, filters: FilterList): PaginatedMedia<PartialMedia> {
+        val q = query.trim()
+        if (q.isBlank()) return PaginatedMedia(page = page, results = emptyList(), hasNextPage = false, totalPages = 0)
 
-  override suspend fun search(
-    title: String,
-    page: Int,
-    filters: FilterList,
-  ): PaginatedResponse<FilmSearchItem> {
-    val query = title.trim()
-    if (query.isBlank()) {
-      return PaginatedResponse(
-        page = page,
-        results = emptyList(),
-        hasNextPage = false,
-        totalPages = 0,
-      )
+        val dto = client
+            .request(url = "https://example.com/api/search?q=${q.encodeURL()}&page=$page")
+            .execute()
+            .fromJson<MySearchResponseDto>()
+
+        val items = dto.results.mapNotNull { it.toPartialMediaOrNull(providerId) }
+
+        return PaginatedMedia(
+            page        = dto.page,
+            results     = items,
+            hasNextPage = dto.page < dto.totalPages,
+            totalPages  = dto.totalPages,
+        )
     }
-
-    val mediaTypeFilter = filters
-      .filterIsInstance<TmdbMediaTypeFilters>()
-      .firstOrNull()
-    val mediaTypeIndex = mediaTypeFilter?.selectedIndex ?: FILTER_ALL
-
-    val endpoint = when (mediaTypeIndex) {
-      FILTER_ALL -> "https://api.themoviedb.org/3/search/multi"
-      FILTER_TV_SHOW -> "https://api.themoviedb.org/3/search/tv"
-      FILTER_MOVIE -> "https://api.themoviedb.org/3/search/movie"
-      else -> "https://api.themoviedb.org/3/search/multi"
-    }
-
-    val dto = client
-      .request(url = buildTmdbRequestUrl(endpoint, query, page, tmdbApiKey))
-      .execute()
-      .fromJson<TmdbSearchResponseDto>()
-
-    val forcedType = when (mediaTypeIndex) {
-      FILTER_MOVIE -> FilmType.MOVIE
-      FILTER_TV_SHOW -> FilmType.TV_SHOW
-      else -> null
-    }
-
-    val results = dto.results
-      .asSequence()
-      .mapNotNull { it.toFilmSearchItemOrNull(providerId = providerId, forcedType = forcedType) }
-      .toList()
-
-    return PaginatedResponse(
-      page = dto.page,
-      results = results,
-      hasNextPage = dto.totalPages != 0 && dto.page < dto.totalPages || (dto.totalPages == 0 && results.isNotEmpty()),
-      totalPages = dto.totalPages,
-    )
-  }
 }
 ```
 
-Minimal grouped filter example (useful when you don’t need a custom `FilterGroup` subclass):
+---
+
+## Metadata (`MediaMetadataProviderApi`)
 
 ```kotlin
-override val filters: FilterList = FilterList(
-  FilterGroup(
-    name = "Content Filters",
-    Filter.Select("Genre", listOf("Action", "Comedy", "Drama")),
-    Filter.CheckBox("HD Only"),
-    Filter.Sort("Sort By", listOf("Popularity", "Release Date")),
-  ),
-)
+interface MediaMetadataProviderApi {
+    suspend fun getMovie(media: PartialMedia): Movie
+    suspend fun getShow(media: PartialMedia): Show
+}
 ```
 
-## Metadata (`MetadataProviderApi`)
+### Rules
 
-- Implement `getMetadata(film: Film): FilmMetadata`.
-- Ensure returned metadata includes stable IDs and the correct provider identifier.
+- The interface is **split** — `getMovie` and `getShow` are separate methods, NOT a single `getMetadata`.
+- `media` is a `PartialMedia` (the lightweight search/catalog item).
+- Return fully populated `Movie` or `Show` with stable IDs and `providerId` set.
+- Prefer stable external IDs (e.g., `media.externalIds[MediaIdSource.IMDB]`) when available.
 
-### Metadata expectations
-
-- Return a richer `FilmMetadata` (`Movie` or `TvShow`) for the given `Film` (often a `FilmSearchItem`).
-- Prefer stable external IDs when available (for example `film.externalIds[FilmIdSource.TMDB]`).
-- For `genres`, prefer setting `Genre.catalog` for navigation metadata; `Genre.id` and `Genre.url` are deprecated.
-- `FilmDetails` exists in older code but is deprecated in favor of `FilmMetadata`.
-
-### Concrete example (choose endpoint by film type)
-
-Adapted from the Provider Docs “Fetching metadata” guide.
+### Concrete example (adapted from `providers/Stremio/StremioMetadataProvider.kt`)
 
 ```kotlin
-@Serializable
-data class TmdbMovieDto(
-  val id: Int,
-  val title: String,
-  @SerialName("poster_path") val posterPath: String? = null,
-  @SerialName("backdrop_path") val backdropPath: String? = null,
-  val homepage: String? = null,
-  val overview: String? = null,
-  val adult: Boolean = false,
-  @SerialName("vote_average") val voteAverage: Double? = null,
-) {
-  fun toMovie(providerId: String): Movie {
-    val poster = posterPath?.let { "https://image.tmdb.org/t/p/w500$it" }
-    val backdrop = backdropPath?.let { "https://image.tmdb.org/t/p/w780$it" }
+class MyMetadataApi(
+    private val client: OkHttpClient,
+) : MediaMetadataProviderApi {
 
-    return Movie(
-      id = id.toString(),
-      title = title,
-      posterImage = poster,
-      homePage = homepage,
-      backdropImage = backdrop,
-      externalIds = mapOf(FilmIdSource.TMDB to id.toString()),
-      releaseDate = null,
-      rating = voteAverage,
-      providerId = providerId,
-      adult = adult,
-      overview = overview,
-    )
-  }
-}
-
-@Serializable
-data class TmdbTvShowDto(
-  val id: Int,
-  @SerialName("name") val title: String,
-  @SerialName("poster_path") val posterPath: String? = null,
-  @SerialName("backdrop_path") val backdropPath: String? = null,
-  val homepage: String? = null,
-  val overview: String? = null,
-  val adult: Boolean = false,
-  @SerialName("vote_average") val voteAverage: Double? = null,
-  @SerialName("number_of_episodes") val numberOfEpisodes: Int = 0,
-  @SerialName("number_of_seasons") val numberOfSeasons: Int = 0,
-) {
-  fun toTvShow(providerId: String): TvShow {
-    val poster = posterPath?.let { "https://image.tmdb.org/t/p/w500$it" }
-    val backdrop = backdropPath?.let { "https://image.tmdb.org/t/p/w780$it" }
-
-    return TvShow(
-      id = id.toString(),
-      title = title,
-      posterImage = poster,
-      homePage = homepage,
-      backdropImage = backdrop,
-      externalIds = mapOf(FilmIdSource.TMDB to id.toString()),
-      releaseDate = null,
-      rating = voteAverage,
-      providerId = providerId,
-      adult = adult,
-      overview = overview,
-      totalEpisodes = numberOfEpisodes,
-      totalSeasons = numberOfSeasons,
-    )
-  }
-}
-
-class TestMetadataApi(
-  private val client: OkHttpClient,
-  private val tmdbApiKey: String,
-) : MetadataProviderApi {
-  private fun buildTmdbDetailsUrl(
-    base: String,
-    id: String,
-    apiKey: String,
-  ): String = "$base/$id?api_key=$apiKey"
-
-  override suspend fun getMetadata(film: Film): FilmMetadata {
-    val providerId = film.providerId
-    val tmdbId = film.externalIds[FilmIdSource.TMDB] ?: film.id
-
-    val endpoint = when (film.filmType) {
-      FilmType.MOVIE -> "https://api.themoviedb.org/3/movie"
-      FilmType.TV_SHOW -> "https://api.themoviedb.org/3/tv"
+    override suspend fun getMovie(media: PartialMedia): Movie {
+        val dto = client
+            .request(url = "https://example.com/api/movie/${media.id}")
+            .execute()
+            .fromJson<MyMovieDto>()
+        return dto.toMovie(providerId = media.providerId)
     }
 
-    val response = client
-      .request(url = buildTmdbDetailsUrl(endpoint, tmdbId, tmdbApiKey))
-      .execute()
-
-    return when (film.filmType) {
-      FilmType.MOVIE -> response.fromJson<TmdbMovieDto>().toMovie(providerId)
-      FilmType.TV_SHOW -> response.fromJson<TmdbTvShowDto>().toTvShow(providerId)
+    override suspend fun getShow(media: PartialMedia): Show {
+        val dto = client
+            .request(url = "https://example.com/api/show/${media.id}")
+            .execute()
+            .fromJson<MyShowDto>()
+        return dto.toShow(providerId = media.providerId)
     }
-  }
 }
 ```
 
-## Media links (`MediaLinkProviderApi`)
+---
 
-- Declare what you can emit via `supportedLinkTypes: Set<MediaLinkType>`:
-  - `setOf(MediaLinkType.STREAMS)`
-  - `setOf(MediaLinkType.SUBTITLES)`
-  - `setOf(MediaLinkType.STREAMS, MediaLinkType.SUBTITLES)`
-- Implement `getLinks(film, episode)` as a `Flow<MediaLink>`.
-  - Emit as you discover links; do not wait for all extraction if not necessary.
+## Media Links (`MediaLinkProviderApi`)
 
-### Flags
+```kotlin
+interface MediaLinkProviderApi {
+    val supportedLinkTypes: Set<MediaLinkType>
+    suspend fun getLinks(media: MediaMetadata, episode: Episode? = null, onLinkFound: (MediaLink) -> Unit)
+}
+```
 
-- Use `Flag` values to declare constraints (auth headers, third-party gateways, trust/source labeling, etc.).
-- Never emit empty/invalid URLs.
+### Rules
 
-Concrete implementation examples for media-links are in `rules/07-media-links.md`.
+- Declare what you emit via `supportedLinkTypes`: `STREAMS`, `SUBTITLES`, or both.
+- `getLinks` uses a **callback** (`onLinkFound`) — it does NOT return a `Flow<MediaLink>`.
+- Call `onLinkFound(link)` for each discovered link; do not buffer everything in memory.
+- Never emit empty or invalid URLs.
+
+Full details and examples are in `rules/07-media-links.md`.
+
+---
 
 ## Cross-match (`CrossMatchProviderApi`)
 
-- Implement when you can resolve other providers’ IDs deterministically.
-- `supportedIdSources` is required; override it to declare which `FilmIdSource` you support.
-- Prefer `getById(sourceIds)` for exact ID resolution; use `getByFuzzy(film)` as fallback.
-  - `film` is assumed to be metadata from another provider (not from this provider).
-
-### Cross-match behavior
-
-- `getById(sourceIds)` should be deterministic and based on trusted IDs.
-- `getByFuzzy(film)` should be a fallback only (best-effort matching).
-
-### Concrete example (ID-first, fuzzy fallback)
-
-Adapted from the Provider Docs “Cross-match” guide.
-
 ```kotlin
-class TestCrossMatchApi(
-  private val providerId: String,
-) : CrossMatchProviderApi {
-  override val supportedIdSources: Set<FilmIdSource> = setOf(
-    FilmIdSource.TMDB,
-    FilmIdSource.IMDB,
-  )
-
-  override suspend fun getById(
-    sourceIds: Map<FilmIdSource, String>,
-  ): FilmMetadata? {
-    val tmdbId = sourceIds[FilmIdSource.TMDB]
-    val imdbId = sourceIds[FilmIdSource.IMDB]
-
-    return when {
-      tmdbId != null -> fetchByTmdbId(tmdbId)
-      imdbId != null -> fetchByImdbId(imdbId)
-      else -> null
-    }
-  }
-
-  override suspend fun getByFuzzy(
-    film: FilmMetadata,
-  ): FilmMetadata? {
-    // Best-effort fallback only.
-    return null
-  }
-
-  private suspend fun fetchByTmdbId(tmdbId: String): FilmMetadata? = TODO()
-  private suspend fun fetchByImdbId(imdbId: String): FilmMetadata? = TODO()
+interface CrossMatchProviderApi {
+    suspend fun getById(sourceIds: Map<MediaIdSource, String>): MediaMetadata?
+    suspend fun getByFuzzy(media: MediaMetadata): MediaMetadata?
 }
 ```
+
+### Rules
+
+- There is **no** `supportedIdSources` property in the SDK — do not add it.
+- `getById` should be deterministic — only return a result when you have a confident ID match.
+- `getByFuzzy` is a best-effort fallback; it is OK to return `null`.
+- The `media` input to `getByFuzzy` comes from **another** provider.
+
+### Concrete example (adapted from `providers/Stremio/StremioCrossMatcher.kt`)
+
+```kotlin
+class MyCrossMatchApi(
+    private val client: OkHttpClient,
+    private val providerId: String,
+) : CrossMatchProviderApi {
+
+    override suspend fun getById(sourceIds: Map<MediaIdSource, String>): MediaMetadata? {
+        val imdbId = sourceIds[MediaIdSource.IMDB] ?: return null
+        return fetchByImdb(imdbId)
+    }
+
+    override suspend fun getByFuzzy(media: MediaMetadata): MediaMetadata? {
+        // Best-effort title search; return null if no confident match
+        return null
+    }
+
+    private suspend fun fetchByImdb(id: String): MediaMetadata? {
+        // ...
+        return null
+    }
+}
+```
+
+---
 
 ## Tracker (`TrackerProviderApi`)
 
-- Implement only if you integrate with a tracker service (lists and/or scrobble).
-- Declare supported operations via `features: Set<TrackerFeature>`.
-- Use the concrete feature names the SDK exposes: `LISTS_READ`, `LISTS_CREATE`, `LISTS_UPDATE`, `LISTS_DELETE`, `LIST_ITEMS_READ`, `LIST_ITEMS_ADD`, `LIST_ITEMS_REMOVE`, `SCROBBLE_START`, `SCROBBLE_STOP`.
-- Implement `suspend fun isAuthenticated(): Boolean` and keep it fast + side-effect free (derive from stored auth state).
-- If auth is required and the user is not authenticated, return `false` from `isAuthenticated()`.
-- Tracker operations assume an authenticated user; if called while unauthenticated, fail fast with a normal exception (do not reference `TrackerAuthRequiredException`; it is not part of the SDK).
-
-### Scrobble contract
-
-- Use `ScrobbleAction.START` when playback starts/resumes.
-- Use `ScrobbleAction.STOP` when playback stops/finishes.
-- Do not add a pause action unless the SDK contract adds it.
-- Ensure `progressPercent` is within 0..100.
-
-### Concrete example skeleton (features + list ops + scrobble)
-
-Adapted from the Provider Docs “Tracker” guide.
-
 ```kotlin
-class TestTrackerApi(
-  private val providerId: String,
-) : TrackerProviderApi {
-  override val features: Set<TrackerFeature> = setOf(
-    TrackerFeature.LISTS_READ,
-    TrackerFeature.LISTS_CREATE,
-    TrackerFeature.LISTS_UPDATE,
-    TrackerFeature.LISTS_DELETE,
-    TrackerFeature.LIST_ITEMS_READ,
-    TrackerFeature.LIST_ITEMS_ADD,
-    TrackerFeature.LIST_ITEMS_REMOVE,
-    TrackerFeature.SCROBBLE_START,
-    TrackerFeature.SCROBBLE_STOP,
-  )
-
-  override suspend fun isAuthenticated(): Boolean = TODO(
-    "Return whether the user is authenticated (derive from ProviderSettings auth state)"
-  )
-
-  override suspend fun getLists(): List<TrackerList> = emptyList()
-
-  override suspend fun createList(
-    name: String,
-    description: String?,
-  ): TrackerList = TODO("Create list remotely")
-
-  override suspend fun updateList(
-    list: TrackerList,
-    name: String?,
-    description: String?,
-  ): TrackerList = TODO("Update list remotely")
-
-  override suspend fun deleteList(list: TrackerList) {
-    TODO("Delete list remotely")
-  }
-
-  override suspend fun getListItems(
-    list: TrackerList,
-    page: Int,
-  ): PaginatedResponse<FilmSearchItem> {
-    TODO("Load tracker list items")
-  }
-
-  override suspend fun addListItem(
-    list: TrackerList,
-    item: Film,
-  ) {
-    TODO("Add item to list")
-  }
-
-  override suspend fun removeListItem(
-    list: TrackerList,
-    item: Film,
-  ) {
-    TODO("Remove item from list")
-  }
-
-  override suspend fun scrobble(
-    action: ScrobbleAction,
-    film: FilmMetadata,
-    episode: Episode?,
-    progressPercent: Float,
-    atMs: Long?,
-  ) {
-    require(progressPercent in 0f..100f)
-    TODO("Send scrobble event")
-  }
+interface TrackerProviderApi {
+    suspend fun getFeatures(): Set<TrackerFeature>   // method, not a property
+    suspend fun isAuthenticated(): Boolean
+    // ... list CRUD, scrobble, etc.
 }
 ```
+
+### Rules
+
+- `TrackerFeature` has exactly **two** values: `LIST_MANAGEMENT` and `SCROBBLE`.
+- `getFeatures()` is a `suspend` **method**, not `override val features`.
+- Back `isAuthenticated()` by stored auth state — make it fast and side-effect-free.
+- Tracker operations assume the user is authenticated; fail fast if not.
+
+Full details and examples are in the Provider Docs [Tracker guide](https://flixclusiveorg.github.io/provider-docs/impl/tracker) and `providers/Trakt/`.

@@ -3,60 +3,88 @@
 ## Template setup (one-time)
 
 - If you created this repo from the provider template, ensure **"Include all branches"** was enabled.
-   - The template CI setup depends on the additional branch.
-- Configure shared provider metadata once in the root `build.gradle.kts` (commonly in a `subprojects { ... }` block):
-   - `flxProvider.author(...)`
-   - `flxProvider.setRepository("https://github.com/<you>/<repo>")`
+  The template CI setup depends on the additional branch.
+- Configure shared provider metadata once in the root `build.gradle.kts` (inside a `subprojects { ... }` block):
+
+  ```kotlin
+  subprojects {
+      flxProvider {
+          author(
+              name = "your-github-handle",
+              image = "https://github.com/your-github-handle.png",
+              socialLink = "https://github.com/your-github-handle",
+          )
+          setRepository("https://github.com/your-handle/your-providers-repo")
+      }
+  }
+  ```
 
 ## What lives where
 
 - `providers/<ProviderModule>/` — each provider is its own Android library module.
 - `settings.gradle.kts` — controls which provider modules are included.
 - Root `build.gradle.kts` — applies the `flx-provider` plugin and sets common Android config.
+- `gradle/libs.versions.toml` — version catalog for SDK and plugin versions.
+- `core/util/` — shared utilities available to all provider modules in this repo.
 
-## Creating a new provider module (recommended workflow)
+## Creating a new provider module
 
-1. Copy `providers/BasicDummyProvider/` into a new folder:
-   - Example: `providers/MyNewProvider/`
+1. Copy `providers/Stremio/` (or `providers/BasicDummyProvider/`) as a starting point:
+
+   ```
+   providers/
+   └── MyProvider/
+       ├── build.gradle.kts
+       └── src/main/
+           ├── kotlin/
+           └── res/
+   ```
+
 2. Add the module name to `settings.gradle.kts`:
+
    ```kotlin
    include(
-       "BasicDummyProvider",
-       "MyNewProvider",
+       "Stremio",
+       "Trakt",
+       "MyProvider",
    )
-   ```
-3. Keep the existing projectDir mapping (this template expects modules in `providers/`):
-   ```kotlin
+
    rootProject.children.forEach {
        it.projectDir = file("providers/${it.name}")
    }
    ```
-4. Update the new module’s `build.gradle.kts`:
-   - `android { namespace = "..." }`
-   - `flxProvider { id = "..." versionMajor/minor/patch/build = ... }`
-   - Dependencies (at minimum `implementation(libs.core.stubs.provider)`)
-5. Rename packages/classes:
-   - Provider entry class should extend `ProviderPlugin` and be annotated with `@FlixclusiveProvider`.
+
+3. Update the new module's `build.gradle.kts`:
+   - `android { namespace = "com.yourorg.provider.my_provider" }`
+   - `flxProvider { id = "prov-my-provider" versionMajor = 1 ... }`
+   - `dependencies { implementation(libs.core.stubs.provider) }`
+
+4. Create the entry class (extends `ProviderPlugin`, annotated with `@FlixclusiveProvider`).
 
 ## Provider module shape
-
-Provider modules are standard Kotlin/Android library modules. At minimum, keep:
 
 ```
 <ProviderModule>/
 ├── build.gradle.kts
 └── src/
-   └── main/
-      ├── kotlin/
-      └── res/
+    └── main/
+        ├── kotlin/
+        │   └── com/yourorg/provider/my_provider/
+        │       ├── api/
+        │       │   ├── search/
+        │       │   ├── catalog/
+        │       │   ├── metadata/
+        │       │   └── links/
+        │       ├── settings/
+        │       ├── common/
+        │       └── MyProviderPlugin.kt
+        └── res/
 ```
 
-- The package folder structure under `src/main/kotlin` does not need to match the module name.
-- The `build.gradle.kts` and `src/main` source set must exist.
+- The package folder structure does not need to match the module name exactly.
+- The `build.gradle.kts` and `src/main` source set must always exist.
 
-## Provider entry point
+## Real-world examples
 
-A provider’s entry point is the class extending `ProviderPlugin` (see `providers/BasicDummyProvider/.../BasicDummyProvider.kt`).
-
-- Cache API instances (use `by lazy`) and return them from capability getters.
-- Return `null` from capability getters you don’t support.
+- Study `providers/Stremio/` for capability-driven layout (search, catalog, metadata, links, cross-match).
+- Study `providers/Trakt/` for tracker integration, OAuth flows, and DataStore token storage.

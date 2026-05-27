@@ -1,39 +1,67 @@
 # 11 — Release & Packaging
 
-## Versioning
+## Provider ID stability (MUST)
 
-- Version fields live in `flxProvider { ... }` inside the provider module’s `build.gradle.kts`.
-- Keep provider `id` stable across all releases; changing it breaks updates and identity.
+- The `id` field in `flxProvider { ... }` MUST remain stable across all releases.
+- **Changing `id` after the first release is a breaking change** — it disconnects existing installs from future updates.
+- Use lowercase + hyphen format, prefixed with `prov-`: `prov-my-provider`
 
-Suggested practice:
+## Versioning (MUST)
 
-- Bugfix: bump `versionPatch`
-- Feature: bump `versionMinor`
-- Breaking behavior change: bump `versionMajor`
+Version fields live in `flxProvider { ... }` in the provider module's `build.gradle.kts`:
 
-## Changelog
+- `versionBuild` — increment on every build (CI typically manages this).
+- `versionPatch` — bugfix / minor behavior correction.
+- `versionMinor` — new feature or capability.
+- `versionMajor` — breaking behavior change or major rewrite.
 
-- Keep `changelog` updated (it supports Markdown).
-- Use clear, user-facing bullet points.
+## Status (MUST)
 
-## Metadata checklist
+Set `status` accurately — it is shown to users:
 
-Before shipping, confirm these `flxProvider { ... }` fields are correct:
+| Value | When to use |
+|---|---|
+| `ProviderStatus.Working` | Provider is fully functional |
+| `ProviderStatus.Beta` | Working but not fully validated |
+| `ProviderStatus.Maintenance` | Temporarily degraded or being updated |
+| `ProviderStatus.Down` | Source is unreachable or broken |
 
-- Identity: `id` (stable), `providerName`, `description`
-- Content spec: `language`, `providerType`, `adult`
-- Build: `requiresResources` (set true only when you actually ship resources)
-- Visibility: `excludeFromUpdaterJson` only when intentionally hiding unfinished providers
+## Changelog (SHOULD)
 
-## Build
+Keep `changelog` updated with user-facing bullet points:
 
-- `./gradlew :<ProviderModule>:make` produces the distributable artifact.
+```kotlin
+flxProvider {
+    changelog = """
+    # 1.2.0
+    ---
+    - Added subtitle support
+    - Fixed catalog pagination
+    """.trimIndent()
+}
+```
 
-## Deployment
+## Metadata checklist before shipping (MUST)
 
-- `./gradlew :<ProviderModule>:deployWithAdb` builds and deploys to a device/emulator.
+Confirm the following `flxProvider { ... }` fields are correct:
 
-## Status
+- `id` — stable and unique
+- `providerName` — human-readable Title Case
+- `description` — short summary
+- `language`, `providerType`, `adult` — accurately reflect content
+- `status` — reflects current availability
+- `requiresResources` — `true` only when `res/` files are actually included
+- `excludeFromUpdaterJson` — only use to hide intentionally unfinished providers
 
-- Set `status` accurately (`Working`, `Down`, `Maintenance`, `Beta`).
-- Use `excludeFromUpdaterJson` only when intentionally hiding unfinished providers.
+## Build and deploy commands
+
+```bash
+# Package the .flx artifact
+./gradlew :MyProvider:make
+
+# Deploy to device/emulator
+./gradlew :MyProvider:deployWithAdb
+
+# Deploy using debug build of Flixclusive
+./gradlew :MyProvider:deployWithAdb --debug-app
+```

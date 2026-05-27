@@ -1,117 +1,115 @@
 # 08 — Settings & Auth Rules
 
-Providers should store user configuration and auth state using `ProviderSettings` (`provider.settings`).
-
-Important runtime note:
+## `settings` is a `DataStore<Preferences>` (MUST)
 
 - `ProviderPlugin.manifest` and `ProviderPlugin.settings` are assigned by the host app at runtime.
-- Avoid accessing them in `init {}` blocks or property initializers unless you use `by lazy { ... }`.
-
-## Persistence
-
-- Store tokens, usernames, feature toggles, and preferences in settings.
-- Keep settings keys as constants in one place.
-- Prefer typed APIs (`getString`, `setString`, `getBool`, `setBool`, etc.).
-
-## Supported settings types
-
-- `ProviderSettings` supports primitives and Kotlinx-Serializable objects:
-  - Primitives: `Bool`, `Int`, `Long`, `Float`, `String`
-  - Objects: `setObject(key, value)` / `getObject<T>(key)` (T must be `@Serializable`)
-
-Useful helpers:
-
-- `exists(key)`, `remove(key)`, `toggleBool(key, default)`, `resetSettings()`, `allKeys`
-- `getUnknown(key, default)`, `setUnknown(key, value)`
-
-## Security basics
-
-- Don’t store raw passwords.
-- Don’t print/log tokens, cookies, or session identifiers.
-- Prefer short-lived tokens + refresh tokens if the upstream service supports it.
-
-## SettingsScreen (Compose)
-
-- Provide Settings UI only when needed.
-- Keep UI code separate from extraction logic.
-- Settings UI should:
-  - show auth status
-  - allow login/logout
-  - allow clearing cached state if relevant
-
-## Tracker auth behavior
-
-When implementing `TrackerProviderApi`:
-
-- Back `isAuthenticated()` by your persisted auth state (token/cookie + expiry when applicable).
-- Return `false` when logged out or expired; the host will route the user to `SettingsScreen` for login.
-- Use `SettingsScreen` to complete login and persist tokens, and clear persisted auth state on logout so `isAuthenticated()` stays accurate.
-
-## Concrete example (Compose SettingsScreen + ProviderSettings)
-
-Adapted from the Provider Docs “Creating a Settings UI” guide.
+- **MUST NOT** access them in `init {}` blocks or property initializers.
+- **MUST** access them inside `by lazy { ... }`, capability getters, or `SettingsScreen()`.
 
 ```kotlin
-private const val KEY_HD_ENABLED = "hd_enabled"
-private const val KEY_API_KEY = "api_key"
+// WRONG — settings not yet initialized
+val apiKey = settings.getString("api_key", null)  // ❌
 
-@Composable
-override fun SettingsScreen() {
-  var isHdEnabled by remember {
-    mutableStateOf(settings.getBool(KEY_HD_ENABLED, false))
-  }
-
-  var apiKey by remember {
-    mutableStateOf(settings.getString(KEY_API_KEY, "") ?: "")
-  }
-
-  Column(
-    modifier = Modifier
-      .fillMaxWidth()
-      .padding(16.dp)
-  ) {
-    Row(
-      modifier = Modifier.fillMaxWidth(),
-      verticalAlignment = Alignment.CenterVertically,
-    ) {
-      Text(
-        text = "Enable HD quality",
-        modifier = Modifier.weight(1f),
-      )
-
-      Switch(
-        checked = isHdEnabled,
-        onCheckedChange = { newValue ->
-          isHdEnabled = newValue
-          settings.setBool(KEY_HD_ENABLED, newValue)
-        },
-      )
-    }
-
-    Spacer(Modifier.height(16.dp))
-
-    OutlinedTextField(
-      value = apiKey,
-      onValueChange = { newValue ->
-        apiKey = newValue
-        settings.setString(KEY_API_KEY, newValue)
-      },
-      label = { Text("API key") },
-      modifier = Modifier.fillMaxWidth(),
-    )
-  }
+// CORRECT — lazy; only evaluated after host sets settings
+private val searchApi by lazy {
+    MySearchApi(apiKey = settings.getString("api_key", null) ?: "")  // ✅
 }
 ```
 
-### Concrete example (persisting a custom object)
+## Persisting configuration (MUST)
+
+- Store tokens, usernames, feature toggles, and preferences in `settings`.
+- Centralize preference keys as `private const val` constants.
+- Use Core Stubs typed DataStore extension helpers.
+
+### Supported types
+
+| Type | Helpers |
+|---|---|
+| Boolean | `settings.getBool(key, default)` / `settings.setBool(key, value)` |
+| Int | `settings.getInt(key, default)` / `settings.setInt(key, value)` |
+| Long | `settings.getLong(key, default)` / `settings.setLong(key, value)` |
+| Float | `settings.getFloat(key, default)` / `settings.setFloat(key, value)` |
+| String | `settings.getString(key, default)` / `settings.setString(key, value)` |
+| Object | `settings.getObject<T>(key)` / `settings.setObject(key, value)` (T must be `@Serializable`) |
+| Utility | `settings.exists(key)`, `settings.remove(key)`, `settings.resetSettings()` |
+
+## Security (MUST)
+
+- Do **not** store raw passwords.
+- Do **not** log tokens, cookies, or session identifiers.
+- Prefer short-lived tokens with refresh tokens where the upstream service supports it.
+
+## SettingsScreen (SHOULD)
+
+- Provide `SettingsScreen()` only when the provider requires user configuration or auth.
+- Extract all composable logic into separate files/functions for readability.
+- The settings screen should: show auth status, allow login/logout, allow clearing cache if relevant.
+
+### Concrete example — basic settings (Material 3)
 
 ```kotlin
-@Serializable
-data class ServerConfig(
-  val url: String,
-  val port: Int,
-)
+private const val KEY_HD_ENABLED = "hd_enabled"
+private const val KEY_API_KEY    = "api_key"
 
-settings.setObject("server_config", ServerConfig(url = "localhost", port = 8080))
-val config = settings.getObject<ServerConfig>("server_config")
+@Composable
+override fun SettingsScreen() {
+    MyProviderSettings(settings = settings)
+}
+
+@Composable
+private fun MyProviderSettings(settings: DataStore<Preferences>) {
+    var isHdEnabled by remember { mutableStateOf(settings.getBool(KEY_HD_ENABLED, false)) }
+    var apiKey by remember { mutableStateOf(settings.getString(KEY_API_KEY, null) ?: "") }
+
+    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("Enable HD quality", modifier = Modifier.weight(1f))
+            Switch(
+                checked = isHdEnabled,
+                onCheckedChange = { v -> isHdEnabled = v; settings.setBool(KEY_HD_ENABLED, v) },
+            )
+        }
+        Spacer(Modifier.height(16.dp))
+        OutlinedTextField(
+            value    = apiKey,
+            onValueChange = { v -> apiKey = v; settings.setString(KEY_API_KEY, v) },
+            label    = { Text("API key") },
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
 ```
+
+### Concrete example — OAuth token storage (adapted from `providers/Trakt/`)
+
+```kotlin
+private const val KEY_ACCESS_TOKEN  = "access_token"
+private const val KEY_REFRESH_TOKEN = "refresh_token"
+private const val KEY_TOKEN_EXPIRY  = "token_expiry_ms"
+
+// Store token after OAuth exchange
+settings.setString(KEY_ACCESS_TOKEN, authToken.accessToken)
+settings.setString(KEY_REFRESH_TOKEN, authToken.refreshToken)
+settings.setLong(KEY_TOKEN_EXPIRY, System.currentTimeMillis() + authToken.expiresInMs)
+
+// Check authentication
+fun isAuthenticated(): Boolean {
+    val token  = settings.getString(KEY_ACCESS_TOKEN, null) ?: return false
+    val expiry = settings.getLong(KEY_TOKEN_EXPIRY, 0L)
+    return token.isNotBlank() && System.currentTimeMillis() < expiry
+}
+
+// Clear auth state on logout
+fun logout() {
+    settings.remove(KEY_ACCESS_TOKEN)
+    settings.remove(KEY_REFRESH_TOKEN)
+    settings.remove(KEY_TOKEN_EXPIRY)
+}
+```
+
+## Tracker auth behavior (MUST)
+
+- Back `isAuthenticated()` by the persisted token/expiry state — keep it fast and side-effect-free.
+- Return `false` when logged out or the token is expired; the host routes the user to `SettingsScreen`.
+- Clear all persisted auth state on logout so `isAuthenticated()` stays accurate.

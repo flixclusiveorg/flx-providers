@@ -1,56 +1,77 @@
 # 09 — Networking & Scraping Rules
 
-## HTTP client
+## HTTP client (MUST)
 
-- Prefer a single `OkHttpClient` shared across capability APIs.
-- Configure timeouts intentionally (avoid default infinite waits).
-- Set a consistent User-Agent if the upstream site requires it.
+- Share a single `OkHttpClient` instance across all capability APIs.
+- Create it with `by lazy` in `ProviderPlugin` and pass it into each API class.
+- Configure timeouts intentionally — do not rely on OkHttp defaults.
+- Set a consistent `User-Agent` header if the upstream site requires one.
 
-## Requests
+### Concrete example — OkHttp with HTTP caching (adapted from `providers/Stremio/StremioClient.kt`)
 
-- Centralize base URLs and endpoints as constants.
+```kotlin
+class MyOkHttpClient(context: Context) {
+    val instance: OkHttpClient by lazy {
+        val cacheDir = File(context.cacheDir, "my_provider_http_cache")
+        val cache = Cache(cacheDir, 10L * 1024 * 1024) // 10 MB
+
+        OkHttpClient.Builder()
+            .cache(cache)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .addNetworkInterceptor { chain ->
+                val response = chain.proceed(chain.request())
+                response.newBuilder()
+                    .header("Cache-Control", "public, max-age=60, stale-while-revalidate=604800")
+                    .build()
+            }
+            .build()
+    }
+}
+```
+
+## Requests (SHOULD)
+
+- Centralize base URLs and endpoint paths as `private const val` constants.
 - Handle redirects explicitly when extracting final stream URLs.
-- Treat non-2xx responses as errors; surface actionable messages.
+- Treat non-2xx responses as errors and surface clear, actionable messages.
 
-## Parsing
+## Parsing (MUST)
 
-- Use Jsoup for HTML parsing; keep selectors resilient (avoid overly brittle DOM paths).
-- For JSON APIs, use Kotlinx Serialization (or a minimal, well-scoped parser).
-- Prefer Core Stubs helpers when available:
-  - `OkHttpClient.request(...)`
-  - `Response.fromJson<T>(...)`
-- Keep parsing code pure and testable (input string -> output model).
+- Use Jsoup for HTML parsing; keep CSS selectors resilient.
+- Use Kotlinx Serialization (`@Serializable` DTOs) for JSON APIs.
+- Use Core Stubs helpers when available:
+  - `OkHttpClient.request(url, method, headers, body)` — builds and executes a request
+  - `Response.fromJson<T>(errorMessage)` — parses the body as JSON
+  - `Response.asJsoup()` — parses the body as an HTML document
+- Keep parsing functions pure and testable: (input `String` → output model).
 
-## WebView fallback
+## WebView fallback (SHOULD)
 
-- Use `WebViewInterceptor` only when a site requires browser execution (JS challenges, cookie bootstrap, CAPTCHA).
-- Prefer attaching it to a client only for the requests that need it:
-  - `val clientWithWebView = client.addWebViewInterceptor(myWebViewInterceptor)`
-- Keep WebView interception isolated from the main capability API logic.
-- Always call `destroy()` when the interception flow is finished.
+Use `WebViewInterceptor` only when a site requires browser execution (JS challenges, CAPTCHA, cookie bootstrap):
 
-Common pitfalls:
+```kotlin
+val clientWithWebView = client.addWebViewInterceptor(myCaptchaInterceptor)
+```
 
-- Memory leaks from long-lived WebView instances
-- Threading mistakes (WebView APIs often require the main thread)
-- Excessive resource usage from repeated interception
+- Keep WebView interception isolated — do not attach it to the main API client.
+- Always call `destroy()` on the interceptor when the flow is finished.
+- Common pitfalls: memory leaks from long-lived WebView instances; main-thread violations.
 
-## Reliability
+## Reliability (SHOULD)
 
-- Expect upstream changes (HTML structure, API fields).
-- Add guardrails:
-  - null checks
-  - fallback selectors
-  - clear errors when a required field is missing
+- Expect upstream HTML structure to change — avoid brittle single-path selectors.
+- Null-check selectors and emit clear errors when a required field is missing.
+- Do not silently return default/empty values that hide real failures.
 
-## Concurrency
+## Concurrency (MUST)
 
 - Avoid unbounded parallel requests.
-- Prefer sequential extraction unless you have clear performance needs.
+- Prefer sequential extraction unless you have clear performance requirements.
 - Respect coroutine cancellation.
 
-## Ethics and safety
+## Ethics and security (MUST)
 
-- Don’t hard-code user credentials.
-- Don’t exfiltrate data.
-- Don’t store or log sensitive session data.
+- Never hard-code user credentials in source code.
+- Never log or exfiltrate sensitive session data.
+- Never store authentication material in plaintext in insecure storage.

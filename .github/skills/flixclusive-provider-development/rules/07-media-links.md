@@ -1,126 +1,116 @@
 # 07 — Media Link Extraction Rules
 
-## Declare what you emit
+## SDK interface (MUST read before implementing)
 
-Implement `MediaLinkProviderApi.supportedLinkTypes` accurately.
+```kotlin
+interface MediaLinkProviderApi {
+    val supportedLinkTypes: Set<MediaLinkType>
+    suspend fun getLinks(
+        media: MediaMetadata,
+        episode: Episode? = null,
+        onLinkFound: (MediaLink) -> Unit,
+    )
+}
+```
 
-- Streams only:
-  - `override val supportedLinkTypes = setOf(MediaLinkType.STREAMS)`
-- Subtitles only:
-  - `override val supportedLinkTypes = setOf(MediaLinkType.SUBTITLES)`
-- Both:
-  - `override val supportedLinkTypes = setOf(MediaLinkType.STREAMS, MediaLinkType.SUBTITLES)`
+`getLinks` is a `suspend fun` with a **callback** parameter. It does **not** return `Flow<MediaLink>`.
+Call `onLinkFound(link)` for each link as soon as you discover it.
 
-## Emitting links
+## Declare what you emit (MUST)
 
-- `getLinks(...)` returns a `Flow<MediaLink>`.
-- Prefer `flow { ... }` and `emit(...)` each discovered link.
-- Emit multiple qualities/variants as separate `Stream` items.
+```kotlin
+// Streams only
+override val supportedLinkTypes = setOf(MediaLinkType.STREAMS)
 
-## IO + parsing
+// Subtitles only
+override val supportedLinkTypes = setOf(MediaLinkType.SUBTITLES)
 
-- Do network + HTML parsing on an IO dispatcher:
-  - Prefer `FlxDispatchers.withIOContext { ... }` for blocking work.
+// Both
+override val supportedLinkTypes = setOf(MediaLinkType.STREAMS, MediaLinkType.SUBTITLES)
+```
+
+## Emitting links (MUST)
+
+- Call `onLinkFound(link)` immediately when each link is discovered.
+- Do not buffer all links in a list and call them at the end — emit as you go.
+- Never emit empty or invalid URLs.
+- `Stream.name` should be human-readable (quality, source name, server name).
+- For subtitle language codes, use standard BCP 47 codes where possible (`en`, `es`, `pt-BR`).
+
+## IO and parsing (MUST)
+
+- Do network calls and HTML parsing on an IO dispatcher.
+  Use `withContext(Dispatchers.IO)` or Core Stubs `FlxDispatchers.IO`.
 - Prefer Core Stubs helpers when available:
   - `OkHttpClient.request(...)`
   - `Response.asJsoup()` for HTML parsing
+  - `Response.fromJson<T>()` for JSON
 
-## Link quality and correctness
+## Flags (SHOULD)
 
-- Never emit empty/invalid URLs.
-- `Stream.name` should be human-readable (quality, source, server name).
-- For subtitle language codes, use standard short codes when possible (e.g., `en`, `es`, `pt-BR`).
+Use `Flag` values to declare constraints on links:
 
-## Flags and auth
+- `Flag.ThirdPartyGateway(name, url, logo)` — link is a handoff to another streaming site.
+- `Flag.RequiresAuth(customHeaders)` — stream requires auth headers.
+- Use `mediaLink.getFlagOfType<Flag.ThirdPartyGateway>()` to read a specific flag type.
+- Do not use `Flag.Trusted` — it is deprecated.
 
-- If the stream/subtitle requires auth headers, attach `Flag.RequiresAuth(customHeaders = ...)`.
-- If the URL is a handoff to another site, attach `Flag.ThirdPartyGateway(...)`.
-- `MediaLink` does not expose `isThirdPartyGateway` or `thirdPartyGatewayInfo` — model and inspect gateway/auth constraints via `flags`.
-- When you need to read a specific flag type from a `MediaLink`, you can either filter `flags` or use the helper:
-  - `import com.flixclusive.model.provider.link.MediaLink.Companion.getFlagOfType`
-  - `val gateway = mediaLink.getFlagOfType<Flag.ThirdPartyGateway>()`
-- Prefer `Flag.ThirdPartyGateway` for cross-site handoff metadata.
-- `Flag.Trusted` exists but is deprecated in Core Stubs; avoid introducing new usages.
-
-## Performance and cancellation
-
-- Do network + parsing on an appropriate dispatcher (IO).
-- Respect cancellation; avoid infinite retries.
-- Keep extraction deterministic and debuggable (small steps, clear errors).
-
-## Concrete example (Flow + OkHttp + Jsoup + emitting streams)
-
-Adapted from the Provider Docs “Fetching media links” guide. This example demonstrates:
-
-- `supportedLinkTypes` declaration
-- `flow { emit(...) }` usage
-- `OkHttpClient.request(...)` + `FlxDispatchers.withIOContext { ... }`
-- `Response.asJsoup()` parsing
-- emitting `Stream(...)` with `Flag.ThirdPartyGateway(...)`
+## Concrete example (adapted from `providers/Stremio/StremioLinkProvider.kt`)
 
 ```kotlin
-class TestMediaLinkApi(
-  private val client: OkHttpClient,
+class MyMediaLinkApi(
+    private val client: OkHttpClient,
 ) : MediaLinkProviderApi {
-  override val supportedLinkTypes: Set<MediaLinkType> = setOf(MediaLinkType.STREAMS)
 
-  override fun getLinks(
-    film: FilmMetadata,
-    episode: Episode?,
-  ): Flow<MediaLink> = flow {
-    val mediaType = film.filmType.type
-    require(mediaType == "movie" || mediaType == "tv") {
-      "Invalid media type: $mediaType"
+    override val supportedLinkTypes = setOf(MediaLinkType.STREAMS, MediaLinkType.SUBTITLES)
+
+    override suspend fun getLinks(
+        media: MediaMetadata,
+        episode: Episode?,
+        onLinkFound: (MediaLink) -> Unit,
+    ) {
+        val imdbId = media.externalIds[MediaIdSource.IMDB] ?: return
+
+        val type = if (episode != null) "series" else "movie"
+        val epSuffix = if (episode != null) ":${episode.season}:${episode.number}" else ""
+        val url = "https://example.com/stream/$type/$imdbId$epSuffix.json"
+
+        val dto = withContext(Dispatchers.IO) {
+            client.request(url = url).execute().fromJson<MyStreamResponseDto>()
+        }
+
+        dto.streams.forEach { stream ->
+            if (stream.url.isNullOrBlank()) return@forEach
+
+            onLinkFound(
+                Stream(
+                    name  = stream.title ?: "Stream",
+                    url   = stream.url,
+                    flags = buildSet {
+                        if (stream.behaviorHints?.notWebReady == true) {
+                            add(Flag.ThirdPartyGateway(name = stream.title ?: "", url = stream.url))
+                        }
+                    },
+                )
+            )
+        }
+
+        dto.subtitles?.forEach { sub ->
+            if (sub.url.isNullOrBlank()) return@forEach
+            onLinkFound(
+                Subtitle(
+                    name     = sub.lang ?: "Unknown",
+                    url      = sub.url,
+                    language = sub.lang,
+                )
+            )
+        }
     }
-
-    val id = film.externalIds[FilmIdSource.TMDB] ?: film.id
-
-    val response = FlxDispatchers.withIOContext {
-      client.request(
-        url = "https://www.themoviedb.org/${mediaType}/${id}/watch?locale=US",
-      ).execute()
-    }
-
-    val html = response.asJsoup()
-
-    html.select("div.ott_provider li a").forEach { element ->
-      val href = element.attr("href")
-      val title = element.attr("title")
-      val logoUrl = element.select("img").attr("src")
-
-      val providerName = title
-        .split(" on ")
-        .lastOrNull()
-        ?.trim()
-        .orEmpty()
-        .ifBlank { "Unknown Provider" }
-
-      val url = href
-        .split("&r=")
-        .getOrNull(1)
-        ?.split("&")
-        ?.firstOrNull()
-
-      if (url != null) {
-        val decodedUrl = URLDecoder.decode(url, "UTF-8")
-
-        emit(
-          Stream(
-            name = providerName,
-            description = title,
-            url = decodedUrl,
-            flags = setOf(
-              Flag.ThirdPartyGateway(
-                name = providerName,
-                url = decodedUrl,
-                logo = logoUrl,
-                description = title,
-              ),
-            ),
-          )
-        )
-      }
-    }
-  }
 }
 ```
+
+## Performance and cancellation (MUST)
+
+- Keep extraction deterministic and debuggable.
+- Respect coroutine cancellation — do not ignore it.
+- Avoid infinite retries or unbounded parallel requests.
