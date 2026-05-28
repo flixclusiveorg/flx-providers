@@ -40,8 +40,8 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(
     "util",
     "Trakt",
-    "Stremio"
-    // "MySecondProvider",
+    "Stremio",
+    "TMDB",
 )
 
 
