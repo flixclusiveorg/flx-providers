@@ -68,7 +68,7 @@ class StremioCrossMatcher internal constructor(
         type: String
     ): MediaMetadata? {
         val cinemataId = AddonUtil.DEFAULT_META_PROVIDER_ID
-        val cinemataUrl = "${AddonUtil.DEFAULT_META_PROVIDER_BASE_URL}/meta/series/$imdbId.json"
+        val cinemataUrl = "${AddonUtil.DEFAULT_META_PROVIDER_BASE_URL}/meta/$type/$imdbId.json"
 
         val response = FlxDispatchers.withIOContext {
             safeCall {
