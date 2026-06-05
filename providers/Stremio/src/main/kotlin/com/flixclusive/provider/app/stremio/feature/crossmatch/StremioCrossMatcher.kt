@@ -54,15 +54,20 @@ class StremioCrossMatcher internal constructor(
     override suspend fun getById(sourceIds: Map<MediaIdSource, String>): MediaMetadata? {
         val imdbId = sourceIds[MediaIdSource.IMDB] ?: return null
 
-        return getMetadata(
-            imdbId = imdbId,
-            type = "movie"
-        ) ?: getMetadata(
-            imdbId = imdbId,
-            type = "series"
-        )
+        return safeCall {
+            getMetadata(
+                imdbId = imdbId,
+                type = "movie"
+            )
+        } ?: safeCall {
+            getMetadata(
+                imdbId = imdbId,
+                type = "series"
+            )
+        }
     }
 
+    @Throws
     private suspend fun getMetadata(
         imdbId: String,
         type: String
