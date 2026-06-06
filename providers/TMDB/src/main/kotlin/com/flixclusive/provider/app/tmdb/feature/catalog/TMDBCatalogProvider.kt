@@ -42,7 +42,7 @@ internal class TMDBCatalogProvider(
         val url = appendPage(catalog.url, page).replace("&&", "&")
         val response = FlxDispatchers.withIOContext {
             client.request(url = url)
-                .execute().also { com.flixclusive.core.util.log.debugLog("TMDBCatalogProvider: Requested URL: $url, $it") }
+                .execute()
                 .fromJson<SearchPageDto<FilmSearchItemDto>>()
         }
 

@@ -59,16 +59,16 @@ internal data class StreamDto(
 @Serializable
 internal data class StreamResponse(
     val streams: List<StreamDto>,
-    override val err: String?,
+    override val err: String? = null,
 ) : CommonErrorResponse()
 
 @Serializable
 internal data class ProxyHeaders(
-    val request: Map<String, String>?,
+    val request: Map<String, String>? = null,
 )
 
 @Serializable
 internal data class ExtraOptions(
-    val proxyHeaders: ProxyHeaders?,
-    val headers: Map<String, String>?,
+    val proxyHeaders: ProxyHeaders? = null,
+    val headers: Map<String, String>? = null,
 )
