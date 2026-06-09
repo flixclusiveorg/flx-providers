@@ -52,7 +52,7 @@ flxProvider {
 
     versionMajor = 1
     versionMinor = 0
-    versionPatch = 2
+    versionPatch = 3
     versionBuild = 0
 
     iconUrl = "https://i.imgur.com/qd6zqII.png"
@@ -64,5 +64,6 @@ flxProvider {
     author(
         name = "rhenwinch",
         socialLink = "https://github.com/rhenwinch",
+        image = "https://github.com/rhenwinch.png",
     )
 }

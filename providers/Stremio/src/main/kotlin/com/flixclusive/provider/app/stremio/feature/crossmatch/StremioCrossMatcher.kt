@@ -1,5 +1,6 @@
 package com.flixclusive.provider.app.stremio.feature.crossmatch
 
+import androidx.compose.ui.util.fastFirstOrNull
 import com.flixclusive.core.util.coroutines.FlxDispatchers
 import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.network.json.fromJson
@@ -25,7 +26,7 @@ class StremioCrossMatcher internal constructor(
     override suspend fun getByFuzzy(media: MediaMetadata): MediaMetadata? {
         val response = searchProvider.search(media.title)
 
-        val bestMatch = response.results.firstOrNull { result ->
+        val bestMatch = response.results.fastFirstOrNull { result ->
             // Check if one of media.externalIds is inside result.externalIds, if media has externalIds
             val hasMatchingExternalId = media.externalIds.any { (source, id) ->
                 val resultExternalId = result.externalIds[source]
@@ -33,7 +34,7 @@ class StremioCrossMatcher internal constructor(
             }
 
             if (hasMatchingExternalId) {
-                return@firstOrNull true
+                return@fastFirstOrNull true
             }
 
             val titleMatches = result.title.matchesFuzzy(media.title)
@@ -51,19 +52,17 @@ class StremioCrossMatcher internal constructor(
         )
     }
 
-    override suspend fun getById(sourceIds: Map<MediaIdSource, String>): MediaMetadata? {
+    override suspend fun getById(
+        mediaType: MediaType,
+        sourceIds: Map<MediaIdSource, String>
+    ): MediaMetadata? {
         val imdbId = sourceIds[MediaIdSource.IMDB] ?: return null
 
         return safeCall {
-            getMetadata(
-                imdbId = imdbId,
-                type = "movie"
-            )
-        } ?: safeCall {
-            getMetadata(
-                imdbId = imdbId,
-                type = "series"
-            )
+            when (mediaType) {
+                MediaType.MOVIE -> getMetadata(imdbId, "movie")
+                MediaType.SHOW -> getMetadata(imdbId, "series")
+            }
         }
     }
 

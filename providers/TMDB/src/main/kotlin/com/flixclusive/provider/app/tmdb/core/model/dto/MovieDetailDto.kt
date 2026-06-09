@@ -1,5 +1,7 @@
 package com.flixclusive.provider.app.tmdb.core.model.dto
 
+import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.util.fastMapNotNull
 import com.flixclusive.model.media.Movie
 import com.flixclusive.model.media.MovieCollection
 import com.flixclusive.model.media.common.MediaIdSource
@@ -34,8 +36,8 @@ internal data class MovieDetailDto(
         val extIds = externalIds?.toExternalIds()?.toMutableMap() ?: mutableMapOf()
         extIds[MediaIdSource.TMDB] = id.toString()
 
-        val genreItems = genres.map { it.toGenre(providerId, isMovie = true) }
-        val keywordItems = keywords?.keywords?.map { it.toGenre(providerId, isMovie = true) } ?: emptyList()
+        val genreItems = genres.fastMap { it.toGenre(providerId, isMovie = true) }
+        val keywordItems = keywords?.keywords?.fastMap { it.toGenre(providerId, isMovie = true) } ?: emptyList()
         val allGenres = if (genreItems.size >= 7) genreItems
             else genreItems + keywordItems.take(7 - genreItems.size)
 
@@ -56,9 +58,9 @@ internal data class MovieDetailDto(
             homePage = homepage,
             externalIds = extIds,
             genres = allGenres,
-            casts = credits?.cast?.map { it.toCast() } ?: emptyList(),
-            producers = productionCompanies.map { it.toCompany(providerId, isMovie = true) },
-            recommendations = recommendations?.results?.mapNotNull {
+            casts = credits?.cast?.fastMap { it.toCast() } ?: emptyList(),
+            producers = productionCompanies.fastMap { it.toCompany(providerId, isMovie = true) },
+            recommendations = recommendations?.results?.fastMapNotNull {
                 it.toPartialMedia(providerId, "movie", imgCfg)
             } ?: emptyList(),
             collection = belongsToCollection?.let {

@@ -25,10 +25,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import java.util.Locale
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.provider.app.tmdb.core.config.DEFAULT_LANGUAGE
 import com.flixclusive.provider.app.tmdb.core.config.KEY_ADULT
 import com.flixclusive.provider.app.tmdb.core.config.KEY_LANGUAGE
@@ -36,6 +35,7 @@ import com.flixclusive.provider.extensions.getStringAsFlow
 import com.flixclusive.provider.extensions.setString
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 @Composable
 internal fun PreferencesSection(
@@ -120,12 +120,11 @@ internal fun PreferencesSection(
                 Spacer(Modifier.height(8.dp))
                 Button(
                     onClick = {
-                        val adult = adultField
                         val lang = langField.trim().ifBlank { DEFAULT_LANGUAGE }
                         adultOverride = null
                         langOverride = null
                         scope.launch {
-                            settings.setString(KEY_ADULT, adult.toString())
+                            settings.setString(KEY_ADULT, adultField.toString())
                             settings.setString(KEY_LANGUAGE, lang)
                             onSaveSuccess()
                         }

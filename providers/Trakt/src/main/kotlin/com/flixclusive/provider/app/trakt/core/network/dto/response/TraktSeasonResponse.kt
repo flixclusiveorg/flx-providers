@@ -1,6 +1,5 @@
 package com.flixclusive.provider.app.trakt.core.network.dto.response
 
-import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.provider.app.trakt.core.model.TraktGenericIdMap
 import kotlinx.serialization.SerialName
@@ -26,9 +25,7 @@ internal data class TraktSeasonResponse(
             ?.let { "https://$it" }
 
     companion object {
-        fun TraktSeasonResponse.toSeason(
-            episodes: List<Episode>
-        ) = Season(
+        fun TraktSeasonResponse.toSeason() = Season.Partial(
             id = id,
             title = title,
             number = number,
@@ -37,8 +34,7 @@ internal data class TraktSeasonResponse(
             rating = rating,
             overview = overview,
             isReleased = firstAired != null,
-            episodeCount = episodeCount ?: episodes.size,
-            episodes = episodes,
+            episodeCount = episodeCount ?: 0,
         )
     }
 

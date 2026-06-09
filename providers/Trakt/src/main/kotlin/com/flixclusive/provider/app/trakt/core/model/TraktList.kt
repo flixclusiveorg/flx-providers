@@ -1,5 +1,6 @@
 package com.flixclusive.provider.app.trakt.core.model
 
+import androidx.compose.ui.util.fastMap
 import com.flixclusive.model.provider.Catalog
 import com.flixclusive.provider.app.trakt.BuildConfig
 import com.flixclusive.provider.app.trakt.core.config.TraktApiConfig
@@ -36,7 +37,7 @@ internal data class TraktList(
 
     fun toTrackerList(providerId: String): TrackerList {
         val imageList = images?.get("posters") ?: images?.get("thumbs")
-        val images = imageList?.map { "https://$it" } ?: emptyList()
+        val images = imageList?.fastMap { "https://$it" } ?: emptyList()
         return TrackerList(
             id = traktId.toString(),
             providerId = providerId,

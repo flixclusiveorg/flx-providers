@@ -91,13 +91,11 @@ internal data class TraktMedia(
 
         fun TraktMedia.toShow(
             providerId: String,
-            seasons: List<Season>,
+            seasons: List<Season.Partial>,
         ): Show {
             val network = network?.let { Company(name = it) }
             val lastAirDate = if (status == ReleaseStatus.ENDED) {
-                seasons.lastOrNull()
-                    ?.episodes?.lastOrNull()
-                        ?.releaseDate
+                seasons.lastOrNull()?.releaseDate
             } else {
                 null
             }
@@ -121,7 +119,7 @@ internal data class TraktMedia(
                 releaseDate = dateAsLong,
                 lastAirDate = lastAirDate,
                 totalSeasons = seasons.size,
-                totalEpisodes = totalEpisodes ?: seasons.fastSumBy { it.episodes.size },
+                totalEpisodes = totalEpisodes ?: seasons.fastSumBy { it.episodeCount },
                 seasons = seasons,
                 genres = genres?.fastMap { genreName ->
                     Genre(

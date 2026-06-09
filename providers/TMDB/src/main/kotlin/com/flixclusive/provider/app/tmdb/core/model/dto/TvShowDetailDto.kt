@@ -1,8 +1,9 @@
 package com.flixclusive.provider.app.tmdb.core.model.dto
 
+import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.util.fastMapNotNull
 import com.flixclusive.model.media.Show
 import com.flixclusive.model.media.common.MediaIdSource
-import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.provider.app.tmdb.core.config.ImageConfig
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -33,12 +34,12 @@ internal data class TvShowDetailDto(
     val images: ImagesDto? = null,
     val keywords: TvKeywordsWrapper? = null,
 ) {
-    fun toShow(providerId: String, seasons: List<Season>, imgCfg: ImageConfig = ImageConfig()): Show {
+    fun toShow(providerId: String, imgCfg: ImageConfig = ImageConfig()): Show {
         val extIds = externalIds?.toExternalIds()?.toMutableMap() ?: mutableMapOf()
         extIds[MediaIdSource.TMDB] = id.toString()
 
-        val genreItems = genres.map { it.toGenre(providerId, isMovie = false) }
-        val keywordItems = keywords?.results?.map { it.toGenre(providerId, isMovie = false) } ?: emptyList()
+        val genreItems = genres.fastMap { it.toGenre(providerId, isMovie = false) }
+        val keywordItems = keywords?.results?.fastMap { it.toGenre(providerId, isMovie = false) } ?: emptyList()
         val allGenres = if (genreItems.size >= 7) genreItems
             else genreItems + keywordItems.take(7 - genreItems.size)
 
@@ -60,12 +61,12 @@ internal data class TvShowDetailDto(
             homePage = homepage,
             externalIds = extIds,
             genres = allGenres,
-            casts = credits?.cast?.map { it.toCast() } ?: emptyList(),
-            networks = networks.map { it.toCompany(providerId, isMovie = false) },
-            recommendations = recommendations?.results?.mapNotNull {
+            casts = credits?.cast?.fastMap { it.toCast() } ?: emptyList(),
+            networks = networks.fastMap { it.toCompany(providerId, isMovie = false) },
+            recommendations = recommendations?.results?.fastMapNotNull {
                 it.toPartialMedia(providerId, "tv", imgCfg)
             } ?: emptyList(),
-            seasons = seasons,
+            seasons = seasons.fastMap { it.toSeason() },
             totalSeasons = numberOfSeasons,
             totalEpisodes = numberOfEpisodes,
         )

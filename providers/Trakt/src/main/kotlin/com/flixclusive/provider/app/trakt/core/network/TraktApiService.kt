@@ -1,6 +1,5 @@
 package com.flixclusive.provider.app.trakt.core.network
 
-import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.provider.app.trakt.core.config.TraktApiConfig
 import com.flixclusive.provider.app.trakt.core.model.TraktList
 import com.flixclusive.provider.app.trakt.core.model.TraktMedia
@@ -15,17 +14,12 @@ import com.flixclusive.provider.app.trakt.core.network.dto.response.MinimalWatch
 import com.flixclusive.provider.app.trakt.core.network.dto.response.MinimalWatchlist
 import com.flixclusive.provider.app.trakt.core.network.dto.response.ScrobblePlaybackResponse
 import com.flixclusive.provider.app.trakt.core.network.dto.response.TraktEpisodeResponse
-import com.flixclusive.provider.app.trakt.core.network.dto.response.TraktEpisodeResponse.Companion.toEpisode
 import com.flixclusive.provider.app.trakt.core.network.dto.response.TraktGenericMediaItemResponse
 import com.flixclusive.provider.app.trakt.core.network.dto.response.TraktLikedList
 import com.flixclusive.provider.app.trakt.core.network.dto.response.TraktMediaWatchNowSources
 import com.flixclusive.provider.app.trakt.core.network.dto.response.TraktSearchMediaItemResponse
 import com.flixclusive.provider.app.trakt.core.network.dto.response.TraktSearchResponseV2
 import com.flixclusive.provider.app.trakt.core.network.dto.response.TraktSeasonResponse
-import com.flixclusive.provider.app.trakt.core.network.dto.response.TraktSeasonResponse.Companion.toSeason
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -237,27 +231,6 @@ internal interface TraktApiService {
     ): TraktSearchResponseV2
 
     companion object {
-        suspend fun TraktApiService.getFullSeasons(showId: String): List<Season> {
-            try {
-                val traktSeasons = getSeasons(showId)
-                return traktSeasons
-                    .chunked(10) // avoid making too many concurrent requests for shows with many seasons
-                    .flatMap { seasonChunk ->
-                        seasonChunk.map { season ->
-                            coroutineScope {
-                                async {
-                                    val traktEpisodes = getEpisodes(showId, season.number)
-                                    val episodes = traktEpisodes.map { episode -> episode.toEpisode() }
-                                    season.toSeason(episodes)
-                                }
-                            }
-                        }.awaitAll()
-                    }
-            } catch (e: Throwable) {
-                throw RuntimeException("Failed to fetch seasons for show with id $showId", e)
-            }
-        }
-
         fun create(client: OkHttpClient): TraktApiService {
             val json = Json {
                 ignoreUnknownKeys = true

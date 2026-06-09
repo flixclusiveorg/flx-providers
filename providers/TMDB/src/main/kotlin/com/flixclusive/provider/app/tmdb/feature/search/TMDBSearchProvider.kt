@@ -1,5 +1,6 @@
 package com.flixclusive.provider.app.tmdb.feature.search
 
+import androidx.compose.ui.util.fastMapNotNull
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.flixclusive.core.util.coroutines.FlxDispatchers
@@ -49,7 +50,9 @@ internal class TMDBSearchProvider(
         }
 
         val imgCfg = settings.readImageConfig()
-        val encodedQuery = URLEncoder.encode(query, "UTF-8")
+        val encodedQuery = FlxDispatchers.withIOContext {
+            URLEncoder.encode(query, "UTF-8")
+        }
         val url = "${TMDB_API_BASE_URL}${endpoint}?query=$encodedQuery&page=$page"
 
         val response = FlxDispatchers.withIOContext {
@@ -58,7 +61,7 @@ internal class TMDBSearchProvider(
                 .fromJson<SearchPageDto<FilmSearchItemDto>>()
         }
 
-        val results = response.results.mapNotNull { it.toPartialMedia(providerId, hint, imgCfg) }
+        val results = response.results.fastMapNotNull { it.toPartialMedia(providerId, hint, imgCfg) }
         return PaginatedMedia(
             page = response.page,
             results = results,

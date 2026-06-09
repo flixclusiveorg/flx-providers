@@ -1,6 +1,8 @@
 package com.flixclusive.provider.app.stremio.core.model
 
+import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.util.fastMapNotNull
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.Movie
 import com.flixclusive.model.media.PartialMedia
@@ -76,7 +78,7 @@ internal data class Meta(
 
             if (areVideosCachedDebrid) {
                 return listOf(
-                    Season(
+                    Season.Full(
                         id = videos?.firstOrNull()?.id ?: "cache_season",
                         number = 1,
                         title = "Cache",
@@ -86,18 +88,18 @@ internal data class Meta(
                 )
             }
 
-            return videos?.mapNotNull {
+            return videos?.fastMapNotNull {
                 if (traversedSeason.contains(it.season) || it.season == null) {
-                    return@mapNotNull null
+                    return@fastMapNotNull null
                 }
 
                 traversedSeason[it.season] = it.id
 
-                val episodesForThisSeason = episodes.filter { episode ->
+                val episodesForThisSeason = episodes.fastFilter { episode ->
                     episode.season == it.season
                 }
 
-                val season = Season(
+                val season = Season.Full(
                     id = it.id,
                     number = it.season,
                     title = "Season ${it.season}",
@@ -105,7 +107,7 @@ internal data class Meta(
                     isReleased = true,
                 )
 
-                return@mapNotNull season
+                return@fastMapNotNull season
             } ?: emptyList()
         }
 
@@ -114,9 +116,9 @@ internal data class Meta(
         get() {
             var episodeCount = 1
 
-            val unsortedEpisodes = videos?.mapNotNull {
+            val unsortedEpisodes = videos?.fastMapNotNull {
                 if ((it.season == null || it.episode == null) && type != "other")
-                    return@mapNotNull null
+                    return@fastMapNotNull null
 
                 val episodeId = it.streams?.firstOrNull()
                     ?.url ?: it.id

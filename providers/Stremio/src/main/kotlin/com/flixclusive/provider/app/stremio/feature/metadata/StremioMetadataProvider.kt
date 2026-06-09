@@ -8,6 +8,7 @@ import com.flixclusive.model.media.Movie
 import com.flixclusive.model.media.PartialMedia
 import com.flixclusive.model.media.Show
 import com.flixclusive.model.media.common.MediaIdSource
+import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.provider.app.stremio.StremioPlugin
 import com.flixclusive.provider.app.stremio.core.model.FetchMetaResponse
 import com.flixclusive.provider.app.stremio.core.model.toMedia
@@ -104,5 +105,12 @@ class StremioMetadataProvider internal constructor(
             nameKey = nameKey,
             url = url
         )
+    }
+
+    override suspend fun getSeason(
+        show: Show,
+        season: Season.Partial
+    ): Season.Full? {
+        return null
     }
 }

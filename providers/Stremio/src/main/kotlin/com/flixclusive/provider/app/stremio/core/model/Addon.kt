@@ -1,6 +1,8 @@
 package com.flixclusive.provider.app.stremio.core.model
 
 import androidx.compose.ui.util.fastAny
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMapNotNull
 import com.flixclusive.model.media.common.MediaType
 import com.flixclusive.model.media.common.tv.Episode
@@ -81,8 +83,8 @@ internal data class Addon(
         isFromStremio: Boolean,
         episode: Episode?,
     ): String = when (type) {
-        MediaType.SHOW  -> getStreamQuery("series", id, isFromStremio, episode)
-        MediaType.MOVIE -> getStreamQuery("movie",  id, isFromStremio, episode)
+        MediaType.SHOW -> getStreamQuery("series", id, isFromStremio, episode)
+        MediaType.MOVIE -> getStreamQuery("movie", id, isFromStremio, episode)
     }
 
     fun getStreamQuery(
@@ -92,21 +94,13 @@ internal data class Addon(
         episode: Episode?,
     ): String = when {
         isFromStremio && episode != null -> "stream/$type/${episode.id}.json"
-        episode == null                  -> "stream/$type/$id.json"
-        else                             -> "stream/$type/$id:${episode.season}:${episode.number}.json"
+        episode == null -> "stream/$type/$id.json"
+        else -> "stream/$type/$id:${episode.season}:${episode.number}.json"
     }
-
-    // -------------------------------------------------------------------------
-    // Private helpers
-    // -------------------------------------------------------------------------
 
     /** Returns `true` if any resource in the list matches [resourceName] (case-insensitive). */
     private fun List<AddonResource>.hasResource(resourceName: String): Boolean =
         fastAny { it.name.equals(resourceName, ignoreCase = true) }
-
-    // -------------------------------------------------------------------------
-    // equals / hashCode — identity is determined solely by [baseUrl]
-    // -------------------------------------------------------------------------
 
     override fun equals(other: Any?): Boolean {
         if (other is Addon) {
@@ -162,9 +156,6 @@ internal sealed interface AddonResource {
         val idPrefixes: List<String> = emptyList(),
     ) : AddonResource
 
-    // -------------------------------------------------------------------------
-    // Custom polymorphic serializer — handles both JSON shapes transparently.
-    // -------------------------------------------------------------------------
     object Serializer : KSerializer<AddonResource> {
 
         override val descriptor: SerialDescriptor =
@@ -181,11 +172,11 @@ internal sealed interface AddonResource {
                     name = element.getValue("name").jsonPrimitive.content,
                     types = element["types"]
                         ?.jsonArray
-                        ?.map { it.jsonPrimitive.content }
+                        ?.fastMap { it.jsonPrimitive.content }
                         ?: emptyList(),
                     idPrefixes = element["idPrefixes"]
                         ?.jsonArray
-                        ?.map { it.jsonPrimitive.content }
+                        ?.fastMap { it.jsonPrimitive.content }
                         ?: emptyList(),
                 )
 
@@ -200,17 +191,17 @@ internal sealed interface AddonResource {
                 ?: throw SerializationException("AddonResource can only be serialized to JSON")
 
             val element: JsonElement = when (value) {
-                is Simple   -> JsonPrimitive(value.name)
+                is Simple -> JsonPrimitive(value.name)
                 is Detailed -> buildJsonObject {
                     put("name", value.name)
                     if (value.types.isNotEmpty()) {
                         put("types", kotlinx.serialization.json.buildJsonArray {
-                            value.types.forEach { add(JsonPrimitive(it)) }
+                            value.types.fastForEach { add(JsonPrimitive(it)) }
                         })
                     }
                     if (value.idPrefixes.isNotEmpty()) {
                         put("idPrefixes", kotlinx.serialization.json.buildJsonArray {
-                            value.idPrefixes.forEach { add(JsonPrimitive(it)) }
+                            value.idPrefixes.fastForEach { add(JsonPrimitive(it)) }
                         })
                     }
                 }

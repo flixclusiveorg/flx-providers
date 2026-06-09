@@ -1,6 +1,8 @@
 package com.flixclusive.provider.app.tmdb.feature.catalog
 
 import android.content.Context
+import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.util.fastMapNotNull
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.flixclusive.core.util.coroutines.FlxDispatchers
@@ -32,9 +34,9 @@ internal class TMDBCatalogProvider(
         if (userCatalogs == null) {
             val seeded = loadCatalogSeed(context)
             settings.setObject(KEY_CATALOGS, seeded)
-            return seeded.filter { it.enabled }.map { it.toCatalog(providerId) }
+            return seeded.filter { it.enabled }.fastMap { it.toCatalog(providerId) }
         }
-        return userCatalogs.filter { it.enabled }.map { it.toCatalog(providerId) }
+        return userCatalogs.filter { it.enabled }.fastMap { it.toCatalog(providerId) }
     }
 
     override suspend fun getCatalogItems(catalog: Catalog, page: Int): PaginatedMedia<PartialMedia> {
@@ -46,7 +48,7 @@ internal class TMDBCatalogProvider(
                 .fromJson<SearchPageDto<FilmSearchItemDto>>()
         }
 
-        val results = response.results.mapNotNull { it.toPartialMedia(providerId, imgCfg = imgCfg) }
+        val results = response.results.fastMapNotNull { it.toPartialMedia(providerId, imgCfg = imgCfg) }
         return PaginatedMedia(
             page = response.page,
             results = results,

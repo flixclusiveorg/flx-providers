@@ -1,18 +1,21 @@
 package com.flixclusive.provider.app.trakt.feature.crossmatch
 
 import android.content.Context
+import androidx.compose.ui.util.fastFilter
+import androidx.compose.ui.util.fastMap
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.common.MediaIdSource
-import com.flixclusive.provider.capability.CrossMatchProviderApi
+import com.flixclusive.model.media.common.MediaType
 import com.flixclusive.provider.app.trakt.TraktPlugin
 import com.flixclusive.provider.app.trakt.core.config.TraktApiConfig.SEARCH_V2_URL
 import com.flixclusive.provider.app.trakt.core.config.TypeSenseKeyProvider
 import com.flixclusive.provider.app.trakt.core.model.TraktMedia.Companion.toMovie
 import com.flixclusive.provider.app.trakt.core.model.TraktMedia.Companion.toShow
 import com.flixclusive.provider.app.trakt.core.network.TraktApiService
-import com.flixclusive.provider.app.trakt.core.network.TraktApiService.Companion.getFullSeasons
 import com.flixclusive.provider.app.trakt.core.network.dto.request.TraktSearchRequestV2
+import com.flixclusive.provider.app.trakt.core.network.dto.response.TraktSeasonResponse.Companion.toSeason
 import com.flixclusive.provider.app.trakt.core.network.util.OkHttpClientUtil
+import com.flixclusive.provider.capability.CrossMatchProviderApi
 import java.util.Calendar
 
 class TraktCrossMatcher internal constructor(
@@ -29,7 +32,7 @@ class TraktCrossMatcher internal constructor(
             OkHttpClientUtil.createCachedClient(
                 context = context,
                 settings = plugin.settings,
-                cacheMaxAge = 60 * 60 // 1 hour in seconds
+                cacheMaxAge = 60 * 60 * 8 // 8 hours
             )
         )
     }
@@ -74,12 +77,17 @@ class TraktCrossMatcher internal constructor(
         } else {
             bestMatch?.toShow(
                 providerId = plugin.id,
-                seasons = defaultApiService.getFullSeasons(bestMatch.id)
+                seasons = defaultApiService.getSeasons(bestMatch.id).fastMap {
+                    it.toSeason()
+                }
             )
         }
     }
 
-    override suspend fun getById(sourceIds: Map<MediaIdSource, String>): MediaMetadata? {
+    override suspend fun getById(
+        mediaType: MediaType,
+        sourceIds: Map<MediaIdSource, String>
+    ): MediaMetadata? {
         val ids = sourceIds.map { (source, id) ->
             source.name.lowercase() to id
         }
@@ -92,7 +100,7 @@ class TraktCrossMatcher internal constructor(
         )
 
         val metadata = if (medias.size > 1) {
-            val scoredMedias = medias.filter { media ->
+            val scoredMedias = medias.fastFilter { media ->
                 media.score >= THRESHOLD_SCORE
             }.sortedByDescending { it.score }
 
@@ -103,11 +111,11 @@ class TraktCrossMatcher internal constructor(
 
         if (metadata == null) return null
 
-        return when (metadata.isMovie) {
-            true -> metadata.media.toMovie(plugin.id)
-            false -> metadata.media.toShow(
+        return when (mediaType) {
+            MediaType.MOVIE -> metadata.media.toMovie(plugin.id)
+            MediaType.SHOW -> metadata.media.toShow(
                 providerId = plugin.id,
-                seasons = defaultApiService.getFullSeasons(metadata.id)
+                seasons = defaultApiService.getSeasons(metadata.id).fastMap { it.toSeason() }
             )
         }
     }

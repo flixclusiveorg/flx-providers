@@ -3,12 +3,14 @@ package com.flixclusive.provider.app.tmdb.feature.metadata
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.flixclusive.core.util.coroutines.FlxDispatchers
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.core.util.network.okhttp.request
 import com.flixclusive.model.media.Movie
 import com.flixclusive.model.media.PartialMedia
 import com.flixclusive.model.media.Show
 import com.flixclusive.model.media.common.MediaIdSource
+import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.provider.app.tmdb.core.config.APPEND_TO_RESPONSE
 import com.flixclusive.provider.app.tmdb.core.config.TMDB_API_BASE_URL
 import com.flixclusive.provider.app.tmdb.core.config.readImageConfig
@@ -16,10 +18,6 @@ import com.flixclusive.provider.app.tmdb.core.model.dto.MovieDetailDto
 import com.flixclusive.provider.app.tmdb.core.model.dto.SeasonDto
 import com.flixclusive.provider.app.tmdb.core.model.dto.TvShowDetailDto
 import com.flixclusive.provider.capability.MediaMetadataProviderApi
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import com.flixclusive.provider.extensions.getString
 import okhttp3.OkHttpClient
 
 internal class TMDBMetadataProvider(
@@ -46,25 +44,21 @@ internal class TMDBMetadataProvider(
             client.request(url = url).execute().fromJson<TvShowDetailDto>()
         }
 
-        val seasons = coroutineScope {
-            showDto.seasons
-                .filter { it.seasonNumber > 0 }
-                .map { brief ->
-                    async {
-                        try {
-                            val seasonUrl = "${TMDB_API_BASE_URL}tv/$tmdbId/season/${brief.seasonNumber}"
-                            FlxDispatchers.withIOContext {
-                                client.request(url = seasonUrl).execute().fromJson<SeasonDto>().toSeason()
-                            }
-                        } catch (_: Throwable) {
-                            null
-                        }
-                    }
-                }
-                .awaitAll()
-                .filterNotNull()
-        }
+        return showDto.toShow(providerId, imgCfg)
+    }
 
-        return showDto.toShow(providerId, seasons, imgCfg)
+    override suspend fun getSeason(
+        show: Show,
+        season: Season.Partial
+    ): Season.Full? {
+        val tmdbId = show.externalIds[MediaIdSource.TMDB] ?: show.id
+        val seasonUrl = "${TMDB_API_BASE_URL}tv/$tmdbId/season/${season.number}"
+        return safeCall {
+            FlxDispatchers.withIOContext {
+                client.request(url = seasonUrl).execute()
+                    .fromJson<SeasonDto>()
+                    .toSeason()
+            }
+        }
     }
 }

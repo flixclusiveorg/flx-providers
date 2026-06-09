@@ -1,5 +1,6 @@
 package com.flixclusive.provider.app.tmdb.core.model.dto
 
+import androidx.compose.ui.util.fastMap
 import com.flixclusive.model.media.common.tv.Season
 import com.flixclusive.provider.app.tmdb.core.config.TMDB_IMAGE_BASE_W500
 import kotlinx.serialization.SerialName
@@ -15,7 +16,24 @@ internal data class SeasonBriefDto(
     @SerialName("air_date") val airDate: String? = null,
     @SerialName("vote_average") val voteAverage: Double? = null,
     @SerialName("poster_path") val posterPath: String? = null,
-)
+) {
+    fun toSeason(): Season.Partial {
+        val releaseDate = airDate.parseToEpochMillis()
+        val isReleased = releaseDate != null && releaseDate <= System.currentTimeMillis()
+
+        return Season.Partial(
+            id = id.toString(),
+            number = seasonNumber,
+            episodeCount = episodeCount,
+            isReleased = isReleased,
+            title = name,
+            releaseDate = releaseDate,
+            overview = overview,
+            rating = voteAverage,
+            image = posterPath?.let { "$TMDB_IMAGE_BASE_W500$it" },
+        )
+    }
+}
 
 @Serializable
 internal data class SeasonDto(
@@ -29,17 +47,17 @@ internal data class SeasonDto(
     @SerialName("vote_average") val voteAverage: Double? = null,
     @SerialName("poster_path") val posterPath: String? = null,
 ) {
-    fun toSeason(): Season {
+    fun toSeason(): Season.Full {
         val releaseDate = airDate.parseToEpochMillis()
         val isReleased = releaseDate != null && releaseDate <= System.currentTimeMillis()
-        val mappedEpisodes = episodes.map { it.toEpisode() }
-        return Season(
+        val mappedEpisodes = episodes.fastMap { it.toEpisode() }
+
+        return Season.Full(
             id = id.toString(),
             number = seasonNumber,
             episodes = mappedEpisodes,
             isReleased = isReleased,
             title = name,
-            episodeCount = episodeCount ?: mappedEpisodes.size,
             releaseDate = releaseDate,
             overview = overview,
             rating = voteAverage,

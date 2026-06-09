@@ -1,5 +1,6 @@
 package com.flixclusive.provider.app.tmdb.feature.link
 
+import androidx.compose.ui.util.fastForEach
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.flixclusive.core.util.coroutines.FlxDispatchers
@@ -45,7 +46,7 @@ internal class TMDBLinkProvider(
 
     private fun parseStreamingInfo(html: Document): List<Stream> {
         val streamingInfoList = mutableListOf<Stream>()
-        html.select("div.ott_provider li a").forEach { element ->
+        html.select("div.ott_provider li a").fastForEach { element ->
             val href = element.attr("href")
             val title = element.attr("title")
             val logoUrl = element.select("img").attr("src")

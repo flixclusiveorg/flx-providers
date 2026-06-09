@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastFilter
 import java.util.Locale
 
 private data class LanguageOption(val tag: String, val displayName: String)
@@ -68,7 +69,7 @@ internal fun LanguagePickerSheet(
     val filtered = remember(searchQuery) {
         val q = searchQuery.trim()
         if (q.isBlank()) languages
-        else languages.filter {
+        else languages.fastFilter {
             it.displayName.contains(q, ignoreCase = true) || it.tag.contains(q, ignoreCase = true)
         }
     }

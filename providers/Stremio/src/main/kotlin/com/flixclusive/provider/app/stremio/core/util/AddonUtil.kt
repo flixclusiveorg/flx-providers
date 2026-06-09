@@ -1,5 +1,8 @@
 package com.flixclusive.provider.app.stremio.core.util
 
+import androidx.compose.ui.util.fastFirstOrNull
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import com.flixclusive.core.util.coroutines.FlxDispatchers.Companion.withIOContext
 import com.flixclusive.core.util.exception.actualMessage
 import com.flixclusive.core.util.exception.safeCall
@@ -7,14 +10,11 @@ import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.core.util.network.okhttp.request
 import com.flixclusive.model.provider.Catalog
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
 import com.flixclusive.provider.app.stremio.core.model.Addon
 import com.flixclusive.provider.app.stremio.core.model.StremioCatalog
 import com.flixclusive.provider.extensions.getString
 import com.flixclusive.provider.extensions.remove
 import com.flixclusive.provider.extensions.setString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 
@@ -133,7 +133,7 @@ internal object AddonUtil {
 
     suspend fun DataStore<Preferences>.getAddon(id: String): Addon {
         return getAddons()
-            .firstOrNull { it.id.equals(id, true) }
+            .fastFirstOrNull { it.id.equals(id, true) }
             ?: throw IllegalArgumentException("[${id}]> Addon cannot be found")
     }
 

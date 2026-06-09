@@ -18,8 +18,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastForEach
 import com.flixclusive.provider.app.tmdb.core.model.UserCatalog
 
 private val TmdbBlue = Color(0xFF01B4E4)
@@ -145,7 +146,7 @@ private fun UrlInspector(uri: Uri) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         UrlRow(key = "URL", value = baseUrl, isBase = true)
 
-        uri.queryParameterNames.sortedBy { it }.forEach { key ->
+        uri.queryParameterNames.sortedBy { it }.fastForEach { key ->
             val value = uri.getQueryParameter(key) ?: ""
             UrlRow(key = key, value = value)
         }

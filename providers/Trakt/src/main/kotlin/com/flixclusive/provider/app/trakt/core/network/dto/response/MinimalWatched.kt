@@ -1,5 +1,7 @@
 package com.flixclusive.provider.app.trakt.core.network.dto.response
 
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastMap
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -45,14 +47,14 @@ internal object MinimalWatchedItemSerializer : KSerializer<MinimalWatchedItem> {
         return when (val element = jsonDecoder.decodeJsonElement()) {
             is JsonArray -> MinimalWatchedItem.Movie(
                 id = "",
-                timestamps = element.map { it.jsonPrimitive.content }
+                timestamps = element.fastMap { it.jsonPrimitive.content }
             )
 
             is JsonObject -> MinimalWatchedItem.Show(
                 id = "",
                 seasons = element.mapValues { (_, season) ->
                     season.jsonObject.mapValues { (_, episodes) ->
-                        episodes.jsonArray.map { it.jsonPrimitive.content }
+                        episodes.jsonArray.fastMap { it.jsonPrimitive.content }
                     }
                 }
             )
@@ -66,7 +68,7 @@ internal object MinimalWatchedItemSerializer : KSerializer<MinimalWatchedItem> {
         jsonEncoder.encodeJsonElement(
             when (value) {
                 is MinimalWatchedItem.Movie -> buildJsonArray {
-                    value.timestamps.forEach { add(it) }
+                    value.timestamps.fastForEach { add(it) }
                 }
 
                 is MinimalWatchedItem.Show -> buildJsonObject {
@@ -104,14 +106,14 @@ internal object MinimalWatchedItemMapSerializer : KSerializer<MinimalWatchedItem
                 id to when (element) {
                     is JsonArray -> MinimalWatchedItem.Movie(
                         id = id,
-                        timestamps = element.map { it.jsonPrimitive.content }
+                        timestamps = element.fastMap { it.jsonPrimitive.content }
                     )
 
                     is JsonObject -> MinimalWatchedItem.Show(
                         id = id,
                         seasons = element.mapValues { (_, season) ->
                             season.jsonObject.mapValues { (_, episodes) ->
-                                episodes.jsonArray.map { it.jsonPrimitive.content }
+                                episodes.jsonArray.fastMap { it.jsonPrimitive.content }
                             }
                         }
                     )
@@ -129,7 +131,7 @@ internal object MinimalWatchedItemMapSerializer : KSerializer<MinimalWatchedItem
                 put(
                     item.id, when (item) {
                     is MinimalWatchedItem.Movie -> buildJsonArray {
-                        item.timestamps.forEach { add(it) }
+                        item.timestamps.fastForEach { add(it) }
                     }
 
                     is MinimalWatchedItem.Show -> buildJsonObject {
@@ -138,7 +140,7 @@ internal object MinimalWatchedItemMapSerializer : KSerializer<MinimalWatchedItem
                                 episodes.forEach { (episodeId, timestamps) ->
                                     put(
                                         episodeId,
-                                        buildJsonArray { timestamps.forEach { add(it) } })
+                                        buildJsonArray { timestamps.fastForEach { add(it) } })
                                 }
                             })
                         }

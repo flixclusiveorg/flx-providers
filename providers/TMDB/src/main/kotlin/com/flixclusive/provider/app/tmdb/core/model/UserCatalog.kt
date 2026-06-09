@@ -1,6 +1,7 @@
 package com.flixclusive.provider.app.tmdb.core.model
 
 import android.content.Context
+import androidx.compose.ui.util.fastForEach
 import com.flixclusive.core.util.network.json.AppJson
 import com.flixclusive.model.provider.Catalog
 import com.flixclusive.provider.app.tmdb.core.config.TMDB_IMAGE_BASE_W200
@@ -75,16 +76,16 @@ internal fun loadCatalogSeed(context: Context): List<UserCatalog> {
 
     val homeJson = context.assets.open("home_catalogs.json").bufferedReader().use { it.readText() }
     val homeCatalogs = AppJson.decodeFromString<TMDBHomeCatalogsDto>(homeJson)
-    homeCatalogs.all.forEach { result.add(it.toUserCatalog("all")) }
-    homeCatalogs.movie.forEach { result.add(it.toUserCatalog("movie")) }
-    homeCatalogs.tv.forEach { result.add(it.toUserCatalog("tv")) }
+    homeCatalogs.all.fastForEach { result.add(it.toUserCatalog("all")) }
+    homeCatalogs.movie.fastForEach { result.add(it.toUserCatalog("movie")) }
+    homeCatalogs.tv.fastForEach { result.add(it.toUserCatalog("tv")) }
 
     val discoverJson = context.assets.open("discover_catalogs.json").bufferedReader().use { it.readText() }
     val discoverCatalogs = AppJson.decodeFromString<TMDBDiscoverCatalogsDto>(discoverJson)
-    discoverCatalogs.networks.forEach { result.add(it.toUserCatalog("network")) }
-    discoverCatalogs.companies.forEach { result.add(it.toUserCatalog("studio")) }
-    discoverCatalogs.genres.forEach { result.add(it.toUserCatalog("genre")) }
-    discoverCatalogs.type.forEach { result.add(it.toUserCatalog("type")) }
+    discoverCatalogs.networks.fastForEach { result.add(it.toUserCatalog("network")) }
+    discoverCatalogs.companies.fastForEach { result.add(it.toUserCatalog("studio")) }
+    discoverCatalogs.genres.fastForEach { result.add(it.toUserCatalog("genre")) }
+    discoverCatalogs.type.fastForEach { result.add(it.toUserCatalog("type")) }
 
     return result
 }

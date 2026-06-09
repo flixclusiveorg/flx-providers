@@ -1,5 +1,6 @@
 package com.flixclusive.provider.app.tmdb.core.model.dto
 
+import androidx.compose.ui.util.fastFirstOrNull
 import com.flixclusive.model.media.common.Cast
 import com.flixclusive.model.media.common.Company
 import com.flixclusive.model.media.common.Genre
@@ -156,8 +157,7 @@ internal fun ExternalIdsDto.toExternalIds(): Map<MediaIdSource, String> {
 }
 
 internal fun ImagesDto.findBestLogo(): String? {
-    val enLogo = logos.firstOrNull { it.language == "en" && !it.filePath.endsWith(".svg") }
-    val anyLogo = logos.firstOrNull { !it.filePath.endsWith(".svg") }
-    val logo = enLogo ?: anyLogo ?: logos.firstOrNull() ?: return null
-    return "$TMDB_IMAGE_BASE_W500${logo.filePath}"
+    val enLogo = logos.fastFirstOrNull { it.language == "en" }
+    val logo = enLogo ?: logos.firstOrNull() ?: return null
+    return "$TMDB_IMAGE_BASE_W500${logo.filePath}".replace(".svg", ".png")
 }

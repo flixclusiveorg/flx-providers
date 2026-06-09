@@ -63,6 +63,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastFilter
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastForEachIndexed
+import androidx.compose.ui.util.fastMap
+import androidx.compose.ui.util.fastMapIndexed
 import androidx.core.net.toUri
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -319,7 +324,7 @@ internal fun TMDBSettingsScreen(
                     }
                 }
 
-                grouped.entries.sortedBy { it.key }.forEach { (category, items) ->
+                grouped.entries.sortedBy { it.key }.fastForEach { (category, items) ->
                     item(key = "header_$category") {
                         SectionHeader(
                             title = categoryDisplayName(category),
@@ -335,7 +340,7 @@ internal fun TMDBSettingsScreen(
                             modifier = Modifier.animateItem(),
                             onToggle = { enabled ->
                                 scope.launch {
-                                    val updated = catalogs.map {
+                                    val updated = catalogs.fastMap {
                                         if (it.name == catalog.name && it.category == catalog.category)
                                             it.copy(enabled = enabled)
                                         else it
@@ -377,7 +382,7 @@ internal fun TMDBSettingsScreen(
                 onConfirm = { name, url ->
                     scope.launch {
                         val updated = if (editTarget != null) {
-                            catalogs.map {
+                            catalogs.fastMap {
                                 if (it.name == editTarget!!.name && it.category == editTarget!!.category)
                                     it.copy(name = name, url = url)
                                 else it
@@ -470,7 +475,7 @@ private fun QualityRow(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            options.forEach { opt ->
+            options.fastForEach { opt ->
                 FilterChip(
                     selected = selected == opt,
                     onClick = { if (selected != opt) onSelect(opt) },
@@ -661,7 +666,7 @@ private fun CatalogEditSheet(
     var queryParams by remember {
         mutableStateOf(
             parsedUri?.queryParameterNames
-                ?.flatMap { key -> parsedUri.getQueryParameters(key).map { key to it } }
+                ?.flatMap { key -> parsedUri.getQueryParameters(key).fastMap { key to it } }
                 ?: emptyList(),
         )
     }
@@ -722,17 +727,17 @@ private fun CatalogEditSheet(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            queryParams.forEachIndexed { index, (key, value) ->
+            queryParams.fastForEachIndexed { index, (key, value) ->
                 UrlEditRow(
                     key = key,
                     value = value,
                     onKeyChange = { newKey ->
-                        queryParams = queryParams.mapIndexed { i, p ->
+                        queryParams = queryParams.fastMapIndexed { i, p ->
                             if (i == index) newKey to p.second else p
                         }
                     },
                     onValueChange = { newValue ->
-                        queryParams = queryParams.mapIndexed { i, p ->
+                        queryParams = queryParams.fastMapIndexed { i, p ->
                             if (i == index) p.first to newValue else p
                         }
                     },
@@ -748,7 +753,7 @@ private fun CatalogEditSheet(
                 Text("+ Add Parameter")
             }
             Spacer(Modifier.height(8.dp))
-            val validParams = queryParams.filter { it.first.isNotBlank() }
+            val validParams = queryParams.fastFilter { it.first.isNotBlank() }
             val currentUrl = if (validParams.isEmpty()) baseUrl.trim()
             else baseUrl.trim() + "?" + validParams.joinToString("&") { "${it.first}=${it.second}" }
             val hasChanges = if (initial == null) {
