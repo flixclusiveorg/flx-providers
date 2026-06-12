@@ -8,7 +8,6 @@ import com.flixclusive.provider.app.trakt.core.model.TraktUserWrapper
 import com.flixclusive.provider.app.trakt.core.model.TraktWatchNowSource
 import com.flixclusive.provider.app.trakt.core.network.dto.request.ListCreateRequest
 import com.flixclusive.provider.app.trakt.core.network.dto.request.ListItemActionRequest
-import com.flixclusive.provider.app.trakt.core.network.dto.request.ScrobbleRequest
 import com.flixclusive.provider.app.trakt.core.network.dto.request.TraktSearchRequestV2
 import com.flixclusive.provider.app.trakt.core.network.dto.response.MinimalWatchedItemMap
 import com.flixclusive.provider.app.trakt.core.network.dto.response.MinimalWatchlist
@@ -170,11 +169,12 @@ internal interface TraktApiService {
         @Path("type") type: String,
     ): List<TraktSmartList>
 
-    @POST("scrobble/{action}")
-    suspend fun scrobble(
-        @Path("action") action: String,
-        @Body request: ScrobbleRequest,
-    )
+    // TODO: uncomment if `apiz.` endpoints have fixed issues for TV Show episodes (403 error)
+//    @POST("scrobble/{action}")
+//    suspend fun scrobble(
+//        @Path("action") action: String,
+//        @Body request: ScrobbleRequest,
+//    )
 
     @GET("sync/playback/{type}")
     suspend fun getPlaybackProgress(

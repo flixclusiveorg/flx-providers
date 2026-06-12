@@ -9,19 +9,17 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.flixclusive.core.util.android.showToast
 import com.flixclusive.core.util.coroutines.FlxDispatchers
+import com.flixclusive.core.util.log.debugLog
 import com.flixclusive.core.util.log.errorLog
-import com.flixclusive.provider.extensions.getBool
-import com.flixclusive.provider.extensions.getString
+import com.flixclusive.core.util.network.json.AppJson
+import com.flixclusive.core.util.network.okhttp.HttpMethod
+import com.flixclusive.core.util.network.okhttp.jsonRequest
 import com.flixclusive.model.media.MediaMetadata
 import com.flixclusive.model.media.common.MediaIdSource
 import com.flixclusive.model.media.common.MediaType
 import com.flixclusive.model.media.common.PaginatedMedia
 import com.flixclusive.model.media.common.tv.Episode
 import com.flixclusive.provider.ProviderPlugin
-import com.flixclusive.provider.capability.TrackerFeature
-import com.flixclusive.provider.capability.TrackerProviderApi
-import com.flixclusive.provider.tracker.ScrobbleAction
-import com.flixclusive.provider.tracker.TrackerList
 import com.flixclusive.provider.app.trakt.core.config.PrefsKey
 import com.flixclusive.provider.app.trakt.core.config.TraktApiConfig
 import com.flixclusive.provider.app.trakt.core.network.TraktApiService
@@ -33,6 +31,12 @@ import com.flixclusive.provider.app.trakt.core.network.dto.request.ScrobbleReque
 import com.flixclusive.provider.app.trakt.core.network.dto.response.MinimalWatchedItemMap
 import com.flixclusive.provider.app.trakt.core.network.dto.response.TraktGenericMediaItemResponse
 import com.flixclusive.provider.app.trakt.core.network.util.OkHttpClientUtil
+import com.flixclusive.provider.capability.TrackerFeature
+import com.flixclusive.provider.capability.TrackerProviderApi
+import com.flixclusive.provider.extensions.getBool
+import com.flixclusive.provider.extensions.getString
+import com.flixclusive.provider.tracker.ScrobbleAction
+import com.flixclusive.provider.tracker.TrackerList
 
 class TraktTracker internal constructor(
     private val context: Context,
@@ -47,10 +51,12 @@ class TraktTracker internal constructor(
         private const val TRAKT_WATCHED_ID = "trakt_flixclusive_watched_history"
     }
 
+    private val nonCachedClient by lazy {
+        OkHttpClientUtil.createNonCachedClient(settings)
+    }
+
     private val apiService by lazy {
-        TraktApiService.create(
-            OkHttpClientUtil.createNonCachedClient(settings)
-        )
+        TraktApiService.create(nonCachedClient)
     }
 
     private val cachedApiService by lazy {
@@ -396,10 +402,30 @@ class TraktTracker internal constructor(
                 }
             }
 
-            apiService.scrobble(
-                action = action.toRequest(),
-                request = request
-            )
+            val url = "https://api.trakt.tv/scrobble/${action.toRequest()}"
+
+            nonCachedClient.jsonRequest(
+                url = url,
+                method = HttpMethod.POST,
+                json = AppJson.encodeToString(request),
+            ).execute().use { response ->
+                val body = response.body.string()
+                debugLog(body)
+
+                if (!response.isSuccessful) {
+                    val validErrors = listOf(
+                        422, // Pause must be at least 1%
+                        409, // Already scrobbling this media
+                    )
+
+                    if (validErrors.contains(response.code)) {
+                        errorLog("Scrobble API returned error ${response.code}: ${response.message}")
+                        return@use
+                    }
+
+                    throw Exception(body)
+                }
+            }
         }
     }
 
