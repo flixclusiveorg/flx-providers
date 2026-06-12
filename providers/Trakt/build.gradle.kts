@@ -61,7 +61,7 @@ flxProvider {
 
     versionMajor = 0
     versionMinor = 0
-    versionPatch = 6
+    versionPatch = 7
     versionBuild = 0
 
     iconUrl = "https://i.imgur.com/cwmhW7c.png"
