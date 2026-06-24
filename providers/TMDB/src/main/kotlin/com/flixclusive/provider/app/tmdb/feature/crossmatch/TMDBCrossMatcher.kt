@@ -8,6 +8,8 @@ import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.core.util.network.okhttp.request
 import com.flixclusive.model.media.MediaMetadata
+import com.flixclusive.model.media.Movie
+import com.flixclusive.model.media.Show
 import com.flixclusive.model.media.common.MediaIdSource
 import com.flixclusive.model.media.common.MediaType
 import com.flixclusive.provider.app.tmdb.core.config.APPEND_TO_RESPONSE
@@ -74,13 +76,13 @@ internal class TMDBCrossMatcher(
 
         val partial = match.toPartialMedia(providerId, hint) ?: return null
         return if (partial.type.isMovie) {
-            try { fetchMovie(partial.id) } catch (_: Throwable) { partial }
+            safeCall { fetchMovie(partial.id) }
         } else {
-            try { fetchShow(partial.id) } catch (_: Throwable) { partial }
+            safeCall { fetchShow(partial.id) }
         }
     }
 
-    private suspend fun fetchMovie(tmdbId: String): MediaMetadata {
+    private suspend fun fetchMovie(tmdbId: String): Movie {
         val imgCfg = settings.readImageConfig()
         val url = "${TMDB_API_BASE_URL}movie/$tmdbId?append_to_response=$APPEND_TO_RESPONSE"
         val dto = FlxDispatchers.withIOContext {
@@ -89,7 +91,7 @@ internal class TMDBCrossMatcher(
         return dto.toMovie(providerId, imgCfg)
     }
 
-    private suspend fun fetchShow(tmdbId: String): MediaMetadata {
+    private suspend fun fetchShow(tmdbId: String): Show {
         val imgCfg = settings.readImageConfig()
         val url = "${TMDB_API_BASE_URL}tv/$tmdbId?append_to_response=$APPEND_TO_RESPONSE"
         val showDto = FlxDispatchers.withIOContext {
