@@ -48,11 +48,14 @@ flxProvider {
     description = """
         A provider for The Movie Database (TMDB), offering catalog browsing, content
         discovery, metadata, search, and watch-provider links.
+        
+        Fixes:
+        - [x] Resolve null TMDB API key issue
     """.trimIndent()
 
     versionMajor = 1
     versionMinor = 0
-    versionPatch = 4
+    versionPatch = 5
     versionBuild = 0
 
     iconUrl = "https://i.imgur.com/qd6zqII.png"
