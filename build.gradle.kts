@@ -19,16 +19,6 @@ subprojects {
                 minSdk = 23
                 testOptions.targetSdk = 36
             }
-
-            buildTypes {
-                release {
-                    isMinifyEnabled = true
-                    proguardFiles(
-                        getDefaultProguardFile("proguard-android-optimize.txt"),
-                        "../../core/proguard/proguard-rules.pro"
-                    )
-                }
-            }
         }
     }
 

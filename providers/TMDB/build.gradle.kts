@@ -56,7 +56,7 @@ flxProvider {
     versionMajor = 1
     versionMinor = 0
     versionPatch = 5
-    versionBuild = 0
+    versionBuild = 1
 
     iconUrl = "https://i.imgur.com/qd6zqII.png"
     language = Language.Multiple
