@@ -92,6 +92,17 @@ internal class MinimalWatchedItemMap(private val items: Map<String, MinimalWatch
     fun isWatched(traktId: String): Boolean {
         return items.containsKey(traktId)
     }
+
+    fun isEpisodeWatched(showId: String, seasonNumber: Int, episodeId: String): Boolean {
+        val show = items[showId] as? MinimalWatchedItem.Show ?: return false
+
+        val episodes = show.seasons.entries
+            .firstOrNull { (key, _) -> key.substringAfterLast('|') == seasonNumber.toString() }
+            ?.value
+            ?: return false
+
+        return episodes.containsKey(episodeId)
+    }
 }
 
 internal object MinimalWatchedItemMapSerializer : KSerializer<MinimalWatchedItemMap> {

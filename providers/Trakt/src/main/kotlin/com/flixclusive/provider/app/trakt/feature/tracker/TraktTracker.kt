@@ -41,11 +41,13 @@ import com.flixclusive.provider.tracker.TrackerList
 class TraktTracker internal constructor(
     private val context: Context,
     private val plugin: ProviderPlugin,
-    private val settings: DataStore<Preferences>
+    private val settings: DataStore<Preferences>,
 ) : TrackerProviderApi {
     companion object {
-        private const val ERROR_DISALLOWED_LIST_MANAGEMENT = "List management is disabled in your Trakt settings"
-        private const val ERROR_DISALLOWED_SCROBBLE = "Scrobbling is disabled in your Trakt settings"
+        private const val ERROR_DISALLOWED_LIST_MANAGEMENT =
+            "List management is disabled in your Trakt settings"
+        private const val ERROR_DISALLOWED_SCROBBLE =
+            "Scrobbling is disabled in your Trakt settings"
 
         private const val TRAKT_WATCHLIST_ID = "trakt_flixclusive_watchlist"
         private const val TRAKT_WATCHED_ID = "trakt_flixclusive_watched_history"
@@ -64,8 +66,8 @@ class TraktTracker internal constructor(
             OkHttpClientUtil.createCachedClient(
                 context = context,
                 settings = settings,
-                cacheMaxAge = 60
-            )
+                cacheMaxAge = 60,
+            ),
         )
     }
 
@@ -84,7 +86,7 @@ class TraktTracker internal constructor(
                     PrefsKey.PREFS_LIST_MANAGEMENT -> ERROR_DISALLOWED_LIST_MANAGEMENT
                     PrefsKey.PREFS_SCROBBLE -> ERROR_DISALLOWED_SCROBBLE
                     else -> "Action not allowed. It is disabled in settings."
-                }
+                },
             )
         }
     }
@@ -126,12 +128,16 @@ class TraktTracker internal constructor(
 
     override suspend fun isInList(
         list: TrackerList,
-        item: MediaMetadata
+        item: MediaMetadata,
     ): Boolean {
         canPerformAction(PrefsKey.PREFS_LIST_MANAGEMENT)
 
         return FlxDispatchers.withIOContext {
             when (list.id) {
+                TRAKT_WATCHED_ID -> {
+                    isWatched(item)
+                }
+
                 TRAKT_WATCHLIST_ID -> {
                     val traktId = item.externalIds[MediaIdSource.TRAKT]
                         ?.toIntOrNull() ?: return@withIOContext false
@@ -139,35 +145,19 @@ class TraktTracker internal constructor(
                     val watchlistItems = apiService.getMinimalWatchlist()
                     watchlistItems.isInList(traktId)
                 }
-                TRAKT_WATCHED_ID -> {
-                    val traktId = item.externalIds[MediaIdSource.TRAKT] ?: return@withIOContext false
-                    val type = when (item.type) {
-                        MediaType.MOVIE -> "movies"
-                        MediaType.SHOW -> "shows"
+
+                else -> {
+                    cachedApiService.getListsContainingItem(
+                        filmId = item.id,
+                        type =
+                            when (item.type) {
+                                MediaType.MOVIE -> "movies"
+                                MediaType.SHOW -> "shows"
+                            },
+                    ).fastAny {
+                        it.toString() == list.id
                     }
-
-                    var page = 1
-                    var watchedItems: MinimalWatchedItemMap? = null
-
-                    do {
-                        if (watchedItems?.isWatched(traktId) == true) {
-                            return@withIOContext true
-                        }
-
-                        watchedItems = cachedApiService.getMinimalWatched(
-                            page = page++, type = type
-                        )
-                    } while (watchedItems.isNotEmpty())
-
-                    false
                 }
-                else -> cachedApiService.getListsContainingItem(
-                    filmId = item.id,
-                    type = when (item.type) {
-                        MediaType.MOVIE -> "movies"
-                        MediaType.SHOW -> "shows"
-                    }
-                ).fastAny { it.toString() == list.id }
             }
         }
     }
@@ -186,7 +176,7 @@ class TraktTracker internal constructor(
 
     override suspend fun addListItem(
         list: TrackerList,
-        item: MediaMetadata
+        item: MediaMetadata,
     ) {
         canPerformAction(PrefsKey.PREFS_LIST_MANAGEMENT)
 
@@ -196,19 +186,21 @@ class TraktTracker internal constructor(
                     TRAKT_WATCHLIST_ID -> {
                         apiService.addTypedItems(
                             type = "watchlist",
-                            request = item.toListItemActionRequest()
+                            request = item.toListItemActionRequest(),
                         )
                     }
+
                     TRAKT_WATCHED_ID -> {
                         apiService.addTypedItems(
                             type = "history",
-                            request = item.toListItemActionRequest()
+                            request = item.toListItemActionRequest(),
                         )
                     }
+
                     else -> {
                         apiService.addListItems(
                             id = list.id,
-                            request = item.toListItemActionRequest()
+                            request = item.toListItemActionRequest(),
                         )
                     }
                 }
@@ -225,7 +217,7 @@ class TraktTracker internal constructor(
 
     override suspend fun createList(
         name: String,
-        description: String?
+        description: String?,
     ): TrackerList {
         canPerformAction(PrefsKey.PREFS_LIST_MANAGEMENT)
 
@@ -307,13 +299,11 @@ class TraktTracker internal constructor(
         }
     }
 
-    override suspend fun isAuthenticated(): Boolean {
-        return settings.getString(PrefsKey.PREFS_AUTH_USER_ID, null) != null
-    }
+    override suspend fun isAuthenticated(): Boolean = settings.getString(PrefsKey.PREFS_AUTH_USER_ID, null) != null
 
     override suspend fun removeListItem(
         list: TrackerList,
-        item: MediaMetadata
+        item: MediaMetadata,
     ) {
         canPerformAction(PrefsKey.PREFS_LIST_MANAGEMENT)
 
@@ -323,19 +313,21 @@ class TraktTracker internal constructor(
                     TRAKT_WATCHLIST_ID -> {
                         apiService.removeTypedItems(
                             type = "watchlist",
-                            request = item.toListItemActionRequest()
+                            request = item.toListItemActionRequest(),
                         )
                     }
+
                     TRAKT_WATCHED_ID -> {
                         apiService.removeTypedItems(
                             type = "history",
-                            request = item.toListItemActionRequest()
+                            request = item.toListItemActionRequest(),
                         )
                     }
+
                     else -> {
                         apiService.removeListItems(
                             id = list.id,
-                            request = item.toListItemActionRequest()
+                            request = item.toListItemActionRequest(),
                         )
                     }
                 }
@@ -350,9 +342,7 @@ class TraktTracker internal constructor(
         }
     }
 
-    override suspend fun updateList(
-        list: TrackerList,
-    ): TrackerList {
+    override suspend fun updateList(list: TrackerList): TrackerList {
         canPerformAction(PrefsKey.PREFS_LIST_MANAGEMENT)
 
         return FlxDispatchers.withIOContext {
@@ -377,7 +367,7 @@ class TraktTracker internal constructor(
         media: MediaMetadata,
         progressPercent: Float,
         atMs: Long?,
-        episode: Episode?
+        episode: Episode?,
     ) {
         canPerformAction(PrefsKey.PREFS_SCROBBLE)
 
@@ -402,7 +392,13 @@ class TraktTracker internal constructor(
                 }
             }
 
-            val url = "https://api.trakt.tv/scrobble/${action.toRequest()}"
+            val actionRequest = when (action) {
+                ScrobbleAction.START -> "start"
+                ScrobbleAction.STOP if (progressPercent >= 80f) -> "stop"
+                else -> "pause"
+            }
+
+            val url = "https://api.trakt.tv/scrobble/${actionRequest}"
 
             nonCachedClient.jsonRequest(
                 url = url,
@@ -431,7 +427,7 @@ class TraktTracker internal constructor(
 
     override suspend fun getScrobbledProgress(
         item: MediaMetadata,
-        episode: Episode?
+        episode: Episode?,
     ): Float {
         canPerformAction(PrefsKey.PREFS_SCROBBLE)
 
@@ -464,20 +460,52 @@ class TraktTracker internal constructor(
                 isSameMedia && isSameEpisode
             }
 
+            if (progressItem == null && isWatched(item, episode)) {
+                return@withIOContext 100f
+            }
+
             progressItem?.progress ?: 0f
         }
     }
 
-    private fun ScrobbleAction.toRequest(): String {
-        return when (this) {
-            ScrobbleAction.START -> "start"
-            ScrobbleAction.STOP -> "stop"
+    private suspend fun isWatched(
+        media: MediaMetadata,
+        episode: Episode? = null,
+    ): Boolean {
+        val traktId = media.externalIds[MediaIdSource.TRAKT] ?: return false
+        val type = when (media.type) {
+            MediaType.MOVIE -> "movies"
+            MediaType.SHOW -> "shows"
         }
+
+        var page = 1
+        var watchedItems: MinimalWatchedItemMap? = null
+
+        do {
+            val isWatched = if (episode != null) {
+                watchedItems?.isEpisodeWatched(
+                    traktId,
+                    seasonNumber = episode.season,
+                    episodeId = episode.id,
+                ) == true
+            } else {
+                watchedItems?.isWatched(traktId) == true
+            }
+
+            if (isWatched) return true
+
+            watchedItems = cachedApiService.getMinimalWatched(
+                page = page++,
+                type = type,
+            )
+        } while (watchedItems.isNotEmpty())
+
+        return false
     }
 
     private suspend fun getWatchedItems(
         page: Int,
-        pageSize: Int
+        pageSize: Int,
     ): List<TraktGenericMediaItemResponse> {
         val movies = cachedApiService.getTypedItems(
             page = page,
@@ -515,7 +543,7 @@ class TraktTracker internal constructor(
             description = "A list of movies and shows you want to watch, synced with your Trakt account.",
             url = "https://trakt.tv/users/me/watchlist",
             updatedAt = lastUpdatedAt,
-            images = previews
+            images = previews,
         )
     }
 
@@ -549,7 +577,7 @@ class TraktTracker internal constructor(
             description = "A list of movies and shows you've watched, synced with your Trakt account.",
             url = "https://trakt.tv/users/me/watched",
             updatedAt = lastUpdatedAt,
-            images = previews
+            images = previews,
         )
     }
 }
