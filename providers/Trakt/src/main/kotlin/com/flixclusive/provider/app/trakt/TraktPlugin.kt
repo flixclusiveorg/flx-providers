@@ -20,6 +20,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flixclusive.core.util.coroutines.FlxDispatchers
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.core.util.log.infoLog
 import com.flixclusive.core.util.log.warnLog
@@ -52,7 +53,6 @@ import com.flixclusive.provider.capability.MediaLinkProviderApi
 import com.flixclusive.provider.capability.MediaMetadataProviderApi
 import com.flixclusive.provider.capability.SearchProviderApi
 import com.flixclusive.provider.capability.TrackerProviderApi
-import com.flixclusive.provider.extensions.getObjectAsFlow
 import com.flixclusive.provider.extensions.remove
 import com.flixclusive.provider.extensions.setBool
 import com.flixclusive.provider.extensions.setString
@@ -60,7 +60,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 
@@ -167,11 +166,9 @@ class TraktPlugin : ProviderPlugin(), TypeSenseKeyProvider {
 
         if (authToken.isExpired) {
             warnLog("Auth token is expired, Catalog API will not be available until user re-authenticates")
-            exchangeCodeForToken(code = authToken.refreshToken, refresh = true)
+            val success = exchangeCodeForToken(code = authToken.refreshToken, refresh = true)
 
-            settings.getObjectAsFlow<AuthToken?>(PrefsKey.PREFS_AUTH, null)
-                .filterNotNull()
-                .first { !it.isExpired }
+            if (!success) return null
         }
 
         return TraktCatalog(
@@ -190,7 +187,10 @@ class TraktPlugin : ProviderPlugin(), TypeSenseKeyProvider {
         LaunchedEffect(authState) {
             if (authState is AuthState.Expired) {
                 val refreshCode = (authState as AuthState.Expired).data.refreshToken
-                exchangeCodeForToken(refreshCode, refresh = true)
+                val result = exchangeCodeForToken(refreshCode, refresh = true)
+                if (!result) {
+                    authState = AuthState.Unauthenticated
+                }
             } else if (authState is AuthState.Authenticated) {
                 saveAndLoadUser()
             }
@@ -253,13 +253,13 @@ class TraktPlugin : ProviderPlugin(), TypeSenseKeyProvider {
         }
     }
 
-    private fun exchangeCodeForToken(
+    private suspend fun exchangeCodeForToken(
         code: String,
         refresh: Boolean = false
-    ) {
+    ): Boolean {
         if (exchangeTokenJob?.isActive == true) {
             warnLog("Token exchange already in progress, ignoring new request...")
-            return
+            return false
         }
 
         val request = TraktApiConfig.getExchangeTokenRequest(
@@ -267,34 +267,42 @@ class TraktPlugin : ProviderPlugin(), TypeSenseKeyProvider {
             code = code,
             isRefreshing = refresh
         )
+
+        var result = false
         exchangeTokenJob = FlxDispatchers.launchOnIO {
             val client = OkHttpClientUtil.createVanillaClient()
-            client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) {
-                    errorLog("Failed to exchange code for token: ${response.code} - ${response.message}")
-                    authError.emit("Failed to exchange code for token: ${response.code}")
-                    return@use
+            safeCall {
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        errorLog("Failed to exchange code for token: ${response.code} - ${response.message}")
+                        authError.emit("Failed to exchange code for token: ${response.code}")
+                        return@use
+                    }
+
+                    val responseBody = response.body.string()
+                    val authToken = runCatching {
+                        fromJson<AuthToken>(responseBody)
+                    }.onFailure {
+                        it.printStackTrace()
+                        errorLog("Failed to parse token exchange response: ${it.message}")
+                        authError.emit("Failed to parse token exchange response")
+                        return@use
+                    }.getOrNull()
+
+                    if (authToken == null) {
+                        errorLog("Received null auth token after exchange")
+                        authError.emit("Failed to exchange code for token: received null token")
+                        return@use
+                    }
+
+                    settings.setObject(PrefsKey.PREFS_AUTH, authToken)
+                    result = true
                 }
-
-                val responseBody = response.body.string()
-                val authToken = runCatching {
-                    fromJson<AuthToken>(responseBody)
-                }.onFailure {
-                    it.printStackTrace()
-                    errorLog("Failed to parse token exchange response: ${it.message}")
-                    authError.emit("Failed to parse token exchange response")
-                    return@use
-                }.getOrNull()
-
-                if (authToken == null) {
-                    errorLog("Received null auth token after exchange")
-                    authError.emit("Failed to exchange code for token: received null token")
-                    return@use
-                }
-
-                settings.setObject(PrefsKey.PREFS_AUTH, authToken)
             }
         }
+
+        exchangeTokenJob?.join()
+        return result
     }
 
     private fun saveAndLoadUser() {

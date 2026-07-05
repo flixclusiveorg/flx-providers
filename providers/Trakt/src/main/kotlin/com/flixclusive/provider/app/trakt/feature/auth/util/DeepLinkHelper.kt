@@ -7,12 +7,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.util.Consumer
+import kotlinx.coroutines.launch
 
 @Composable
-internal fun ObserveOauthDeepLinkUri(onDeepLink: (Uri) -> Unit) {
+internal fun ObserveOauthDeepLinkUri(onDeepLink: suspend (Uri) -> Unit) {
+    val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val activity = context as? ComponentActivity
     val callback by rememberUpdatedState(onDeepLink)
@@ -27,7 +30,7 @@ internal fun ObserveOauthDeepLinkUri(onDeepLink: (Uri) -> Unit) {
     DisposableEffect(activity) {
         val listener = Consumer<Intent> { newIntent ->
             newIntent.data?.let { uri ->
-                callback(uri)
+                scope.launch { callback(uri) }
                 newIntent.data = null // consume it
             }
         }
