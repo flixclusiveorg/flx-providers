@@ -41,10 +41,11 @@ Each provider exposes only the capabilities its source supports:
 
 ## Providers
 
-| Provider | Capabilities |
-|---|---|
-| [Stremio](providers/Stremio/) | Catalog, Search, Metadata, Media Links, Cross-match |
-| [Trakt](providers/Trakt/) | Catalog, Search, Metadata, Tracker, Cross-match |
+| Provider                     | Capabilities                                        |
+|------------------------------|-----------------------------------------------------|
+| [Stremio](providers/Stremio) | Catalog, Search, Metadata, Media Links, Cross-match |
+| [Trakt](providers/Trakt)     | Catalog, Search, Metadata, Tracker, Cross-match     |
+| [TMDB](providers/TMDB)       | Catalog, Search, Metadata, Cross-match, Media Links |
 
 ---
 
@@ -52,7 +53,7 @@ Each provider exposes only the capabilities its source supports:
 
 - [x] Stremio
 - [x] Trakt
-- [ ] TMDB
+- [x] TMDB
 - [ ] Simkl
 - [ ] Letterboxd
 

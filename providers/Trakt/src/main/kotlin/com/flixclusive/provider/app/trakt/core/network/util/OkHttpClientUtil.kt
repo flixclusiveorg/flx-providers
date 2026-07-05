@@ -17,7 +17,7 @@ internal object OkHttpClientUtil {
     private lateinit var cache: Cache
 
     fun deleteCache() {
-        cache.delete()
+        if (::cache.isInitialized) cache.delete()
     }
 
     fun createCachedClient(
