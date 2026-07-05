@@ -59,10 +59,16 @@ flxProvider {
     providerName = "Trakt"
     description = "A provider acting as an adapter for the Trakt API, providing metadata, tracking and discovery features."
 
+    changelog = """
+        ## 0.0.8 fixes
+        - Improved scrobbling
+        - Resolved stuck state
+    """.trimIndent()
+
     versionMajor = 0
     versionMinor = 0
-    versionPatch = 7
-    versionBuild = 1
+    versionPatch = 8
+    versionBuild = 0
 
     iconUrl = "https://i.imgur.com/cwmhW7c.png"
 
