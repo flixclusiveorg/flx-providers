@@ -29,5 +29,5 @@ internal data class SubtitleDto(
 @Serializable
 internal data class SubtitleResponse(
     val subtitles: List<SubtitleDto>,
-    override val err: String?,
+    override val err: String? = null,
 ) : CommonErrorResponse()
