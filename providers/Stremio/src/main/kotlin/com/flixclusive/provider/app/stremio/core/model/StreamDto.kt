@@ -13,7 +13,7 @@ import java.net.URL
  * */
 @Serializable
 internal data class StreamDto(
-    val url: String?,
+    val url: String? = null,
     val name: String? = null,
     val title: String? = null,
     val description: String? = null,
