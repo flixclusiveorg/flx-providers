@@ -20,7 +20,7 @@ internal data class TraktSmartList(
         providerId: String,
         authToken: String,
     ): Catalog {
-        val url = "https://apiz.trakt.tv${path}?extended=full%2Cimages&${query}"
+        val url = "https://api.trakt.tv${path}?extended=full%2Cimages&${query}"
         return Catalog(
             name = name,
             description = null,

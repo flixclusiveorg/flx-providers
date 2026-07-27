@@ -60,6 +60,8 @@ flxProvider {
     description = "A provider acting as an adapter for the Trakt API, providing metadata, tracking and discovery features."
 
     changelog = """
+        ## 0.0.10
+        - Change API host - seems like old apiz has been privatized to trakt maintainers only
         ## 0.0.9
         - Resolved uninstalling Trakt exception
         ## 0.0.8
@@ -69,7 +71,7 @@ flxProvider {
 
     versionMajor = 0
     versionMinor = 0
-    versionPatch = 9
+    versionPatch = 10
     versionBuild = 0
 
     iconUrl = "https://i.imgur.com/cwmhW7c.png"

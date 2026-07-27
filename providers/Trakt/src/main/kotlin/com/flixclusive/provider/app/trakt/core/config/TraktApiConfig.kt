@@ -7,7 +7,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.net.URLEncoder
 
 internal object TraktApiConfig {
-    const val API_BASE_URL = "https://apiz.trakt.tv"
+    const val API_BASE_URL = "https://api.trakt.tv"
     const val AUTH_BASE_URL = "https://trakt.tv"
 
     const val AUTH_TOKEN_URL = "$API_BASE_URL/oauth/token"
