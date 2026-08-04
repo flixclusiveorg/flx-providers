@@ -15,7 +15,7 @@ internal object TypesenseKeyFetcher {
                 response.body.string()
             }
 
-            Regex("""typesense:\{keys:\{media:\{default:"(.*)",""")
+            Regex("""typesense:\{keys:\{media:\{default:"(.*)"(},|,)""")
                 .find(html)
                 ?.groupValues
                 ?.get(1)
