@@ -1,6 +1,7 @@
 package com.flixclusive.provider.app.stremio.feature.link
 
 import com.flixclusive.core.util.coroutines.FlxDispatchers
+import com.flixclusive.core.util.exception.safeCall
 import com.flixclusive.core.util.network.json.fromJson
 import com.flixclusive.core.util.network.okhttp.request
 import com.flixclusive.model.media.MediaMetadata
@@ -119,11 +120,14 @@ class StremioLinkProvider internal constructor(
             "subtitles/series/$id:${episode.season}:${episode.number}"
         }
 
-        val response = FlxDispatchers.withIOContext {
-            client.request(url = "$baseUrl/$slug.json").execute()
-        }.fromJson<SubtitleResponse>()
+        val response = safeCall {
+            FlxDispatchers.withIOContext {
+                client.request(url = "$baseUrl/$slug.json").execute()
+                    .fromJson<SubtitleResponse>()
+            }
+        }
 
-        if (response.err != null)
+        if (response == null || response.err != null)
             return
 
         response.subtitles.forEach { subtitle ->
@@ -170,13 +174,16 @@ class StremioLinkProvider internal constructor(
             )
         }
 
-        val response = FlxDispatchers.withIOContext {
-            client.request(
-                url = "$baseUrl/$query"
-            ).execute()
-        }.fromJson<StreamResponse>()
+        val response = safeCall {
+            FlxDispatchers.withIOContext {
+                client.request(
+                    url = "$baseUrl/$query"
+                ).execute()
+                    .fromJson<StreamResponse>()
+            }
+        }
 
-        if (response.err != null)
+        if (response == null || response.err != null)
             return
 
         response.streams.forEach { stream ->
