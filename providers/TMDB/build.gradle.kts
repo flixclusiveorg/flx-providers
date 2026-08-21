@@ -19,7 +19,7 @@ dependencies {
     compileOnly(libs.compose.activity)
     compileOnly(libs.coil.compose)
     compileOnly(libs.okhttp)
-    compileOnly(libs.jsoup)
+    implementation(libs.jsoup)
     compileOnly(libs.kotlinx.coroutines)
     compileOnly(libs.datastore)
     implementation(projects.util)
