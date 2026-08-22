@@ -41,11 +41,15 @@ jobs:
           TRAKT_CLIENT_SECRET: ${{ secrets.TRAKT_CLIENT_SECRET }}
           TRAKT_CLIENT_ID: ${{ secrets.TRAKT_CLIENT_ID }}
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          LETTERBOXD_CLIENT_ID: ${{ secrets.LETTERBOXD_CLIENT_ID }}
+          LETTERBOXD_CLIENT_SECRET: ${{ secrets.LETTERBOXD_CLIENT_SECRET }}
         run: |
           cd $GITHUB_WORKSPACE/src
           echo TRAKT_CLIENT_SECRET=$TRAKT_CLIENT_SECRET >> local.properties
           echo TRAKT_CLIENT_ID=$TRAKT_CLIENT_ID >> local.properties
           echo TMDB_API_KEY=$TMDB_API_KEY >> local.properties
+          echo LETTERBOXD_CLIENT_ID=$LETTERBOXD_CLIENT_ID >> local.properties
+          echo LETTERBOXD_CLIENT_SECRET=$LETTERBOXD_CLIENT_SECRET >> local.properties
 
       # Change `**/**/build/*.flx` if you've changed the providers file structure.
       - name: Build Plugins

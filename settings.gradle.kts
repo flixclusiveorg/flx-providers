@@ -38,6 +38,7 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 * to the includes below.
 * */
 include(
+    "Letterboxd",
     "Discord",
     "util",
     "Trakt",
