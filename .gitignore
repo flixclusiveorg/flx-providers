@@ -10,3 +10,7 @@
 .cxx
 local.properties
 .kotlin
+
+.agents
+.claude
+skills-lock.json
