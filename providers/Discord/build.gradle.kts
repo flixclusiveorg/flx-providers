@@ -56,12 +56,14 @@ flxProvider {
 
     versionMajor = 0
     versionMinor = 0
-    versionPatch = 1
+    versionPatch = 2
     versionBuild = 0
 
     language = Language.Multiple
     providerType = ProviderType("Tracker")
     status = ProviderStatus.Beta
+
+    iconUrl = "https://i.imgur.com/VkuQEQC.png"
 
     requiresResources = false
 }
