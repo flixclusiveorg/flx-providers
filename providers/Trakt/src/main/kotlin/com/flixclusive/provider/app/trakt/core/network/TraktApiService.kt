@@ -109,6 +109,13 @@ internal interface TraktApiService {
         @Query("ignore_watched") ignoreWatched: Boolean = false,
     ): List<TraktGenericMediaItemResponse>
 
+    @GET("users/me/history")
+    suspend fun getHistory(
+        @Query("page") page: Int,
+        @Query("limit") limit: Int = TraktApiConfig.PAGE_RESULTS_LIMIT,
+        @Query("extended") extended: String = "full,images",
+    ): List<TraktGenericMediaItemResponse>
+
     @GET("users/me/watched/{type}")
     suspend fun getMinimalWatched(
         @Path("type") type: String,

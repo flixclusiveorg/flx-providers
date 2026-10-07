@@ -60,20 +60,14 @@ flxProvider {
     description = "A provider acting as an adapter for the Trakt API, providing metadata, tracking and discovery features."
 
     changelog = """
-        ## 0.0.12
-        - Fix search issues
-        ## 0.0.10
-        - Change API host - seems like old apiz has been privatized to trakt maintainers only
-        ## 0.0.9
-        - Resolved uninstalling Trakt exception
-        ## 0.0.8
-        - Improved scrobbling
-        - Resolved stuck state
+        ## 0.0.13
+        - Fix Watched/History list not paginating
+        - Fix Shows not displaying image posters on Watched list
     """.trimIndent()
 
     versionMajor = 0
     versionMinor = 0
-    versionPatch = 12
+    versionPatch = 13
     versionBuild = 0
 
     iconUrl = "https://i.imgur.com/cwmhW7c.png"

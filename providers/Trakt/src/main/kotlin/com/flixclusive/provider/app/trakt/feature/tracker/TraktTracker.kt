@@ -29,7 +29,6 @@ import com.flixclusive.provider.app.trakt.core.network.dto.request.ScrobbleEpiso
 import com.flixclusive.provider.app.trakt.core.network.dto.request.ScrobbleMedia.Companion.toScrobbleMedia
 import com.flixclusive.provider.app.trakt.core.network.dto.request.ScrobbleRequest
 import com.flixclusive.provider.app.trakt.core.network.dto.response.MinimalWatchedItemMap
-import com.flixclusive.provider.app.trakt.core.network.dto.response.TraktGenericMediaItemResponse
 import com.flixclusive.provider.app.trakt.core.network.util.OkHttpClientUtil
 import com.flixclusive.provider.capability.TrackerFeature
 import com.flixclusive.provider.capability.TrackerProviderApi
@@ -258,27 +257,29 @@ class TraktTracker internal constructor(
             val items = when (list.id) {
                 TRAKT_WATCHLIST_ID -> cachedApiService.getTypedItems(
                     page = page,
-                    limit = TraktApiConfig.PAGE_RESULTS_LIMIT,
+                    limit = pageSize,
                     type = "watchlist",
                     ignoreWatched = true
                 )
-                TRAKT_WATCHED_ID -> {
-                    getWatchedItems(page, pageSize)
-                }
+                TRAKT_WATCHED_ID -> cachedApiService.getHistory(
+                    page = page,
+                    limit = 250,
+                ).distinctBy { it.media.id }
                 else -> cachedApiService.getListItems(
                     id = list.id,
                     page = page,
                     limit = pageSize,
                 )
             }
-
+            val hasNextPage = when (list.id) {
+                TRAKT_WATCHED_ID -> items.size >= 250
+                else -> items.size >= pageSize
+            }
             PaginatedMedia(
                 page = page,
                 totalPages = totalPages,
-                hasNextPage = items.size >= pageSize,
-                results = items.fastMap {
-                    it.toPartialMedia(providerId = plugin.id)
-                }
+                hasNextPage = hasNextPage,
+                results = items.map { it.toPartialMedia(providerId = plugin.id) }
             )
         }
     }
@@ -501,27 +502,6 @@ class TraktTracker internal constructor(
         } while (watchedItems.isNotEmpty())
 
         return false
-    }
-
-    private suspend fun getWatchedItems(
-        page: Int,
-        pageSize: Int,
-    ): List<TraktGenericMediaItemResponse> {
-        val movies = cachedApiService.getTypedItems(
-            page = page,
-            limit = pageSize / 2,
-            type = "watched",
-            mediaType = "movies"
-        )
-
-        val shows = cachedApiService.getTypedItems(
-            page = page,
-            limit = pageSize - movies.size,
-            type = "watched",
-            mediaType = "shows"
-        )
-
-        return (movies + shows).sortedBy { it.listedAtAsLong ?: 0L }
     }
 
     private suspend fun getWatchlist(): TrackerList {
