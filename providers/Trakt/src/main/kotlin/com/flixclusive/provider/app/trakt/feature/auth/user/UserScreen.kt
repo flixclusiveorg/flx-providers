@@ -109,7 +109,7 @@ private fun UserScreenContent(
                         .crossfade(true)
                         .build()
                 },
-                contentDescription = user.name,
+                contentDescription = user.username,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(160.dp)
@@ -120,7 +120,7 @@ private fun UserScreenContent(
 
         item(key = null, contentType = null) {
             Text(
-                text = user.name,
+                text = user.name ?: user.username,
                 style = MaterialTheme.typography.headlineMedium
             )
         }

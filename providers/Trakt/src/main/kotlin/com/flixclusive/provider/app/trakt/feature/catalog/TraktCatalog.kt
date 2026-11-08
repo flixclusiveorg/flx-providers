@@ -254,7 +254,8 @@ class TraktCatalog internal constructor(
         return apiService.getLikedLists(
             page = 1,
             limit = 100
-        ).fastMap {
+        ).mapNotNull {
+            if (it.list.user?.traktSlug == null) return@mapNotNull null
             it.list.toCatalog(
                 providerId = plugin.id,
                 authToken = authToken.accessToken

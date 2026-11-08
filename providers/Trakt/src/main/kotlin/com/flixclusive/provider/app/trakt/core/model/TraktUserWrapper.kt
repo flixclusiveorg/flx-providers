@@ -7,14 +7,14 @@ import kotlinx.serialization.Serializable
 internal data class TraktUserWrapper(
     @SerialName("user") val user: TraktUser
 ) {
-    val traktSlug: String get() = user.traktSlug
+    val traktSlug: String? get() = user.traktSlug
 
 }
 
 @Serializable
 internal data class TraktUser(
     val deleted: Boolean,
-    val name: String,
+    val name: String? = null,
     val username: String,
     val about: String? = null,
     val age: Int? = null,
@@ -23,12 +23,12 @@ internal data class TraktUser(
     private val images: Map<String, Map<String, String>>,
     val email: String? = null,
 ) {
-    val traktSlug: String get() = ids.slug
+    val traktSlug: String? get() = ids.slug
 
     val avatar: String? get() = images["avatar"]?.get("full")
 
     @Serializable
     data class UserId(
-        @SerialName("slug") val slug: String,
+        @SerialName("slug") val slug: String?,
     )
 }

@@ -327,7 +327,7 @@ class TraktPlugin : ProviderPlugin(), TypeSenseKeyProvider {
             }
 
             val response = userResult.getOrNull() ?: return@launchOnIO
-            infoLog("Successfully loaded user after authentication: ${response.user.name}")
+            infoLog("Successfully loaded user after authentication: ${response.user.username}")
 
             settings.setString(PrefsKey.PREFS_AUTH_USER_ID, response.traktSlug)
             userFlow.value = UserState.Success(response.user)
