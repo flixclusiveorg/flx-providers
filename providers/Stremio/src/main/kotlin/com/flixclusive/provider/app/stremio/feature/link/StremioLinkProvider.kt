@@ -21,7 +21,6 @@ import com.flixclusive.provider.app.stremio.core.util.AddonUtil.ADDON_SOURCE_KEY
 import com.flixclusive.provider.app.stremio.core.util.AddonUtil.MEDIA_TYPE_KEY
 import com.flixclusive.provider.app.stremio.core.util.AddonUtil.getAddon
 import com.flixclusive.provider.app.stremio.core.util.AddonUtil.getAddons
-import com.flixclusive.provider.app.stremio.core.util.isValidUrl
 import com.flixclusive.provider.capability.MediaLinkProviderApi
 import com.flixclusive.provider.capability.MediaLinkType
 import okhttp3.OkHttpClient
@@ -131,9 +130,6 @@ class StremioLinkProvider internal constructor(
             return
 
         response.subtitles.forEach { subtitle ->
-            val isValidUrl = isValidUrl(subtitle.url)
-            if (!isValidUrl) return@forEach
-
             onLinkFound(
                 subtitle.toSubtitle(addonName = this@getSubtitle.name)
             )
@@ -149,7 +145,7 @@ class StremioLinkProvider internal constructor(
         addonName: String,
         onLinkFound: (MediaLink) -> Unit
     ) {
-        val hasStreamUrlOnEpisode = episode != null && isValidUrl(episode.id)
+        val hasStreamUrlOnEpisode = episode != null
         if (hasStreamUrlOnEpisode) {
             val stream = Stream(
                 name = episode.title ?: "S${episode.season}E${episode.number}",
@@ -187,14 +183,8 @@ class StremioLinkProvider internal constructor(
             return
 
         response.streams.forEach { stream ->
-            val streamLink = stream.toStreamLink()
-            if (streamLink != null)
-                onLinkFound(streamLink)
-
+            onLinkFound(stream.toStreamLink())
             stream.subtitles?.forEach sub@ { subtitle ->
-                val isValidUrl = isValidUrl(subtitle.url)
-                if (!isValidUrl) return@sub
-
                 onLinkFound(subtitle.toSubtitle(addonName))
             }
         }

@@ -2,7 +2,6 @@ package com.flixclusive.provider.app.stremio.core.model
 
 import com.flixclusive.model.provider.link.Flag
 import com.flixclusive.model.provider.link.Stream
-import com.flixclusive.provider.app.stremio.core.util.isValidUrl
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.net.URL
@@ -24,11 +23,9 @@ internal data class StreamDto(
     val subtitles: List<SubtitleDto>? = null,
     @SerialName("behaviorHints") val extraOptions: ExtraOptions? = null
 ) {
-    fun toStreamLink(): Stream? {
-        val isValidUrl = isValidUrl(url)
-        if (!isValidUrl) return null
-
-        val headers = (extraOptions?.headers ?: emptyMap()).plus(extraOptions?.proxyHeaders?.request ?: emptyMap())
+    fun toStreamLink(): Stream {
+        val headers = (extraOptions?.headers ?: emptyMap())
+            .plus(extraOptions?.proxyHeaders?.request ?: emptyMap())
 
         return Stream(
             url = URL(url).toString(),

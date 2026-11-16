@@ -44,17 +44,18 @@ flxProvider {
     id = "flx-stremio-1778084225"
     
     description = """
-        A flixclusive adapter for Stremio addons. Torrent addons, such as Torrentio, don't work without debrid accounts.
+        A flixclusive adapter for Stremio addons.
     """.trimIndent()
 
     changelog = """
+        - Allow all possible stream URIs
         - Updated to Core Stubs SDK v1.3.0
         - Brought this back just for testing - might remove again if I don't have time to maintain it
     """.trimIndent()
 
     versionMajor = 1
     versionMinor = 3
-    versionPatch = 4
+    versionPatch = 5
     versionBuild = 0
 
     // Extra authors for specific provider
