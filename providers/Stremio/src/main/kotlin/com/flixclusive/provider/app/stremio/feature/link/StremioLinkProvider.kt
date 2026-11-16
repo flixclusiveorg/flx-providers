@@ -146,6 +146,7 @@ class StremioLinkProvider internal constructor(
         onLinkFound: (MediaLink) -> Unit
     ) {
         val hasStreamUrlOnEpisode = episode != null
+            && (episode.id.contains("://") || episode.id.startsWith("magnet:", ignoreCase = true))
         if (hasStreamUrlOnEpisode) {
             val stream = Stream(
                 name = episode.title ?: "S${episode.season}E${episode.number}",

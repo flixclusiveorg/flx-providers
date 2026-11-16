@@ -49,7 +49,7 @@ internal data class StreamDto(
             .map { it.removePrefix("tracker:") }
             .filter { "://" in it }
             .distinct()
-        
+
         if (hash.startsWith("magnet:")) {
             warnLog("[Stremio] infoHash might be invalid: $hash")
         }
