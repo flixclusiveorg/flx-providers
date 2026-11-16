@@ -1,9 +1,11 @@
 package com.flixclusive.provider.app.stremio.core.model
 
+import com.flixclusive.core.util.log.warnLog
 import com.flixclusive.model.provider.link.Flag
 import com.flixclusive.model.provider.link.Stream
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.net.URLEncoder
 
 /**
  *
@@ -23,12 +25,12 @@ internal data class StreamDto(
     @SerialName("behaviorHints") val extraOptions: ExtraOptions? = null
 ) {
     fun toStreamLink(): Stream? {
-        if (url == null) return null
+        val streamUrl = url ?: toMagnet() ?: return null
         val headers = (extraOptions?.headers ?: emptyMap())
             .plus(extraOptions?.proxyHeaders?.request ?: emptyMap())
 
         return Stream(
-            url = url,
+            url = streamUrl,
             name = fixSourceName(
                 name = name,
                 description = description,
@@ -38,6 +40,25 @@ internal data class StreamDto(
                 Flag.RequiresAuth(customHeaders = headers),
             )
         )
+    }
+
+    private fun toMagnet(): String? {
+        val hash = infoHash?.takeIf { it.isNotBlank() } ?: return null
+        val trackers = sources.orEmpty()
+            .filter { it.startsWith("tracker:") }
+            .map { it.removePrefix("tracker:") }
+            .filter { "://" in it }
+            .distinct()
+        
+        if (hash.startsWith("magnet:")) {
+            warnLog("[Stremio] infoHash might be invalid: $hash")
+        }
+
+        return buildString {
+            append("magnet:?xt=urn:btih:").append(hash)
+            extraOptions?.filename?.let { append("&dn=").append(URLEncoder.encode(it, "UTF-8")) }
+            trackers.forEach { append("&tr=").append(URLEncoder.encode(it, "UTF-8")) }
+        }
     }
 
     private fun fixSourceName(
@@ -68,4 +89,5 @@ internal data class ProxyHeaders(
 internal data class ExtraOptions(
     val proxyHeaders: ProxyHeaders? = null,
     val headers: Map<String, String>? = null,
+    val filename: String? = null,
 )
