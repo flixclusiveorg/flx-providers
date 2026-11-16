@@ -183,7 +183,7 @@ class StremioLinkProvider internal constructor(
             return
 
         response.streams.forEach { stream ->
-            onLinkFound(stream.toStreamLink())
+            stream.toStreamLink()?.let(onLinkFound)
             stream.subtitles?.forEach sub@ { subtitle ->
                 onLinkFound(subtitle.toSubtitle(addonName))
             }

@@ -4,7 +4,6 @@ import com.flixclusive.model.provider.link.Flag
 import com.flixclusive.model.provider.link.Stream
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import java.net.URL
 
 /**
  *
@@ -23,12 +22,13 @@ internal data class StreamDto(
     val subtitles: List<SubtitleDto>? = null,
     @SerialName("behaviorHints") val extraOptions: ExtraOptions? = null
 ) {
-    fun toStreamLink(): Stream {
+    fun toStreamLink(): Stream? {
+        if (url == null) return null
         val headers = (extraOptions?.headers ?: emptyMap())
             .plus(extraOptions?.proxyHeaders?.request ?: emptyMap())
 
         return Stream(
-            url = URL(url).toString(),
+            url = url,
             name = fixSourceName(
                 name = name,
                 description = description,
