@@ -1,11 +1,11 @@
 package com.flixclusive.provider.app.trakt.feature.catalog
 
 import android.content.Context
-import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
 import com.flixclusive.core.util.android.showToast
 import com.flixclusive.core.util.coroutines.FlxDispatchers
 import com.flixclusive.core.util.exception.safeCall
+import com.flixclusive.core.util.log.errorLog
 import com.flixclusive.model.media.PartialMedia
 import com.flixclusive.model.media.common.PaginatedMedia
 import com.flixclusive.model.provider.Catalog
@@ -20,6 +20,7 @@ import com.flixclusive.provider.app.trakt.core.network.util.OkHttpClientUtil
 import com.flixclusive.provider.capability.CatalogProviderApi
 import com.flixclusive.provider.extensions.getBool
 import com.flixclusive.provider.extensions.getString
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -100,12 +101,12 @@ class TraktCatalog internal constructor(
     override suspend fun getCatalogs(): List<Catalog> {
         canPerformAction()
 
-        val deferred = mutableListOf<Deferred<List<Catalog>>>()
+        val deferred = mutableListOf<Deferred<List<Catalog>?>>()
         val catalogs = mutableListOf<Catalog>()
 
         coroutineScope {
-            val movieSmartLists = async {
-                apiService.getSavedFilters(type = "movies").fastMap {
+            val smartLists = safeAsync {
+                apiService.getSmartLists().map {
                     it.toCatalog(
                         providerId = plugin.id,
                         authToken = authToken.accessToken
@@ -113,20 +114,11 @@ class TraktCatalog internal constructor(
                 }
             }
 
-            val showSmartLists = async {
-                apiService.getSavedFilters(type = "shows").fastMap {
-                    it.toCatalog(
-                        providerId = plugin.id,
-                        authToken = authToken.accessToken
-                    )
-                }
-            }
-
-            val trendingAsync = async { listOf(getTrendingCatalog()) }
-            val popularAsync = async { getPopularCatalogs() }
-            val anticipatedAsync = async { listOf(getAnticipatedCatalog()) }
-            val likedListsAsync = async { getLikedListsAsCatalogs() }
-            val recommendedAsync = async {
+            val trendingAsync = safeAsync { listOf(getTrendingCatalog()) }
+            val popularAsync = safeAsync { getPopularCatalogs() }
+            val anticipatedAsync = safeAsync { listOf(getAnticipatedCatalog()) }
+            val likedListsAsync = safeAsync { getLikedListsAsCatalogs() }
+            val recommendedAsync = safeAsync {
                 val recommendedCatalog = getRecommendedCatalog()
                 val results = safeCall {
                     apiService.getCatalogItems(recommendedCatalog.url)
@@ -134,7 +126,7 @@ class TraktCatalog internal constructor(
 
                 if (results.isEmpty()) emptyList() else listOf(recommendedCatalog)
             }
-            val watchlistAsync = async {
+            val watchlistAsync = safeAsync {
                 val watchlist = getWatchlistCatalog()
                 val results = safeCall {
                     apiService.getCatalogItems(watchlist.url)
@@ -151,13 +143,15 @@ class TraktCatalog internal constructor(
                     likedListsAsync,
                     recommendedAsync,
                     watchlistAsync,
-                    movieSmartLists,
-                    showSmartLists
+                    smartLists,
                 )
             )
 
             deferred.awaitAll()
-                .fastForEach(catalogs::addAll)
+                .forEach { result ->
+                    if (result == null) return@forEach
+                    catalogs.addAll(result)
+                }
         }
 
         return catalogs
@@ -260,6 +254,20 @@ class TraktCatalog internal constructor(
                 providerId = plugin.id,
                 authToken = authToken.accessToken
             )
+        }
+    }
+
+    private fun <T> CoroutineScope.safeAsync(
+        block: suspend CoroutineScope.() -> T?
+    ): Deferred<T?> {
+        return async {
+            try {
+                block()
+            } catch (e: Throwable) {
+                errorLog("Fail to fetch catalog:")
+                errorLog(e)
+                return@async null
+            }
         }
     }
 }

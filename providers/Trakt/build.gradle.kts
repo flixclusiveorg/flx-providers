@@ -60,14 +60,14 @@ flxProvider {
     description = "A provider acting as an adapter for the Trakt API, providing metadata, tracking and discovery features."
 
     changelog = """
-        ## 0.0.13
-        - Fix Watched/History list not paginating
-        - Fix Shows not displaying image posters on Watched list
+        ## 0.0.15
+        - Removed saved filters as smart lists
+        - Use new smart lists API
     """.trimIndent()
 
     versionMajor = 0
     versionMinor = 0
-    versionPatch = 14
+    versionPatch = 15
     versionBuild = 0
 
     iconUrl = "https://i.imgur.com/cwmhW7c.png"

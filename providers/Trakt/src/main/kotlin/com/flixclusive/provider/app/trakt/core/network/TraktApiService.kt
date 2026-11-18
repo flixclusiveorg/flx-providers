@@ -171,9 +171,9 @@ internal interface TraktApiService {
         @Query("limit") limit: Int = TraktApiConfig.PAGE_RESULTS_LIMIT,
     ): List<TraktMedia>
 
-    @GET("users/saved_filters/{type}")
-    suspend fun getSavedFilters(
-        @Path("type") type: String,
+    @GET("users/{user}/smart-lists")
+    suspend fun getSmartLists(
+        @Path("user") user: String = "me",
     ): List<TraktSmartList>
 
     // TODO: uncomment if `apiz.` endpoints have fixed issues for TV Show episodes (403 error)
